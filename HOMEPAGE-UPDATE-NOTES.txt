@@ -1,0 +1,16 @@
+AUR-K EV HOMEPAGE UPDATE
+
+This package adds a customer feedback section and a persistent WhatsApp contact button to the redesigned homepage. The existing showroom, product catalogue, Supabase product/image loading, enquiry bag and WhatsApp checkout code are retained.
+
+DEPLOYMENT
+1. Back up your current GitHub repository first.
+2. Extract this ZIP and upload the contents of AUR-K_EV_Website to the same website folder in your existing repository.
+3. IMPORTANT: keep your current working config.js with your Supabase Project URL and publishable/anon key. Do not replace it with a placeholder config.js from this ZIP.
+4. Keep your existing admin.html, admin.js, site.js and SQL setup/migration files if they contain newer working changes. This homepage update does not require a database migration.
+5. Commit and push; wait for Vercel deployment. Then hard-refresh with Ctrl+F5.
+
+CUSTOMER REVIEWS
+No fabricated testimonials or star ratings have been added. The feedback section invites real customers to share their experience.
+
+HOMEPAGE BANNER
+The existing app.js continues to load the hero image from the Supabase site_images record with slot = hero.
