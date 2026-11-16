@@ -7,7 +7,29 @@ if(SUPABASE_URL.startsWith("PASTE_")||SUPABASE_ANON_KEY.startsWith("PASTE_")){
  throw new Error("Supabase config missing");
 }
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-async function refreshSession(){const {data:{session}}=await supabase.auth.getSession();loginPanel.hidden=!!session;dashboard.hidden=!session;const profile=document.getElementById("adminEmail");if(profile&&session)profile.textContent=session.user?.email||"Signed in";if(session)loadImages();}
+let currentRole=null;
+const roleViews={owner:['overview','products','orders','customers','reports','finance','staff'],manager:['overview','orders','customers','reports','finance'],sales_staff:['overview','orders','customers'],product_staff:['overview','products']};
+const canView=view=>(roleViews[currentRole]||[]).includes(view);
+function applyRolePermissions(){
+ document.querySelectorAll('[data-view]').forEach(b=>{b.hidden=!canView(b.dataset.view);});
+ document.querySelectorAll('[data-section]').forEach(s=>{if(!canView(s.dataset.section))s.hidden=true;});
+ document.querySelectorAll('[data-quick-view]').forEach(b=>{if(!canView(b.dataset.quickView))b.hidden=true;});
+ const costLabel=document.getElementById('pCost')?.closest('label');if(costLabel)costLabel.hidden=currentRole!=='owner';
+ const expenseFormEl=document.getElementById('expenseForm');if(expenseFormEl)expenseFormEl.hidden=currentRole!=='owner';
+ window.AURK_CURRENT_ROLE=currentRole;window.AURK_ROLE_VIEWS=roleViews;
+}
+async function refreshSession(){
+ const {data:{session}}=await supabase.auth.getSession();
+ if(!session){currentRole=null;window.AURK_CURRENT_ROLE=null;productCostMap=new Map();loginPanel.hidden=false;dashboard.hidden=true;return;}
+ const {data:role,error}=await supabase.rpc('current_staff_role');
+ if(error||!role||!roleViews[role]){await supabase.auth.signOut();currentRole=null;window.AURK_CURRENT_ROLE=null;loginPanel.hidden=false;dashboard.hidden=true;loginMessage.textContent='This account has no AUR-K EV staff role. Ask the Owner to assign access.';return;}
+ currentRole=role;window.AURK_CURRENT_ROLE=currentRole;if(!['owner','manager'].includes(currentRole))productCostMap=new Map();loginPanel.hidden=true;dashboard.hidden=false;
+ const profile=document.getElementById('adminEmail');if(profile)profile.textContent=(session.user?.email||'Signed in')+' • '+role.replaceAll('_',' ');
+ applyRolePermissions();
+ if(['owner','product_staff'].includes(currentRole))loadImages();
+ if(['owner','manager'].includes(currentRole))await loadProductCostMap();
+ if(canView('staff'))loadStaff();
+}
 supabase.auth.onAuthStateChange(()=>refreshSession());
 document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();loginMessage.textContent="Signing in…";const {error}=await supabase.auth.signInWithPassword({email:document.getElementById("email").value,password:document.getElementById("password").value});loginMessage.textContent=error?error.message:"";await refreshSession();});
 document.getElementById("logout").addEventListener("click",async()=>{await supabase.auth.signOut();await refreshSession();});
@@ -17,11 +39,11 @@ refreshSession();
 // Product catalogue manager (requires the included product-table migration).
 let editingProductId=null;
 const productForm=document.getElementById('productForm');
-async function loadProducts(){const list=document.getElementById('productList');if(!list)return;list.textContent='Loading…';const {data,error}=await supabase.from('site_products').select('*').order('created_at',{ascending:false});if(error){list.textContent='Product table setup required: '+error.message;return;}productCostMap=new Map((data||[]).map(p=>[String(p.id),p.purchase_cost===null||p.purchase_cost===undefined||p.purchase_cost===''?null:Number(p.purchase_cost)]));list.innerHTML='';if(!data?.length){list.textContent='No products added yet.';return;}for(const p of data){const card=document.createElement('article');card.className='image-item';if(p.image_url){const img=document.createElement('img');img.src=p.image_url;img.alt=p.name;card.append(img);}const body=document.createElement('div');const title=document.createElement('strong');title.textContent=p.name;const meta=document.createElement('small');meta.textContent=(p.category||'')+' • '+(p.price_text||'Price on enquiry')+(p.purchase_cost!==null&&p.purchase_cost!==undefined?' • Cost: '+money(p.purchase_cost):' • Cost not set')+(p.featured?' • Featured':'');const edit=document.createElement('button');edit.className='outline-btn';edit.textContent='Edit';edit.onclick=()=>{editingProductId=p.id;document.getElementById('pName').value=p.name||'';document.getElementById('pCategory').value=p.category||'premium';document.getElementById('pTag').value=p.tag||'';document.getElementById('pPrice').value=p.price_text||'';document.getElementById('pCost').value=p.purchase_cost??'';document.getElementById('pDescription').value=p.description||'';document.getElementById('pImage').value=p.image_url||'';document.getElementById('pSpecs').value=p.specifications||'';document.getElementById('pFeatured').checked=!!p.featured;document.getElementById('pCancel').hidden=false;window.scrollTo({top:productForm.offsetTop,behavior:'smooth'});};const del=document.createElement('button');del.className='delete-btn';del.textContent='Delete';del.onclick=async()=>{if(!confirm('Delete '+p.name+'?'))return;const {error}=await supabase.from('site_products').delete().eq('id',p.id);if(error){alert(error.message);return;}loadProducts();};body.append(title,meta,edit,del);card.append(body);list.append(card);}}
-if(productForm){productForm.addEventListener('submit',async e=>{e.preventDefault();const row={name:document.getElementById('pName').value.trim(),category:document.getElementById('pCategory').value,tag:document.getElementById('pTag').value.trim(),price_text:document.getElementById('pPrice').value.trim()||'Ask for price',purchase_cost:document.getElementById('pCost').value.trim()===''?null:Number(document.getElementById('pCost').value),description:document.getElementById('pDescription').value.trim(),image_url:document.getElementById('pImage').value.trim(),specifications:document.getElementById('pSpecs').value.trim(),featured:document.getElementById('pFeatured').checked};const msg=document.getElementById('productMessage');msg.textContent='Saving…';const result=editingProductId?await supabase.from('site_products').update(row).eq('id',editingProductId):await supabase.from('site_products').insert(row);if(result.error){msg.textContent=result.error.message;return;}msg.textContent='Product saved.';productForm.reset();editingProductId=null;document.getElementById('pCancel').hidden=true;loadProducts();});document.getElementById('pCancel').onclick=()=>{productForm.reset();editingProductId=null;document.getElementById('pCancel').hidden=true;};}
+async function loadProducts(){const list=document.getElementById('productList');if(!list)return;list.textContent='Loading…';const {data,error}=await supabase.from('site_products').select('id,name,category,tag,price_text,description,image_url,specifications,featured,created_at').order('created_at',{ascending:false});if(error){list.textContent='Product table setup required: '+error.message;return;}if(currentRole==='owner'){const {data:costRows}=await supabase.from('site_product_costs').select('product_id,purchase_cost');productCostMap=new Map((costRows||[]).map(c=>[String(c.product_id),c.purchase_cost===null?null:Number(c.purchase_cost)]));}const products=(data||[]).map(p=>({...p,purchase_cost:productCostMap.get(String(p.id))??null}));list.innerHTML='';if(!products.length){list.textContent='No products added yet.';return;}for(const p of products){const card=document.createElement('article');card.className='image-item';if(p.image_url){const img=document.createElement('img');img.src=p.image_url;img.alt=p.name;card.append(img);}const body=document.createElement('div');const title=document.createElement('strong');title.textContent=p.name;const meta=document.createElement('small');meta.textContent=(p.category||'')+' • '+(p.price_text||'Price on enquiry')+(p.purchase_cost!==null&&p.purchase_cost!==undefined?' • Cost: '+money(p.purchase_cost):' • Cost not set')+(p.featured?' • Featured':'');const edit=document.createElement('button');edit.className='outline-btn';edit.textContent='Edit';edit.onclick=()=>{editingProductId=p.id;document.getElementById('pName').value=p.name||'';document.getElementById('pCategory').value=p.category||'premium';document.getElementById('pTag').value=p.tag||'';document.getElementById('pPrice').value=p.price_text||'';document.getElementById('pCost').value=p.purchase_cost??'';document.getElementById('pDescription').value=p.description||'';document.getElementById('pImage').value=p.image_url||'';document.getElementById('pSpecs').value=p.specifications||'';document.getElementById('pFeatured').checked=!!p.featured;document.getElementById('pCancel').hidden=false;window.scrollTo({top:productForm.offsetTop,behavior:'smooth'});};const del=document.createElement('button');del.className='delete-btn';del.textContent='Delete';del.onclick=async()=>{if(!confirm('Delete '+p.name+'?'))return;const {error}=await supabase.from('site_products').delete().eq('id',p.id);if(error){alert(error.message);return;}loadProducts();};body.append(title,meta,edit,del);card.append(body);list.append(card);}}
+if(productForm){productForm.addEventListener('submit',async e=>{e.preventDefault();const row={name:document.getElementById('pName').value.trim(),category:document.getElementById('pCategory').value,tag:document.getElementById('pTag').value.trim(),price_text:document.getElementById('pPrice').value.trim()||'Ask for price',description:document.getElementById('pDescription').value.trim(),image_url:document.getElementById('pImage').value.trim(),specifications:document.getElementById('pSpecs').value.trim(),featured:document.getElementById('pFeatured').checked};const msg=document.getElementById('productMessage');msg.textContent='Saving…';const result=editingProductId?await supabase.from('site_products').update(row).eq('id',editingProductId).select('id').single():await supabase.from('site_products').insert(row).select('id').single();if(result.error){msg.textContent=result.error.message;return;}const savedId=result.data?.id||editingProductId;if(currentRole==='owner'&&savedId){const rawCost=document.getElementById('pCost').value.trim();const costRow={product_id:savedId,purchase_cost:rawCost===''?null:Number(rawCost)};const {error:costError}=await supabase.from('site_product_costs').upsert(costRow,{onConflict:'product_id'});if(costError){msg.textContent='Product saved, but purchase cost could not be saved: '+costError.message;return;}productCostMap.set(String(savedId),costRow.purchase_cost);}msg.textContent='Product saved.';productForm.reset();editingProductId=null;document.getElementById('pCancel').hidden=true;loadProducts();});document.getElementById('pCancel').onclick=()=>{productForm.reset();editingProductId=null;document.getElementById('pCancel').hidden=true;};}
 const originalRefresh=refreshSession;
 // load product list whenever authenticated dashboard is shown
-const productObserver=new MutationObserver(()=>{if(!dashboard.hidden)loadProducts();});productObserver.observe(dashboard,{attributes:true,attributeFilter:['hidden']});
+const productObserver=new MutationObserver(()=>{if(!dashboard.hidden&&canView('products'))loadProducts();});productObserver.observe(dashboard,{attributes:true,attributeFilter:['hidden']});
 
 // Customer order management: delivery progress + printable invoices.
 const ordersList=document.getElementById('ordersList');
@@ -137,9 +159,10 @@ document.getElementById('exportSalesCsv')?.addEventListener('click',exportSales)
 let productCostMap=new Map();
 let cachedExpenses=[];
 async function loadProductCostMap(){
- const {data,error}=await supabase.from('site_products').select('id,name,purchase_cost');
+ if(!['owner','manager'].includes(currentRole)){productCostMap=new Map();return null;}
+ const {data,error}=await supabase.from('site_product_costs').select('product_id,purchase_cost');
  if(error){productCostMap=new Map();return error;}
- productCostMap=new Map((data||[]).map(p=>[String(p.id),p.purchase_cost===null||p.purchase_cost===undefined||p.purchase_cost===''?null:Number(p.purchase_cost)]));
+ productCostMap=new Map((data||[]).map(p=>[String(p.product_id),p.purchase_cost===null||p.purchase_cost===undefined||p.purchase_cost===''?null:Number(p.purchase_cost)]));
  return null;
 }
 function calculateOrderCost(order){
@@ -162,7 +185,7 @@ function renderProfitOverview(){
 function renderExpenseList(){
  const list=document.getElementById('expenseList');if(!list)return;
  if(!cachedExpenses.length){list.innerHTML='<p class="muted">No expenses recorded yet.</p>';return;}
- list.innerHTML=`<table class="customer-table"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Action</th></tr></thead><tbody>${cachedExpenses.map(e=>`<tr><td>${escHtml(e.expense_date||'')}</td><td>${escHtml(e.category||'')}</td><td>${escHtml(e.description||'')}</td><td>${money(e.amount)}</td><td><button class="delete-btn" type="button" data-expense-id="${escHtml(e.id)}">Delete</button></td></tr>`).join('')}</tbody></table>`;
+ list.innerHTML=`<table class="customer-table"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th>${currentRole==='owner'?'<th>Action</th>':''}</tr></thead><tbody>${cachedExpenses.map(e=>`<tr><td>${escHtml(e.expense_date||'')}</td><td>${escHtml(e.category||'')}</td><td>${escHtml(e.description||'')}</td><td>${money(e.amount)}</td>${currentRole==='owner'?`<td><button class="delete-btn" type="button" data-expense-id="${escHtml(e.id)}">Delete</button></td>`:''}</tr>`).join('')}</tbody></table>`;
  list.querySelectorAll('[data-expense-id]').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('Delete this expense record?'))return;btn.disabled=true;const {error}=await supabase.from('site_expenses').delete().eq('id',btn.dataset.expenseId);btn.disabled=false;if(error){document.getElementById('expenseMessage').textContent='Could not delete expense: '+error.message;return;}await loadExpenses();renderProfitOverview();}));
 }
 async function loadExpenses(){
@@ -188,7 +211,7 @@ async function loadOrders(){
  ordersList.textContent='Loading orders…';
  const {data,error}=await supabase.from('site_orders').select('*').order('created_at',{ascending:false});
  if(error){ordersList.textContent='Could not load orders: '+error.message;return;}
- cachedOrders=data||[];await loadProductCostMap();await loadExpenses();renderAnalytics(data||[]);renderCustomerAndReports(data||[]);renderProfitOverview();
+ cachedOrders=data||[];await loadProductCostMap();if(['owner','manager'].includes(currentRole))await loadExpenses();else{cachedExpenses=[];renderExpenseList();}renderAnalytics(data||[]);renderCustomerAndReports(data||[]);renderProfitOverview();
  if(!data?.length){ordersList.textContent='No customer orders yet.';return;}
  ordersList.innerHTML='';
  for(const order of data){
@@ -217,9 +240,23 @@ async function loadOrders(){
   const makeWaLink=o=>'https://wa.me/'+String(o.customer_phone||'').replace(/\D/g,'')+'?text='+encodeURIComponent(`Assalam-o-Alaikum ${o.customer_name}, this is AUR-K EV regarding your order ${o.id}. Your current order status is: ${o.status||'New'}.`);
   const wa=document.createElement('a');wa.className='outline-btn';wa.target='_blank';wa.rel='noopener';wa.href=makeWaLink(order);wa.textContent='WhatsApp customer';
   const invoice=document.createElement('button');invoice.type='button';invoice.className='gold-btn';invoice.textContent='Print invoice';invoice.addEventListener('click',()=>printInvoice(order));
-  const profitBtn=document.createElement('button');profitBtn.type='button';profitBtn.className='outline-btn';profitBtn.textContent='Save profit';profitBtn.disabled=order.status!=='Delivered'||(order.cost_of_goods_amount!==null&&order.cost_of_goods_amount!==undefined);profitBtn.addEventListener('click',()=>saveOrderProfit(order,profitBtn));controls.append(deliveryWrap,saveAmount,status,wa,invoice,profitBtn);card.append(head,details,progress,controls);ordersList.append(card);
+  const profitBtn=document.createElement('button');profitBtn.type='button';profitBtn.className='outline-btn';profitBtn.textContent='Save profit';profitBtn.disabled=order.status!=='Delivered'||(order.cost_of_goods_amount!==null&&order.cost_of_goods_amount!==undefined);profitBtn.addEventListener('click',()=>saveOrderProfit(order,profitBtn));if(currentRole==='owner')controls.append(deliveryWrap,saveAmount,invoice,profitBtn);else if(currentRole==='manager')controls.append(deliveryWrap,saveAmount);controls.append(status,wa);card.append(head,details,progress,controls);ordersList.append(card);
  }
 }
+
+// Owner-only staff role management. Auth users are created separately in Supabase.
+async function loadStaff(){
+ const host=document.getElementById('staffList');if(!host||currentRole!=='owner')return;
+ host.textContent='Loading staff accounts…';
+ const {data,error}=await supabase.from('staff_roles').select('email,role,created_at').order('email');
+ if(error){host.textContent='Could not load staff: '+error.message;return;}
+ if(!data?.length){host.textContent='No staff accounts assigned yet.';return;}
+ host.innerHTML=`<table class="customer-table"><thead><tr><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody>${data.map(x=>`<tr><td>${escHtml(x.email)}</td><td>${escHtml(x.role)}</td><td>${x.role==='owner'?'Protected owner':`<button class="delete-btn" type="button" data-staff-email="${escHtml(x.email)}">Remove access</button>`}</td></tr>`).join('')}</tbody></table>`;
+ host.querySelectorAll('[data-staff-email]').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('Remove admin access for '+btn.dataset.staffEmail+'?'))return;btn.disabled=true;const {error}=await supabase.from('staff_roles').delete().eq('email',btn.dataset.staffEmail);if(error){alert(error.message);btn.disabled=false;return;}await loadStaff();}));
+}
+const staffForm=document.getElementById('staffForm');
+if(staffForm)staffForm.addEventListener('submit',async e=>{e.preventDefault();if(currentRole!=='owner')return;const msg=document.getElementById('staffMessage');const email=document.getElementById('staffEmail').value.trim().toLowerCase();const role=document.getElementById('staffRole').value;msg.textContent='Saving access…';const {error}=await supabase.from('staff_roles').upsert({email,role},{onConflict:'email'});if(error){msg.textContent='Could not save staff role: '+error.message;return;}msg.textContent='Staff access saved. The user can sign in with their own Supabase Auth account.';staffForm.reset();await loadStaff();});
+
 document.getElementById('refreshOrders')?.addEventListener('click',loadOrders);
-const orderObserver=new MutationObserver(()=>{if(!dashboard.hidden)loadOrders();});
+const orderObserver=new MutationObserver(()=>{if(!dashboard.hidden&&canView('orders'))loadOrders();});
 orderObserver.observe(dashboard,{attributes:true,attributeFilter:['hidden']});
