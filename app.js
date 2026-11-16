@@ -25,7 +25,7 @@ document.getElementById('customerOrderForm').addEventListener('submit',async e=>
  if(!supabase){msg.textContent='Order saving is not configured. Please contact us on WhatsApp.';btn.disabled=false;return;}
  const {error}=await supabase.from('site_orders').insert(order);
  if(error){msg.textContent='Could not save order: '+error.message+' Please try again or contact us on WhatsApp.';btn.disabled=false;return;}
- const message=`Hello AUR-K EV! I have submitted a Cash on Delivery order.\\nOrder reference: ${orderId}\\n\\n${items.map(x=>`${x.name} x ${x.quantity}`).join('\\n')}\\n\\nName: ${customer.name}\\nPhone: ${customer.phone}\\nAddress: ${customer.address}, ${customer.city}\\nNote: ${customer.note||'None'}\\n\\nPlease confirm final price and delivery charges.`;
+ const message=`*NEW CASH ON DELIVERY ORDER*\n\nAssalam-o-Alaikum AUR-K EV Team,\nI have placed an order through your website. Please review the details below.\n\n*ORDER DETAILS*\nOrder Reference: ${orderId}\n${items.map(x=>`• ${x.name} — Quantity: ${x.quantity}`).join('\n')}\n\n*CUSTOMER DETAILS*\nName: ${customer.name}\nMobile: ${customer.phone}\nDelivery Address: ${customer.address}, ${customer.city}\nSpecial Instructions: ${customer.note||'None'}\n\n*PAYMENT METHOD*\nCash on Delivery (COD)\n\nPlease confirm product availability, the final total price, delivery charges, and estimated delivery time.\n\nThank you!`;
  msg.textContent='Order saved successfully. Opening WhatsApp…';
  whatsapp(message);cart=[];renderCart();e.target.reset();closeOrder();btn.disabled=false;
 });
