@@ -105,3 +105,15 @@ body.storefront .menu-toggle{display:none;background:none;border:0;font-size:24p
 .order-admin-controls select{padding:10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#171717}
 .order-admin-controls a{display:inline-flex;align-items:center;padding:9px 12px;text-decoration:none}
 @media(max-width:600px){.order-modal-card{padding:18px}.order-admin-head{align-items:flex-start;flex-direction:column}}
+
+/* AUR-K EV order delivery tracker and invoice controls */
+.order-progress{display:flex;gap:6px;margin:14px 0 18px;align-items:flex-start}
+.progress-step{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;text-align:center;color:#888}
+.progress-step:not(:last-child):after{content:"";position:absolute;height:2px;background:#ddd;left:calc(50% + 14px);right:calc(-50% + 14px);top:13px}
+.progress-step.done:not(:last-child):after{background:#c9a45c}
+.progress-step span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#eee;color:#666;font-size:12px;font-weight:700;z-index:1}
+.progress-step.done span{background:#c9a45c;color:#171717}
+.progress-step small{font-size:10px;line-height:1.2}
+.order-progress.cancelled{color:#a33;font-weight:700;padding:8px 0}
+.order-admin-controls .gold-btn{padding:10px 13px;border:0;border-radius:8px;background:#c9a45c;color:#171717;font-weight:700}
+@media(max-width:520px){.progress-step small{font-size:9px}.order-admin-controls{align-items:stretch}.order-admin-controls>*{flex:1;text-align:center;justify-content:center}}
