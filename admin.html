@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AUR-K EV | Admin</title><link rel="stylesheet" href="styles.css?v=admin-redesign-1"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AUR-K EV | Admin</title><link rel="stylesheet" href="styles.css?v=admin-profit-1"></head>
 <body class="admin-body"><header class="site-header"><a class="brand" href="index.html"><span>AUR-K</span> EV <small>ADMIN</small></a><a href="index.html">View website ↗</a></header>
 <main class="admin-wrap"><section id="loginPanel" class="panel login-panel"><p class="eyebrow">PRIVATE AREA</p><h1>Admin login</h1><p>Sign in with the admin account you create in Supabase Authentication.</p><form id="loginForm"><label>Email<input id="email" type="email" required autocomplete="username"></label><label>Password<input id="password" type="password" required autocomplete="current-password"></label><button class="gold-btn" type="submit">Sign in</button><p id="loginMessage" class="message"></p></form></section>
 <section id="dashboard" class="panel" hidden><div class="dash-head"><div><p class="eyebrow">WEBSITE CONTENT</p><h1>Image manager</h1><p>Upload photos and assign them to the homepage or a product.</p></div><button id="logout" class="outline-btn">Sign out</button></div>
@@ -9,7 +9,8 @@
 <label>Product name<input id="pName" required maxlength="100" placeholder="ROADKING R99 PRO"></label>
 <label>Category<select id="pCategory"><option value="premium">Premium</option><option value="commuter">City commute</option></select></label>
 <label>Tag<input id="pTag" maxlength="50" placeholder="FEATURED MODEL"></label>
-<label>Price display<input id="pPrice" placeholder="Ask for price"></label>
+<label>Price display<input id="pPrice" placeholder="e.g. Rs. 180,000"></label>
+<label>Purchase cost (PKR)<input id="pCost" type="number" min="0" step="0.01" placeholder="Your cost price"></label>
 <label>Description<input id="pDescription" maxlength="300" placeholder="Product description"></label>
 <label>Image URL<input id="pImage" placeholder="Paste URL from uploaded images"></label>
 <label>Specifications<input id="pSpecs" placeholder="Battery, range, motor, warranty"></label>
@@ -33,5 +34,17 @@
 </div>
 <div id="reportSummary" class="report-summary"></div>
 <h3>Best-selling scooters</h3><div id="topProducts" class="top-products"></div>
+<h2>Business Profit &amp; Expenses</h2>
+<p>Profit is calculated from delivered orders with saved final amounts and known product purchase costs. Enter business expenses below.</p>
+<div id="profitSummary" class="sales-analytics"><div class="analytics-tile"><small>Delivered revenue</small><strong>—</strong></div><div class="analytics-tile"><small>Cost of scooters sold</small><strong>—</strong></div><div class="analytics-tile"><small>Gross profit</small><strong>—</strong></div><div class="analytics-tile"><small>Business expenses</small><strong>—</strong></div><div class="analytics-tile"><small>Net profit</small><strong>—</strong></div></div>
+<p id="profitNote" class="message" aria-live="polite"></p>
+<form id="expenseForm" class="expense-form">
+<label>Expense date<input id="expenseDate" type="date" required></label>
+<label>Category<select id="expenseCategory" required><option value="Rent">Rent</option><option value="Salaries">Salaries</option><option value="Transport">Transport</option><option value="Repairs">Repairs</option><option value="Utilities">Utilities</option><option value="Marketing">Marketing</option><option value="Other">Other</option></select></label>
+<label>Description<input id="expenseDescription" maxlength="160" placeholder="e.g. showroom electricity bill"></label>
+<label>Amount (PKR)<input id="expenseAmount" type="number" min="0.01" step="0.01" required placeholder="e.g. 5000"></label>
+<button class="gold-btn" type="submit">Save expense</button><p id="expenseMessage" class="message"></p>
+</form>
+<h3>Recorded business expenses</h3><div id="expenseList" class="customer-table-wrap"><p class="muted">Expenses will appear here.</p></div>
 <h2>Customer orders</h2><p>Set delivery charges for each order. The final payable amount is calculated automatically.</p><div class="orders-toolbar"><button type="button" id="refreshOrders" class="outline-btn">Refresh orders</button><span id="ordersMessage" class="message"></span></div><div id="ordersList" class="orders-list">Orders will appear here after the orders database migration is run.</div>
 <h2>Current images</h2><div id="imageList" class="image-list"></div></section></main><script type="module" src="admin.js"></script></body></html>
