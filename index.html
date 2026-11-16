@@ -41,6 +41,23 @@
   </main>
   <footer class="footer-v2"><a class="brand" href="#top"><img class="brand-logo" src="aurk-ev-logo.png" alt="AUR-K EV"></a><p>© <span id="year"></span> AUR-K EV Bike Experts. All rights reserved.</p><a href="#top">Back to top ↑</a></footer>
   <a class="floating-whatsapp" href="https://wa.me/923239661747?text=Hello%20AUR-K%20EV%2C%20I%20would%20like%20to%20know%20about%20your%20electric%20scooters." target="_blank" rel="noopener" aria-label="Chat with AUR-K EV on WhatsApp"><span class="wa-icon">◉</span><span>Chat with us</span></a>
-  <div class="cart-overlay" id="cartOverlay"><aside class="cart-drawer"><div class="cart-head"><h3>Your enquiry bag</h3><button id="cartClose" aria-label="Close bag">✕</button></div><div id="cartItems" class="cart-items"><p class="empty">Your bag is waiting for its first ride.</p></div><div class="cart-bottom"><div class="total"><span>Price</span><b id="cartTotal">On enquiry</b></div><button class="btn btn-gold checkout" id="checkout">Send enquiry on WhatsApp ↗</button><small>Our team will confirm availability, final price and delivery details with you.</small></div></aside></div>
+
+  <div class="order-modal" id="orderModal" aria-hidden="true">
+    <div class="order-modal-card" role="dialog" aria-modal="true" aria-labelledby="orderTitle">
+      <div class="cart-head"><h3 id="orderTitle">Complete your COD order</h3><button type="button" id="orderClose" aria-label="Close order form">✕</button></div>
+      <p class="order-intro">Enter your details. Your order will be saved and you can also contact us on WhatsApp.</p>
+      <form id="customerOrderForm" class="customer-order-form">
+        <label>Full name<input id="customerName" name="customerName" required maxlength="100" autocomplete="name"></label>
+        <label>Mobile number<input id="customerPhone" name="customerPhone" required type="tel" maxlength="25" placeholder="03XX-XXXXXXX" autocomplete="tel"></label>
+        <label>Delivery address<textarea id="customerAddress" name="customerAddress" required maxlength="500" rows="3" autocomplete="street-address"></textarea></label>
+        <label>City<input id="customerCity" name="customerCity" required maxlength="80" value="Faisalabad" autocomplete="address-level2"></label>
+        <label>Additional note (optional)<textarea id="customerNote" name="customerNote" maxlength="500" rows="2"></textarea></label>
+        <p class="cod-note">Payment method: Cash on Delivery. Final price and delivery charges will be confirmed by AUR-K EV.</p>
+        <p id="orderMessage" class="message" role="status"></p>
+        <button class="btn btn-gold checkout" type="submit" id="placeOrderBtn">Place order & continue to WhatsApp ↗</button>
+      </form>
+    </div>
+  </div>
+\n  <div class="cart-overlay" id="cartOverlay"><aside class="cart-drawer"><div class="cart-head"><h3>Your enquiry bag</h3><button id="cartClose" aria-label="Close bag">✕</button></div><div id="cartItems" class="cart-items"><p class="empty">Your bag is waiting for its first ride.</p></div><div class="cart-bottom"><div class="total"><span>Price</span><b id="cartTotal">On enquiry</b></div><button class="btn btn-gold checkout" id="checkout">Send enquiry on WhatsApp ↗</button><small>Our team will confirm availability, final price and delivery details with you.</small></div></aside></div>
   <script type="module" src="app.js"></script>
 </body></html>

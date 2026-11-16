@@ -22,3 +22,39 @@ if(productForm){productForm.addEventListener('submit',async e=>{e.preventDefault
 const originalRefresh=refreshSession;
 // load product list whenever authenticated dashboard is shown
 const productObserver=new MutationObserver(()=>{if(!dashboard.hidden)loadProducts();});productObserver.observe(dashboard,{attributes:true,attributeFilter:['hidden']});
+
+// Customer order management (requires site-orders-migration.sql).
+const ordersList=document.getElementById('ordersList');
+const ordersMessage=document.getElementById('ordersMessage');
+const ORDER_STATUSES=['New','Confirmed','Processing','Dispatched','Delivered','Cancelled'];
+async function loadOrders(){
+ if(!ordersList)return;
+ ordersList.textContent='Loading orders…';
+ const {data,error}=await supabase.from('site_orders').select('*').order('created_at',{ascending:false});
+ if(error){ordersList.textContent='Orders setup required: '+error.message;return;}
+ if(!data?.length){ordersList.textContent='No customer orders yet.';return;}
+ ordersList.innerHTML='';
+ for(const order of data){
+  const card=document.createElement('article');card.className='order-admin-card';
+  const head=document.createElement('div');head.className='order-admin-head';
+  const title=document.createElement('strong');title.textContent='Order '+order.id.slice(0,8).toUpperCase();
+  const date=document.createElement('small');date.textContent=new Date(order.created_at).toLocaleString();
+  head.append(title,date);
+  const details=document.createElement('div');details.className='order-admin-details';
+  const items=document.createElement('p');items.textContent=(order.items||[]).map(x=>`${x.name} × ${x.quantity}`).join(', ');
+  const customer=document.createElement('p');customer.textContent=`${order.customer_name} • ${order.customer_phone}`;
+  const address=document.createElement('p');address.textContent=`${order.delivery_address}, ${order.city}`;
+  const note=document.createElement('p');note.textContent=order.customer_note?`Note: ${order.customer_note}`:'';
+  const payment=document.createElement('small');payment.textContent='Payment: Cash on Delivery';
+  details.append(items,customer,address);if(order.customer_note)details.append(note);details.append(payment);
+  const controls=document.createElement('div');controls.className='order-admin-controls';
+  const status=document.createElement('select');status.setAttribute('aria-label','Order status');
+  ORDER_STATUSES.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;status.append(o);});status.value=ORDER_STATUSES.includes(order.status)?order.status:'New';
+  status.addEventListener('change',async()=>{status.disabled=true;const {error}=await supabase.from('site_orders').update({status:status.value,updated_at:new Date().toISOString()}).eq('id',order.id);status.disabled=false;if(error){ordersMessage.textContent='Could not update status: '+error.message;status.value=order.status;}else{order.status=status.value;ordersMessage.textContent='Order status updated.';}});
+  const wa=document.createElement('a');wa.className='outline-btn';wa.target='_blank';wa.rel='noopener';wa.href='https://wa.me/'+String(order.customer_phone).replace(/\D/g,'')+'?text='+encodeURIComponent(`Hello ${order.customer_name}, this is AUR-K EV regarding your order ${order.id.slice(0,8).toUpperCase()}. Your current order status is: ${order.status}.`);wa.textContent='WhatsApp customer';
+  controls.append(status,wa);card.append(head,details,controls);ordersList.append(card);
+ }
+}
+document.getElementById('refreshOrders')?.addEventListener('click',loadOrders);
+const orderObserver=new MutationObserver(()=>{if(!dashboard.hidden)loadOrders();});
+orderObserver.observe(dashboard,{attributes:true,attributeFilter:['hidden']});

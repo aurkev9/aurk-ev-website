@@ -1,0 +1,44 @@
+AUR-K EV ORDER MANAGEMENT UPGRADE
+===================================
+
+This ZIP is based on the SETUP.zip you supplied. It adds customer Cash on Delivery order submission and an Orders manager in the existing admin dashboard.
+
+IMPORTANT: Your supplied ZIP did not contain config.js. Keep the config.js already present in your live GitHub repository. Do NOT replace it with a placeholder and do not share its contents or service-role key.
+
+STEP 1 — BACK UP
+Download a copy of your current GitHub repository before replacing files.
+
+STEP 2 — RUN THE NEW SUPABASE MIGRATION
+1. Open the EXISTING Supabase project.
+2. Open SQL Editor -> New query.
+3. Open site-orders-migration.sql from this ZIP, copy all its contents, paste into SQL Editor and Run.
+4. This creates only public.site_orders and its RLS policies. It does not alter site_products, site_images, Storage or Auth.
+
+STEP 3 — UPDATE YOUR EXISTING GITHUB REPOSITORY
+Upload/replace these files from this ZIP:
+- index.html
+- app.js
+- admin.html
+- admin.js
+- styles.css
+- site-orders-migration.sql
+Do not delete or replace config.js, existing SQL files, images, logo, favicon or other working files. Keep your existing config.js exactly as it is.
+
+STEP 4 — DEPLOY
+Commit/push to the same GitHub repository connected to Vercel. Wait for deployment to finish.
+
+STEP 5 — TEST
+1. Open the website and add a product to the enquiry bag.
+2. Click the checkout button. Fill in name, mobile, address and city.
+3. Submit. A successful submission saves the order in Supabase and opens WhatsApp with the order reference and details.
+4. Open /admin.html and sign in with your existing admin account.
+5. Scroll to Customer orders. Refresh orders if needed. Change the status and use WhatsApp customer to contact the buyer.
+
+SECURITY
+- Public visitors can INSERT orders but cannot read orders.
+- Only authenticated Supabase users can view and update orders.
+- Customer phone/address data is personal information. Keep admin credentials private.
+- Keep the existing frontend anon/public key in config.js; never use the Supabase service_role key in browser code.
+
+LIMITATION
+This version does not calculate product prices or delivery charges because the current catalogue stores price_text as display text, not a numeric price. Confirm final price and delivery charges with the customer via WhatsApp.
