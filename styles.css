@@ -127,3 +127,23 @@ body.storefront .menu-toggle{display:none;background:none;border:0;font-size:24p
 .delivery-charge-field input{width:145px;min-height:40px;padding:9px 10px;border:1px solid #b9a477;border-radius:7px;background:#fff;color:#171717}
 .order-price-summary{font-weight:600;color:#b18a42}
 @media(max-width:600px){.order-admin-controls{align-items:stretch}.delivery-charge-field{width:100%}.delivery-charge-field input{flex:1;min-width:110px}}
+
+
+/* Customer management and reports */
+.report-tools{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:14px 0 18px}
+.report-tools label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.report-tools select,.report-tools input{min-height:40px;padding:8px 10px;border:1px solid #b9a477;border-radius:8px;background:#fff;color:#171717}
+.report-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:12px 0 20px}
+.report-summary .analytics-tile{min-height:72px}
+.customer-table-wrap{overflow-x:auto;margin:12px 0 24px;border:1px solid rgba(201,164,92,.25);border-radius:10px}
+.customer-table{width:100%;border-collapse:collapse;min-width:680px}
+.customer-table th,.customer-table td{padding:11px 12px;text-align:left;border-bottom:1px solid rgba(201,164,92,.18);font-size:13px}
+.customer-table th{background:#171717;color:#c9a45c;position:sticky;top:0}
+.customer-table td{color:inherit}
+.customer-table tr:last-child td{border-bottom:0}
+.report-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.top-products{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:12px 0 24px}
+.top-product{padding:13px;border:1px solid rgba(201,164,92,.3);border-radius:10px;background:rgba(201,164,92,.06)}
+.top-product strong{display:block;margin-bottom:5px}
+.top-product small{opacity:.8}
+@media(max-width:600px){.report-tools>*{flex:1 1 100%}.report-tools label{width:100%}.report-tools select,.report-tools input{width:100%}}

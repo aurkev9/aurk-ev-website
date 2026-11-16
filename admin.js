@@ -57,12 +57,76 @@ function renderAnalytics(data){
  el.innerHTML=tiles.map(([label,value])=>`<div class="analytics-tile"><small>${label}</small><strong>${value}</strong></div>`).join('');
 }
 
+let cachedOrders=[];
+function csvCell(value){const s=String(value??'');return '"'+s.replace(/"/g,'""')+'"';}
+function downloadCsv(filename,rows){
+ const csv='\uFEFF'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+function reportOrders(data){
+ const mode=document.getElementById('reportPeriod')?.value||'all';
+ const day=document.getElementById('reportDay')?.value||'';
+ const month=document.getElementById('reportMonth')?.value||'';
+ const year=document.getElementById('reportYear')?.value||'';
+ return data.filter(o=>{
+  const d=new Date(o.created_at||0);if(Number.isNaN(d.getTime()))return false;
+  const yyyy=String(d.getFullYear()),mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');
+  if(mode==='day')return !day||`${yyyy}-${mm}-${dd}`===day;
+  if(mode==='month')return !month||`${yyyy}-${mm}`===month;
+  if(mode==='year')return !year||yyyy===String(year);
+  return true;
+ });
+}
+function renderCustomerAndReports(data){
+ cachedOrders=Array.isArray(data)?data:[];
+ const groups=new Map();
+ for(const o of cachedOrders){
+  const phone=String(o.customer_phone||'').trim();const key=phone.replace(/\D/g,'')||String(o.customer_name||'').trim().toLowerCase()||String(o.id);
+  if(!groups.has(key))groups.set(key,{name:o.customer_name||'Customer',phone,orders:[],last:o.created_at||''});
+  const g=groups.get(key);g.orders.push(o);if(new Date(o.created_at||0)>new Date(g.last||0))g.last=o.created_at||g.last;
+ }
+ const customers=[...groups.values()].sort((a,b)=>b.orders.length-a.orders.length||new Date(b.last)-new Date(a.last));
+ const repeat=customers.filter(c=>c.orders.length>1).length;
+ const summary=document.getElementById('customerSummary');
+ if(summary)summary.innerHTML=[['Unique customers',customers.length],['Repeat customers',repeat],['Orders per customer',customers.length?(cachedOrders.length/customers.length).toFixed(1):'0']].map(([l,v])=>`<div class="analytics-tile"><small>${l}</small><strong>${v}</strong></div>`).join('');
+ const list=document.getElementById('customerList');
+ if(list){
+  if(!customers.length)list.innerHTML='<p class="muted">No customer orders yet.</p>';
+  else list.innerHTML=`<table class="customer-table"><thead><tr><th>Customer</th><th>Mobile</th><th>Total orders</th><th>Delivered revenue</th><th>Last order</th></tr></thead><tbody>${customers.map(c=>{const revenue=c.orders.filter(o=>o.status==='Delivered').reduce((s,o)=>s+(Number(o.final_amount)||0),0);return `<tr><td>${escHtml(c.name)}</td><td>${escHtml(c.phone)}</td><td>${c.orders.length}</td><td>${money(revenue)}</td><td>${c.last?new Date(c.last).toLocaleDateString():'—'}</td></tr>`;}).join('')}</tbody></table>`;
+ }
+ const filtered=reportOrders(cachedOrders);
+ const delivered=filtered.filter(o=>o.status==='Delivered');
+ const revenue=delivered.reduce((s,o)=>s+(Number(o.final_amount)||0),0);
+ const outstanding=filtered.filter(o=>!['Delivered','Cancelled'].includes(o.status||'New')).length;
+ const report=document.getElementById('reportSummary');
+ if(report)report.innerHTML=[['Orders in period',filtered.length],['Delivered revenue',money(revenue)],['Delivered orders',delivered.length],['Awaiting delivery',outstanding]].map(([l,v])=>`<div class="analytics-tile"><small>${l}</small><strong>${v}</strong></div>`).join('');
+ const products=new Map();
+ for(const o of filtered){for(const item of (Array.isArray(o.items)?o.items:[])){const name=String(item.name||'Product');products.set(name,(products.get(name)||0)+(Number(item.quantity)||1));}}
+ const top=[...products.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5);const topEl=document.getElementById('topProducts');
+ if(topEl)topEl.innerHTML=top.length?top.map(([name,qty],i)=>`<div class="top-product"><strong>${i+1}. ${escHtml(name)}</strong><small>${qty} unit(s) ordered</small></div>`).join(''):'<p class="muted">No product sales data for this period.</p>';
+}
+function exportCustomers(){
+ const groups=new Map();for(const o of cachedOrders){const phone=String(o.customer_phone||'').trim();const key=phone.replace(/\D/g,'')||String(o.customer_name||'').trim().toLowerCase()||String(o.id);if(!groups.has(key))groups.set(key,{name:o.customer_name||'',phone,orders:[],last:o.created_at||''});const g=groups.get(key);g.orders.push(o);if(new Date(o.created_at||0)>new Date(g.last||0))g.last=o.created_at||g.last;}
+ const rows=[['Customer name','Mobile','Total orders','Delivered revenue (PKR)','Last order']];for(const c of groups.values()){const rev=c.orders.filter(o=>o.status==='Delivered').reduce((s,o)=>s+(Number(o.final_amount)||0),0);rows.push([c.name,c.phone,c.orders.length,rev,c.last]);}downloadCsv('AURK-EV-Customers.csv',rows);
+}
+function exportSales(){
+ const data=reportOrders(cachedOrders);const rows=[['Order reference','Order date','Customer','Mobile','Products','Status','Subtotal (PKR)','Delivery charges (PKR)','Final amount (PKR)']];
+ for(const o of data){const items=(o.items||[]).map(i=>`${i.name||'Product'} x ${i.quantity||1}`).join('; ');rows.push([o.id,o.created_at,o.customer_name,o.customer_phone,items,o.status||'New',o.subtotal_amount??'',o.delivery_charge??'',o.final_amount??'']);}
+ downloadCsv('AURK-EV-Sales-Report.csv',rows);
+}
+const periodSelect=document.getElementById('reportPeriod');
+function updateReportInputs(){const mode=periodSelect?.value||'all';const day=document.getElementById('reportDayWrap'),month=document.getElementById('reportMonthWrap'),year=document.getElementById('reportYearWrap');if(day)day.hidden=mode!=='day';if(month)month.hidden=mode!=='month';if(year)year.hidden=mode!=='year';renderCustomerAndReports(cachedOrders);}
+if(periodSelect){const now=new Date();document.getElementById('reportDay').value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;document.getElementById('reportMonth').value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;document.getElementById('reportYear').value=now.getFullYear();periodSelect.addEventListener('change',updateReportInputs);['reportDay','reportMonth','reportYear'].forEach(id=>document.getElementById(id).addEventListener('change',()=>renderCustomerAndReports(cachedOrders)));}
+document.getElementById('exportCustomersCsv')?.addEventListener('click',exportCustomers);
+document.getElementById('exportSalesCsv')?.addEventListener('click',exportSales);
+
 async function loadOrders(){
  if(!ordersList)return;
  ordersList.textContent='Loading orders…';
  const {data,error}=await supabase.from('site_orders').select('*').order('created_at',{ascending:false});
  if(error){ordersList.textContent='Could not load orders: '+error.message;return;}
- renderAnalytics(data||[]);
+ renderAnalytics(data||[]);renderCustomerAndReports(data||[]);
  if(!data?.length){ordersList.textContent='No customer orders yet.';return;}
  ordersList.innerHTML='';
  for(const order of data){
@@ -84,10 +148,10 @@ async function loadOrders(){
   const deliveryWrap=document.createElement('label');deliveryWrap.className='delivery-charge-field';deliveryWrap.textContent='Delivery charges (Rs.) ';
   const deliveryInput=document.createElement('input');deliveryInput.type='number';deliveryInput.min='0';deliveryInput.step='1';deliveryInput.placeholder='Enter delivery';deliveryInput.value=order.delivery_charge??'';deliveryInput.setAttribute('aria-label','Delivery charges in rupees');deliveryWrap.append(deliveryInput);
   const saveAmount=document.createElement('button');saveAmount.type='button';saveAmount.className='gold-btn';saveAmount.textContent='Save amount';
-  saveAmount.addEventListener('click',async()=>{const subtotalNow=orderTotals(order).subtotal;const charge=deliveryInput.value.trim()===''?null:Number(deliveryInput.value);if(subtotalNow===null){ordersMessage.textContent='Cannot calculate total: enter numeric product prices in Product management first.';return;}if(charge===null||!Number.isFinite(charge)||charge<0){ordersMessage.textContent='Enter delivery charges as zero or a positive amount.';return;}saveAmount.disabled=true;const final=subtotalNow+charge;const {error}=await supabase.from('site_orders').update({subtotal_amount:subtotalNow,delivery_charge:charge,final_amount:final,updated_at:new Date().toISOString()}).eq('id',order.id);saveAmount.disabled=false;if(error){ordersMessage.textContent='Could not save amount: '+error.message;return;}order.subtotal_amount=subtotalNow;order.delivery_charge=charge;order.final_amount=final;priceSummary.textContent=`Subtotal: ${money(subtotalNow)} • Delivery: ${money(charge)} • Final: ${money(final)}`;ordersMessage.textContent='Delivery charges and final payable amount saved.';renderAnalytics((await supabase.from('site_orders').select('*')).data||[]);});
+  saveAmount.addEventListener('click',async()=>{const subtotalNow=orderTotals(order).subtotal;const charge=deliveryInput.value.trim()===''?null:Number(deliveryInput.value);if(subtotalNow===null){ordersMessage.textContent='Cannot calculate total: enter numeric product prices in Product management first.';return;}if(charge===null||!Number.isFinite(charge)||charge<0){ordersMessage.textContent='Enter delivery charges as zero or a positive amount.';return;}saveAmount.disabled=true;const final=subtotalNow+charge;const {error}=await supabase.from('site_orders').update({subtotal_amount:subtotalNow,delivery_charge:charge,final_amount:final,updated_at:new Date().toISOString()}).eq('id',order.id);saveAmount.disabled=false;if(error){ordersMessage.textContent='Could not save amount: '+error.message;return;}order.subtotal_amount=subtotalNow;order.delivery_charge=charge;order.final_amount=final;priceSummary.textContent=`Subtotal: ${money(subtotalNow)} • Delivery: ${money(charge)} • Final: ${money(final)}`;ordersMessage.textContent='Delivery charges and final payable amount saved.';const refreshedOrders=await supabase.from('site_orders').select('*');renderAnalytics(refreshedOrders.data||[]);renderCustomerAndReports(refreshedOrders.data||[]);});
   const status=document.createElement('select');status.setAttribute('aria-label','Order status');
   ORDER_STATUSES.forEach(v=>{const option=document.createElement('option');option.value=v;option.textContent=v;status.append(option);});status.value=ORDER_STATUSES.includes(order.status)?order.status:'New';
-  status.addEventListener('change',async()=>{const previous=order.status||'New';status.disabled=true;const next=status.value;const {error}=await supabase.from('site_orders').update({status:next,updated_at:new Date().toISOString()}).eq('id',order.id);status.disabled=false;if(error){ordersMessage.textContent='Could not update status: '+error.message;status.value=previous;}else{order.status=next;progress.innerHTML=progressMarkup(next);wa.href=makeWaLink(order);ordersMessage.textContent='Order status updated successfully.';const refreshed=await supabase.from('site_orders').select('*');renderAnalytics(refreshed.data||[]);}});
+  status.addEventListener('change',async()=>{const previous=order.status||'New';status.disabled=true;const next=status.value;const {error}=await supabase.from('site_orders').update({status:next,updated_at:new Date().toISOString()}).eq('id',order.id);status.disabled=false;if(error){ordersMessage.textContent='Could not update status: '+error.message;status.value=previous;}else{order.status=next;progress.innerHTML=progressMarkup(next);wa.href=makeWaLink(order);ordersMessage.textContent='Order status updated successfully.';const refreshed=await supabase.from('site_orders').select('*');renderAnalytics(refreshed.data||[]);renderCustomerAndReports(refreshed.data||[]);}});
   const makeWaLink=o=>'https://wa.me/'+String(o.customer_phone||'').replace(/\D/g,'')+'?text='+encodeURIComponent(`Assalam-o-Alaikum ${o.customer_name}, this is AUR-K EV regarding your order ${o.id}. Your current order status is: ${o.status||'New'}.`);
   const wa=document.createElement('a');wa.className='outline-btn';wa.target='_blank';wa.rel='noopener';wa.href=makeWaLink(order);wa.textContent='WhatsApp customer';
   const invoice=document.createElement('button');invoice.type='button';invoice.className='gold-btn';invoice.textContent='Print invoice';invoice.addEventListener('click',()=>printInvoice(order));

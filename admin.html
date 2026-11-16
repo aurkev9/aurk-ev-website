@@ -16,5 +16,22 @@
 <label><span><input id="pFeatured" type="checkbox"> Featured product</span></label>
 <button class="gold-btn" type="submit">Save product</button><button id="pCancel" class="outline-btn" type="button" hidden>Cancel edit</button><p id="productMessage" class="message"></p>
 </form><h2>Current products</h2><div id="productList" class="image-list"></div>
-<h2>Sales overview</h2><p>Revenue is counted from delivered orders with a saved final amount.</p><div id="salesAnalytics" class="sales-analytics"><div class="analytics-tile"><small>Total orders</small><strong>—</strong></div><div class="analytics-tile"><small>Delivered revenue</small><strong>—</strong></div><div class="analytics-tile"><small>Awaiting delivery</small><strong>—</strong></div><div class="analytics-tile"><small>Delivered</small><strong>—</strong></div></div><h2>Customer orders</h2><p>Set delivery charges for each order. The final payable amount is calculated automatically.</p><div class="orders-toolbar"><button type="button" id="refreshOrders" class="outline-btn">Refresh orders</button><span id="ordersMessage" class="message"></span></div><div id="ordersList" class="orders-list">Orders will appear here after the orders database migration is run.</div>
+<h2>Sales overview</h2><p>Revenue is counted from delivered orders with a saved final amount.</p><div id="salesAnalytics" class="sales-analytics"><div class="analytics-tile"><small>Total orders</small><strong>—</strong></div><div class="analytics-tile"><small>Delivered revenue</small><strong>—</strong></div><div class="analytics-tile"><small>Awaiting delivery</small><strong>—</strong></div><div class="analytics-tile"><small>Delivered</small><strong>—</strong></div></div>
+<h2>Customer management</h2>
+<p>Customers are grouped by mobile number from their existing website orders. No separate customer database is created.</p>
+<div id="customerSummary" class="sales-analytics"></div>
+<div class="report-actions"><button type="button" id="exportCustomersCsv" class="outline-btn">Export customers for Excel (CSV)</button></div>
+<div id="customerList" class="customer-table-wrap"><p class="muted">Customer records will appear after orders load.</p></div>
+<h2>Sales reports</h2>
+<p>Filter order activity by day, month, year or all time. Revenue includes only delivered orders with a saved final amount.</p>
+<div class="report-tools">
+<label>Report period<select id="reportPeriod"><option value="all">All time</option><option value="day">Daily</option><option value="month" selected>Monthly</option><option value="year">Yearly</option></select></label>
+<label id="reportDayWrap" hidden>Date<input id="reportDay" type="date"></label>
+<label id="reportMonthWrap">Month<input id="reportMonth" type="month"></label>
+<label id="reportYearWrap" hidden>Year<input id="reportYear" type="number" min="2000" max="2100"></label>
+<button type="button" id="exportSalesCsv" class="gold-btn">Export sales report for Excel (CSV)</button>
+</div>
+<div id="reportSummary" class="report-summary"></div>
+<h3>Best-selling scooters</h3><div id="topProducts" class="top-products"></div>
+<h2>Customer orders</h2><p>Set delivery charges for each order. The final payable amount is calculated automatically.</p><div class="orders-toolbar"><button type="button" id="refreshOrders" class="outline-btn">Refresh orders</button><span id="ordersMessage" class="message"></span></div><div id="ordersList" class="orders-list">Orders will appear here after the orders database migration is run.</div>
 <h2>Current images</h2><div id="imageList" class="image-list"></div></section></main><script type="module" src="admin.js"></script></body></html>
