@@ -1,0 +1,39 @@
+AUR-K EV — DELIVERY CHARGES, FINAL AMOUNT & SALES ANALYTICS
+
+WHAT THIS UPGRADE ADDS
+- Admin enters delivery charges for each order.
+- Subtotal is calculated from numeric product prices and quantities.
+- Final payable amount is calculated automatically and saved in Supabase.
+- Printable invoice displays subtotal, delivery charges and final payable amount.
+- Admin sales overview shows total orders, delivered revenue, orders awaiting delivery and delivered orders.
+- Existing delivery tracking, product management, image manager and WhatsApp order flow are retained.
+
+IMPORTANT BEFORE INSTALLING
+1. Download a backup of your current GitHub repository.
+2. Keep your existing config.js unchanged. It contains your Supabase URL and anon key.
+3. Run sales-amounts-migration.sql once in Supabase Dashboard > SQL Editor. This only adds three nullable numeric columns to the existing site_orders table; it does not delete or replace any data.
+
+FILES TO UPDATE IN YOUR EXISTING GITHUB REPOSITORY
+- app.js
+- admin.js
+- admin.html
+- styles.css
+
+Also add this new SQL file to your project if you want to keep a copy:
+- sales-amounts-migration.sql
+
+DEPLOY
+1. Commit and push the four updated website files to GitHub.
+2. Wait for Vercel deployment to finish.
+3. Open https://aurk-ev-website.vercel.app/admin.html and sign in.
+4. Open Customer orders.
+5. For each order, enter delivery charges in rupees and click Save amount.
+6. The system calculates and stores the final payable amount.
+7. Click Print invoice to verify the saved figures.
+
+IMPORTANT NOTES
+- Product prices must be numeric, for example 125000 or Rs. 125,000. Text such as "Ask for price" cannot be used to calculate a numeric subtotal. Update such products in Product management before saving their order totals.
+- Existing orders are preserved. Their delivery charge and final amount remain blank until an admin enters and saves the delivery charge.
+- Delivered revenue includes only orders with status Delivered and a saved final_amount.
+- Do not replace config.js or expose a Supabase service-role key.
+- This upgrade does not deploy itself; you must push the files to GitHub and allow Vercel to deploy.

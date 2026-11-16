@@ -35,20 +35,34 @@ function progressMarkup(status){
  const current=Math.max(0,ORDER_STATUSES.slice(0,5).indexOf(status));
  return `<div class="order-progress" aria-label="Delivery progress">${ORDER_STATUSES.slice(0,5).map((step,i)=>`<div class="progress-step ${i<=current?'done':''}"><span>${i+1}</span><small>${step}</small></div>`).join('')}</div>`;
 }
+function orderTotals(order){
+ const rows=(Array.isArray(order.items)?order.items:[]).map(item=>{const qty=Number(item.quantity)||1;const unit=priceNumber(item.price_text);return {name:item.name||'Product',qty,price:item.price_text||'To be confirmed',line:unit===null?null:unit*qty};});
+ const subtotal=rows.every(r=>r.line!==null)?rows.reduce((sum,r)=>sum+r.line,0):null;
+ const delivery=order.delivery_charge===null||order.delivery_charge===undefined?null:Number(order.delivery_charge);
+ const final=subtotal!==null&&delivery!==null?subtotal+delivery:null;
+ return {rows,subtotal,delivery,final};
+}
 function printInvoice(order){
- const items=Array.isArray(order.items)?order.items:[];
- const rows=items.map(item=>{const qty=Number(item.quantity)||1;const unit=priceNumber(item.price_text);return {name:item.name||'Product',qty,price:item.price_text||'To be confirmed',line:unit===null?null:unit*qty};});
- const known=rows.every(r=>r.line!==null);const subtotal=known?rows.reduce((sum,r)=>sum+r.line,0):null;
+ const {rows,subtotal,delivery,final}=orderTotals(order);
  const w=window.open('','_blank','width=850,height=900');
  if(!w){alert('Please allow pop-ups to print the invoice.');return;}
- const invoice=`<!doctype html><html><head><meta charset="utf-8"><title>AUR-K EV Invoice</title><style>body{font:14px Arial,sans-serif;color:#222;margin:36px}header{display:flex;justify-content:space-between;border-bottom:3px solid #c9a45c;padding-bottom:18px}h1{margin:0;color:#171717}h2{font-size:16px;margin:28px 0 10px}.muted{color:#666;line-height:1.6}.ref{font-weight:bold;color:#9b7738}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}th{background:#f5f1e8}.right{text-align:right}.total{font-size:17px;font-weight:bold;margin-top:18px;text-align:right}.footer{margin-top:45px;border-top:1px solid #ddd;padding-top:14px;color:#777;font-size:12px}@media print{body{margin:18mm}}</style></head><body><header><div><h1>AUR-K EV</h1><div class="muted">EV BIKE EXPERTS<br>Mansoorabad, Near Total Petrol Pump,<br>Jhumra Road, Faisalabad, Pakistan<br>WhatsApp / Call: 0323-9661747</div></div><div class="right"><h1>ORDER INVOICE</h1><p class="ref">${escHtml(order.id)}</p><div class="muted">Date: ${escHtml(new Date(order.created_at||Date.now()).toLocaleString())}<br>Status: ${escHtml(order.status||'New')}<br>Payment: Cash on Delivery</div></div></header><h2>Customer details</h2><p>${escHtml(order.customer_name)}<br>${escHtml(order.customer_phone)}<br>${escHtml(order.delivery_address)}${order.city?', '+escHtml(order.city):''}<br>Note: ${escHtml(order.customer_note||'None')}</p><h2>Order items</h2><table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th class="right">Line total</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${escHtml(r.name)}</td><td>${r.qty}</td><td>${escHtml(r.price)}</td><td class="right">${r.line===null?'To be confirmed':money(r.line)}</td></tr>`).join('')}</tbody></table><p class="total">Subtotal: ${subtotal===null?'To be confirmed':money(subtotal)}<br>Delivery charges: To be confirmed<br>Final amount: To be confirmed by AUR-K EV</p><div class="footer">Thank you for choosing AUR-K EV. This is an order summary; final price and delivery charges must be confirmed by the AUR-K EV team.</div><script>window.onload=()=>window.print();</script></body></html>`;
+ const invoice=`<!doctype html><html><head><meta charset="utf-8"><title>AUR-K EV Invoice</title><style>body{font:14px Arial,sans-serif;color:#222;margin:36px}header{display:flex;justify-content:space-between;border-bottom:3px solid #c9a45c;padding-bottom:18px}h1{margin:0;color:#171717}h2{font-size:16px;margin:28px 0 10px}.muted{color:#666;line-height:1.6}.ref{font-weight:bold;color:#9b7738}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}th{background:#f5f1e8}.right{text-align:right}.total{font-size:16px;font-weight:bold;margin-top:18px;text-align:right}.footer{margin-top:45px;border-top:1px solid #ddd;padding-top:14px;color:#777;font-size:12px}@media print{body{margin:18mm}}</style></head><body><header><div><h1>AUR-K EV</h1><div class="muted">EV BIKE EXPERTS<br>Mansoorabad, Near Total Petrol Pump,<br>Jhumra Road, Faisalabad, Pakistan<br>WhatsApp / Call: 0323-9661747</div></div><div class="right"><h1>ORDER INVOICE</h1><p class="ref">${escHtml(order.id)}</p><div class="muted">Date: ${escHtml(new Date(order.created_at||Date.now()).toLocaleString())}<br>Status: ${escHtml(order.status||'New')}<br>Payment: Cash on Delivery</div></div></header><h2>Customer details</h2><p>${escHtml(order.customer_name)}<br>${escHtml(order.customer_phone)}<br>${escHtml(order.delivery_address)}${order.city?', '+escHtml(order.city):''}<br>Note: ${escHtml(order.customer_note||'None')}</p><h2>Order items</h2><table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th class="right">Line total</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${escHtml(r.name)}</td><td>${r.qty}</td><td>${escHtml(r.price)}</td><td class="right">${r.line===null?'Price unavailable':money(r.line)}</td></tr>`).join('')}</tbody></table><p class="total">Subtotal: ${subtotal===null?'Price unavailable':money(subtotal)}<br>Delivery charges: ${delivery===null?'Not set':money(delivery)}<br>Final amount payable: ${final===null?'Not ready — set a numeric product price and delivery charge':money(final)}</p><div class="footer">Thank you for choosing AUR-K EV. Cash on Delivery.</div><script>window.onload=()=>window.print();</script></body></html>`;
  w.document.open();w.document.write(invoice);w.document.close();
 }
+function renderAnalytics(data){
+ const el=document.getElementById('salesAnalytics');if(!el)return;
+ const total=data.length,delivered=data.filter(o=>o.status==='Delivered'),pending=data.filter(o=>!['Delivered','Cancelled'].includes(o.status||'New'));
+ const revenue=delivered.reduce((sum,o)=>sum+(Number(o.final_amount)||0),0);
+ const tiles=[['Total orders',total],['Delivered revenue',money(revenue)],['Awaiting delivery',pending.length],['Delivered',delivered.length]];
+ el.innerHTML=tiles.map(([label,value])=>`<div class="analytics-tile"><small>${label}</small><strong>${value}</strong></div>`).join('');
+}
+
 async function loadOrders(){
  if(!ordersList)return;
  ordersList.textContent='Loading orders…';
  const {data,error}=await supabase.from('site_orders').select('*').order('created_at',{ascending:false});
  if(error){ordersList.textContent='Could not load orders: '+error.message;return;}
+ renderAnalytics(data||[]);
  if(!data?.length){ordersList.textContent='No customer orders yet.';return;}
  ordersList.innerHTML='';
  for(const order of data){
@@ -64,14 +78,20 @@ async function loadOrders(){
   const payment=document.createElement('small');payment.textContent='Payment: Cash on Delivery';
   details.append(items,customer,address);if(order.customer_note)details.append(note);details.append(payment);
   const progress=document.createElement('div');progress.innerHTML=progressMarkup(order.status||'New');
+  const totals=orderTotals(order);
+  const priceSummary=document.createElement('p');priceSummary.className='order-price-summary';priceSummary.textContent=`Subtotal: ${totals.subtotal===null?'Price unavailable':money(totals.subtotal)} • Delivery: ${totals.delivery===null?'Not set':money(totals.delivery)} • Final: ${totals.final===null?'Not set':money(totals.final)}`;details.append(priceSummary);
   const controls=document.createElement('div');controls.className='order-admin-controls';
+  const deliveryWrap=document.createElement('label');deliveryWrap.className='delivery-charge-field';deliveryWrap.textContent='Delivery charges (Rs.) ';
+  const deliveryInput=document.createElement('input');deliveryInput.type='number';deliveryInput.min='0';deliveryInput.step='1';deliveryInput.placeholder='Enter delivery';deliveryInput.value=order.delivery_charge??'';deliveryInput.setAttribute('aria-label','Delivery charges in rupees');deliveryWrap.append(deliveryInput);
+  const saveAmount=document.createElement('button');saveAmount.type='button';saveAmount.className='gold-btn';saveAmount.textContent='Save amount';
+  saveAmount.addEventListener('click',async()=>{const subtotalNow=orderTotals(order).subtotal;const charge=deliveryInput.value.trim()===''?null:Number(deliveryInput.value);if(subtotalNow===null){ordersMessage.textContent='Cannot calculate total: enter numeric product prices in Product management first.';return;}if(charge===null||!Number.isFinite(charge)||charge<0){ordersMessage.textContent='Enter delivery charges as zero or a positive amount.';return;}saveAmount.disabled=true;const final=subtotalNow+charge;const {error}=await supabase.from('site_orders').update({subtotal_amount:subtotalNow,delivery_charge:charge,final_amount:final,updated_at:new Date().toISOString()}).eq('id',order.id);saveAmount.disabled=false;if(error){ordersMessage.textContent='Could not save amount: '+error.message;return;}order.subtotal_amount=subtotalNow;order.delivery_charge=charge;order.final_amount=final;priceSummary.textContent=`Subtotal: ${money(subtotalNow)} • Delivery: ${money(charge)} • Final: ${money(final)}`;ordersMessage.textContent='Delivery charges and final payable amount saved.';renderAnalytics((await supabase.from('site_orders').select('*')).data||[]);});
   const status=document.createElement('select');status.setAttribute('aria-label','Order status');
   ORDER_STATUSES.forEach(v=>{const option=document.createElement('option');option.value=v;option.textContent=v;status.append(option);});status.value=ORDER_STATUSES.includes(order.status)?order.status:'New';
-  status.addEventListener('change',async()=>{const previous=order.status||'New';status.disabled=true;const next=status.value;const {error}=await supabase.from('site_orders').update({status:next,updated_at:new Date().toISOString()}).eq('id',order.id);status.disabled=false;if(error){ordersMessage.textContent='Could not update status: '+error.message;status.value=previous;}else{order.status=next;progress.innerHTML=progressMarkup(next);wa.href=makeWaLink(order);ordersMessage.textContent='Order status updated successfully.';}});
+  status.addEventListener('change',async()=>{const previous=order.status||'New';status.disabled=true;const next=status.value;const {error}=await supabase.from('site_orders').update({status:next,updated_at:new Date().toISOString()}).eq('id',order.id);status.disabled=false;if(error){ordersMessage.textContent='Could not update status: '+error.message;status.value=previous;}else{order.status=next;progress.innerHTML=progressMarkup(next);wa.href=makeWaLink(order);ordersMessage.textContent='Order status updated successfully.';const refreshed=await supabase.from('site_orders').select('*');renderAnalytics(refreshed.data||[]);}});
   const makeWaLink=o=>'https://wa.me/'+String(o.customer_phone||'').replace(/\D/g,'')+'?text='+encodeURIComponent(`Assalam-o-Alaikum ${o.customer_name}, this is AUR-K EV regarding your order ${o.id}. Your current order status is: ${o.status||'New'}.`);
   const wa=document.createElement('a');wa.className='outline-btn';wa.target='_blank';wa.rel='noopener';wa.href=makeWaLink(order);wa.textContent='WhatsApp customer';
   const invoice=document.createElement('button');invoice.type='button';invoice.className='gold-btn';invoice.textContent='Print invoice';invoice.addEventListener('click',()=>printInvoice(order));
-  controls.append(status,wa,invoice);card.append(head,details,progress,controls);ordersList.append(card);
+  controls.append(deliveryWrap,saveAmount,status,wa,invoice);card.append(head,details,progress,controls);ordersList.append(card);
  }
 }
 document.getElementById('refreshOrders')?.addEventListener('click',loadOrders);

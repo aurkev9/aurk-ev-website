@@ -21,13 +21,15 @@ document.getElementById('customerOrderForm').addEventListener('submit',async e=>
  const customer={name:document.getElementById('customerName').value.trim(),phone:document.getElementById('customerPhone').value.trim(),address:document.getElementById('customerAddress').value.trim(),city:document.getElementById('customerCity').value.trim(),note:document.getElementById('customerNote').value.trim()};
  const items=cart.map(p=>({product_id:String(p.id),name:p.name,quantity:p.qty,price_text:p.price_text||'Price on enquiry'}));
  const orderId=crypto.randomUUID();
- const order={id:orderId,customer_name:customer.name,customer_phone:customer.phone,delivery_address:customer.address,city:customer.city,customer_note:customer.note||null,items,payment_method:'Cash on Delivery',status:'New'};
+ const parsePrice=value=>{const m=String(value??'').match(/^\s*(?:Rs\.?|PKR)?\s*([\d,]+(?:\.\d{1,2})?)\s*$/i);return m?Number(m[1].replace(/,/g,'')):null;};
+ const subtotalValues=items.map(x=>{const n=parsePrice(x.price_text);return n===null?null:n*x.quantity;});
+ const subtotal=subtotalValues.every(x=>x!==null)?subtotalValues.reduce((a,b)=>a+b,0):null;
+ const order={id:orderId,customer_name:customer.name,customer_phone:customer.phone,delivery_address:customer.address,city:customer.city,customer_note:customer.note||null,items,subtotal_amount:subtotal,delivery_charge:null,final_amount:null,payment_method:'Cash on Delivery',status:'New'};
  if(!supabase){msg.textContent='Order saving is not configured. Please contact us on WhatsApp.';btn.disabled=false;return;}
  const {error}=await supabase.from('site_orders').insert(order);
  if(error){msg.textContent='Could not save order: '+error.message+' Please try again or contact us on WhatsApp.';btn.disabled=false;return;}
  const pricedItems=items.map(x=>{const match=String(x.price_text||'').match(/^\s*(?:Rs\.?|PKR)?\s*([\d,]+(?:\.\d{1,2})?)\s*$/i);const unitPrice=match?Number(match[1].replace(/,/g,'')):null;return {...x,unitPrice,lineTotal:unitPrice===null?null:unitPrice*x.quantity};});
  const allPricesKnown=pricedItems.every(x=>x.lineTotal!==null);
- const subtotal=allPricesKnown?pricedItems.reduce((sum,x)=>sum+x.lineTotal,0):null;
  const money=n=>'PKR '+n.toLocaleString('en-PK',{maximumFractionDigits:2});
  const itemLines=pricedItems.map(x=>`• ${x.name}\n  Quantity: ${x.quantity}\n  Website Price: ${x.price_text}\n  Line Total: ${x.lineTotal===null?'To be confirmed':money(x.lineTotal)}`).join('\n');
  const message=`*NEW CASH ON DELIVERY ORDER*\n\nAssalam-o-Alaikum AUR-K EV Team,\nI have placed an order through your website. Please review the complete order details below.\n\n*ORDER DETAILS*\nOrder Reference: ${orderId}\n\n${itemLines}\n\n*PRICE SUMMARY*\nSubtotal: ${subtotal===null?'To be confirmed':money(subtotal)}\nDelivery Charges: To be confirmed\n*Final Amount Payable: To be confirmed by AUR-K EV Team*\n\n*CUSTOMER DETAILS*\nName: ${customer.name}\nMobile: ${customer.phone}\nDelivery Address: ${customer.address}, ${customer.city}\nSpecial Instructions: ${customer.note||'None'}\n\n*PAYMENT METHOD*\nCash on Delivery (COD)\n\nPlease confirm product availability, the final total price, delivery charges, and estimated delivery time.\n\nThank you!`;

@@ -117,3 +117,13 @@ body.storefront .menu-toggle{display:none;background:none;border:0;font-size:24p
 .order-progress.cancelled{color:#a33;font-weight:700;padding:8px 0}
 .order-admin-controls .gold-btn{padding:10px 13px;border:0;border-radius:8px;background:#c9a45c;color:#171717;font-weight:700}
 @media(max-width:520px){.progress-step small{font-size:9px}.order-admin-controls{align-items:stretch}.order-admin-controls>*{flex:1;text-align:center;justify-content:center}}
+
+/* Sales analytics and order amount controls */
+.sales-analytics{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin:16px 0 24px}
+.analytics-tile{background:#171717;border:1px solid rgba(201,164,92,.35);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:82px}
+.analytics-tile small{color:#c9a45c;font-size:12px}
+.analytics-tile strong{color:#fff;font-size:22px;overflow-wrap:anywhere}
+.delivery-charge-field{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:inherit;font-size:13px}
+.delivery-charge-field input{width:145px;min-height:40px;padding:9px 10px;border:1px solid #b9a477;border-radius:7px;background:#fff;color:#171717}
+.order-price-summary{font-weight:600;color:#b18a42}
+@media(max-width:600px){.order-admin-controls{align-items:stretch}.delivery-charge-field{width:100%}.delivery-charge-field input{flex:1;min-width:110px}}
