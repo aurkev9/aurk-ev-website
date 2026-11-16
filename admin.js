@@ -7,7 +7,7 @@ if(SUPABASE_URL.startsWith("PASTE_")||SUPABASE_ANON_KEY.startsWith("PASTE_")){
  throw new Error("Supabase config missing");
 }
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-async function refreshSession(){const {data:{session}}=await supabase.auth.getSession();loginPanel.hidden=!!session;dashboard.hidden=!session;if(session)loadImages();}
+async function refreshSession(){const {data:{session}}=await supabase.auth.getSession();loginPanel.hidden=!!session;dashboard.hidden=!session;const profile=document.getElementById("adminEmail");if(profile&&session)profile.textContent=session.user?.email||"Signed in";if(session)loadImages();}
 supabase.auth.onAuthStateChange(()=>refreshSession());
 document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();loginMessage.textContent="Signing in…";const {error}=await supabase.auth.signInWithPassword({email:document.getElementById("email").value,password:document.getElementById("password").value});loginMessage.textContent=error?error.message:"";await refreshSession();});
 document.getElementById("logout").addEventListener("click",async()=>{await supabase.auth.signOut();await refreshSession();});
@@ -55,9 +55,21 @@ function renderAnalytics(data){
  const revenue=delivered.reduce((sum,o)=>sum+(Number(o.final_amount)||0),0);
  const tiles=[['Total orders',total],['Delivered revenue',money(revenue)],['Awaiting delivery',pending.length],['Delivered',delivered.length]];
  el.innerHTML=tiles.map(([label,value])=>`<div class="analytics-tile"><small>${label}</small><strong>${value}</strong></div>`).join('');
+ updateDashboardWidgets(data);
 }
 
 let cachedOrders=[];
+function updateDashboardWidgets(data){
+ const rows=Array.isArray(data)?data:[];
+ const pending=rows.filter(o=>!['Delivered','Cancelled'].includes(o.status||'New'));
+ const fresh=rows.filter(o=>(o.status||'New')==='New');
+ const count=document.getElementById('notificationCount');if(count)count.textContent=String(pending.length);
+ const note=document.getElementById('notificationText');if(note)note.textContent=pending.length?`${pending.length} order(s) are awaiting completion; ${fresh.length} new order(s) need review.`:'No pending orders. Your order queue is clear.';
+ const title=document.getElementById('overviewAlertTitle'),message=document.getElementById('overviewAlertText'),alertBox=document.getElementById('overviewAlert');
+ if(title)title.textContent=fresh.length?`${fresh.length} new order(s) need attention`:pending.length?`${pending.length} order(s) in progress`:'You are all caught up';
+ if(message)message.textContent=pending.length?`There are ${pending.length} orders not yet delivered or cancelled. Review their status in Order Management.`:'There are no pending orders at the moment.';
+ if(alertBox)alertBox.classList.toggle('has-alert',pending.length>0);
+}
 function csvCell(value){const s=String(value??'');return '"'+s.replace(/"/g,'""')+'"';}
 function downloadCsv(filename,rows){
  const csv='\uFEFF'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');
