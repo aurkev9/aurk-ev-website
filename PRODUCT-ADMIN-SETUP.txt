@@ -1,0 +1,16 @@
+AUR-K EV PRODUCT ADMIN UPGRADE
+
+This package preserves the premium COD storefront, logo, styling and existing image manager.
+
+IMPORTANT: Before deploying, copy your existing working config.js values (Supabase URL and anon/publishable key) into this package's config.js. Never use a service_role/secret key.
+
+1. In Supabase SQL Editor, run product-management-migration.sql ONCE. This adds the site_products table; it does not delete your existing images or site_images table.
+2. Ensure Supabase Authentication public sign-ups are disabled and your admin user exists. Existing image bucket/table remain in use.
+3. Upload the contents of this ZIP's AUR-K_EV_Website folder to your existing GitHub repository, replacing the website files. Keep your own config.js credentials.
+4. Let Vercel deploy. Visit https://aurk-ev-website.vercel.app/admin.html
+5. Upload product photos in Image manager. Copy the public image URL (visible in the image listing only if you inspect it in Supabase Storage) into Product management -> Image URL. Then Save product.
+6. Existing starter products remain visible on the public website until at least one product is added to site_products. Once products exist, the live catalogue is read from Supabase.
+
+Product fields: name, category, tag, displayed price, description, image URL, specifications, featured flag. Edit/Delete supported. Cash-on-delivery WhatsApp checkout remains.
+
+Security: Existing image policies from your earlier setup are retained. For production, restrict authenticated write policies to your own admin user ID; authenticated access alone is not the same as owner-only.
