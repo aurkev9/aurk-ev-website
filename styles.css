@@ -2,3 +2,50 @@
 @media(max-width:800px){.site-header{padding:0 5%;height:70px}.menu-toggle{display:block;margin-left:auto;margin-right:16px}.site-header nav{display:none;position:absolute;top:70px;left:0;right:0;background:#fff;padding:20px 6%;flex-direction:column;gap:18px;border-top:1px solid #eee}.site-header nav.show{display:flex}.hero{grid-template-columns:1fr;padding:60px 7% 35px}.hero-art{min-height:310px;margin-top:25px}.hero-stats{gap:18px;margin-top:42px}.hero-stats small{font-size:7px}.section{padding:75px 7%}.section-heading{display:block}.section-heading h2,.about h2{font-size:43px}.section-heading>p{margin-top:18px}.product-grid{grid-template-columns:repeat(2,1fr)}.feature-band{grid-template-columns:1fr}.feature-image{min-height:320px;max-height:360px}.feature-copy{padding:55px 8%}.contact{grid-template-columns:1fr;gap:25px;padding:65px 7%}.contact-card{max-width:500px}.ticker{gap:13px;font-size:7px;letter-spacing:1px}footer{padding:25px 5%;gap:15px;flex-wrap:wrap}}@media(max-width:520px){.announcement{font-size:8px}.announcement span{display:none}.brand-copy b{font-size:17px}.cart-button{padding:8px 10px}.hero h1{font-size:48px}.hero-art{min-height:245px}.hero-stats{justify-content:space-between;gap:8px}.hero-stats b{font-size:17px}.hero-stats small{letter-spacing:.6px}.hero-actions{gap:15px;flex-wrap:wrap}.ticker span:nth-of-type(3){display:none}.product-grid{grid-template-columns:1fr}.product-photo{height:250px}.filters{overflow:auto}.feature-copy h2,.contact h2{font-size:46px}footer p{order:3;width:100%}}
 
 .brand-logo{display:block;width:160px;height:62px;object-fit:contain;object-position:left center}.site-header .brand{min-width:160px}@media(max-width:520px){.brand-logo{width:125px;height:54px}.site-header .brand{min-width:125px}}
+
+/* AUR-K EV ADMIN DASHBOARD — refined responsive layout */
+.admin-body{background:#f4f2ed;color:#171717;min-height:100vh;font-family:Arial,Helvetica,sans-serif}
+.admin-body .site-header{height:76px;padding:0 clamp(20px,5vw,72px);background:#101010;color:#fff;border-bottom:1px solid #30291e;box-shadow:0 5px 24px #00000012}
+.admin-body .site-header .brand{font-size:20px;font-weight:800;letter-spacing:.5px;color:#fff;gap:8px}
+.admin-body .site-header .brand span{color:#d0ad69}
+.admin-body .site-header .brand small{font-size:10px;letter-spacing:2px;color:#c8b58e;margin-left:8px}
+.admin-body .site-header>a:last-child{font-size:12px;color:#e0c58f;font-weight:700}
+.admin-wrap{width:min(1160px,calc(100% - 36px));margin:42px auto 80px}
+.admin-body .panel{background:#fff;border:1px solid #e8e2d7;border-radius:15px;padding:clamp(22px,3.2vw,38px);box-shadow:0 12px 38px #17120a0a}
+.admin-body .panel[hidden]{display:none!important}
+.admin-body .eyebrow{color:#a9823f;font-size:10px;letter-spacing:3px;font-weight:800;margin:0 0 10px}
+.admin-body h1{font-size:clamp(27px,4vw,38px);line-height:1.12;letter-spacing:-1.1px;margin:0 0 10px;color:#151515}
+.admin-body h2{font-size:21px;letter-spacing:-.35px;margin:38px 0 17px;padding-bottom:12px;border-bottom:1px solid #eee9df;color:#171717}
+.admin-body .panel p:not(.eyebrow):not(.message){color:#777;line-height:1.65;font-size:13px}
+.dash-head{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:26px;padding-bottom:23px;border-bottom:1px solid #eee9df}
+.dash-head>div>p:last-child{margin:0}
+.admin-body button{border-radius:7px;min-height:42px;padding:10px 17px;font-size:12px;font-weight:700;letter-spacing:.15px;transition:transform .15s,background .15s,border-color .15s}
+.admin-body button:hover{transform:translateY(-1px)}
+.admin-body .gold-btn{background:#c9a45c;color:#15120c;border:1px solid #c9a45c;box-shadow:0 5px 13px #c9a45c2a}
+.admin-body .gold-btn:hover{background:#d8b875}
+.admin-body .outline-btn{background:#fff;color:#26221b;border:1px solid #d8d1c4}
+.admin-body .outline-btn:hover{border-color:#b38c4c;background:#faf8f3}
+.admin-body .upload-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 20px;align-items:end;background:#faf9f6;border:1px solid #eee9df;border-radius:12px;padding:22px}
+.admin-body .upload-form label,.admin-body #loginForm label{display:flex;flex-direction:column;gap:8px;min-width:0;color:#514b40;font-size:11px;font-weight:800;letter-spacing:.35px}
+.admin-body .upload-form input:not([type=checkbox]):not([type=file]),.admin-body .upload-form select,.admin-body #loginForm input{width:100%;min-width:0;height:43px;padding:0 12px;border:1px solid #dcd6ca;border-radius:6px;background:#fff;color:#211f1a;font:400 13px Arial,sans-serif;outline:none}
+.admin-body .upload-form input:focus,.admin-body .upload-form select:focus,.admin-body #loginForm input:focus{border-color:#b38c4c;box-shadow:0 0 0 3px #c9a45c22}
+.admin-body .upload-form input[type=file]{width:100%;min-width:0;padding:9px;background:#fff;border:1px dashed #cfc6b6;border-radius:6px;font-size:12px;color:#777}
+.admin-body .upload-form label:has(input[type=checkbox]){align-self:center;min-height:43px;justify-content:center}
+.admin-body .upload-form label span{display:flex;align-items:center;gap:9px;color:#49443b;font-size:12px}
+.admin-body input[type=checkbox]{accent-color:#b58b45;width:17px;height:17px}
+.admin-body .upload-form>.gold-btn,.admin-body .upload-form>.outline-btn{justify-self:start;min-width:145px}
+.admin-body .message{grid-column:1/-1;margin:0;color:#82652e;font-size:12px;min-height:16px}
+.admin-body .login-panel{max-width:470px;margin:8vh auto 0;padding:38px}
+.admin-body #loginForm{display:grid;gap:17px;margin-top:25px}
+.admin-body #loginForm .gold-btn{width:100%;margin-top:4px}
+.admin-body .image-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.admin-body .image-item{display:flex;flex-direction:column;min-width:0;overflow:hidden;border:1px solid #e9e4da;border-radius:10px;background:#fff;box-shadow:0 5px 18px #00000008}
+.admin-body .image-item>img{width:100%;height:185px;object-fit:cover;background:#f0eee9}
+.admin-body .image-item>div{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:15px}
+.admin-body .image-item strong{font-size:13px;line-height:1.4;color:#201d17;overflow-wrap:anywhere}
+.admin-body .image-item small{font-size:10px;color:#8b806e;line-height:1.5}
+.admin-body .image-item button{min-height:34px;padding:7px 12px;margin-top:3px}
+.admin-body .delete-btn{background:#fff7f5;color:#a23d32;border:1px solid #efd4cf}
+.admin-body .delete-btn:hover{background:#ffefeb}
+@media(max-width:760px){.admin-wrap{width:min(100% - 24px,620px);margin:22px auto 50px}.admin-body .panel{padding:22px 17px}.admin-body .upload-form{grid-template-columns:1fr;padding:16px;gap:14px}.admin-body .image-list{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-body .image-item>img{height:150px}.admin-body h2{margin-top:30px}.dash-head{align-items:flex-start}.dash-head .outline-btn{white-space:nowrap}}
+@media(max-width:460px){.admin-body .site-header{height:65px;padding:0 16px}.admin-body .site-header .brand{font-size:17px}.admin-body .site-header .brand small{font-size:8px}.admin-wrap{width:calc(100% - 20px);margin:14px auto 35px}.admin-body .panel{padding:19px 13px}.dash-head{gap:10px}.dash-head h1{font-size:27px}.dash-head .outline-btn{padding:8px 10px;font-size:10px;min-height:36px}.admin-body .image-list{grid-template-columns:1fr}.admin-body .image-item{display:grid;grid-template-columns:112px minmax(0,1fr)}.admin-body .image-item>img{height:100%;min-height:130px}.admin-body .image-item>div{padding:12px}.admin-body .upload-form>.gold-btn,.admin-body .upload-form>.outline-btn{width:100%}}
