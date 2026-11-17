@@ -204,3 +204,195 @@ body.storefront .menu-toggle{display:none;background:none;border:0;font-size:24p
   .trust-strip article:last-child{border-bottom:0}
   .trust-icon{width:32px;height:32px;flex-basis:32px}
 }
+
+
+/* AUR-K EV luxury product showcase refresh */
+.product-grid{
+  align-items:stretch;
+  gap:24px;
+}
+.product-card-luxury{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid #e8e1d5;
+  border-radius:3px;
+  background:#fff;
+  box-shadow:0 8px 26px rgba(22,18,11,.045);
+  transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease;
+}
+.product-card-luxury:hover{
+  transform:translateY(-6px);
+  border-color:#c9a45c;
+  box-shadow:0 20px 42px rgba(22,18,11,.12);
+}
+.product-photo-luxury{
+  height:280px;
+  min-height:220px;
+  background:linear-gradient(135deg,#f1eee8,#e5e0d5);
+  isolation:isolate;
+}
+.product-photo-luxury:after{
+  content:"";
+  position:absolute;
+  inset:45% 0 0;
+  z-index:0;
+  background:linear-gradient(transparent,rgba(18,16,12,.12));
+  pointer-events:none;
+}
+.product-photo-luxury img{
+  position:relative;
+  z-index:0;
+  object-fit:contain;
+  padding:18px;
+  mix-blend-mode:multiply;
+}
+.product-tag{
+  z-index:2;
+  top:16px;
+  left:16px;
+  padding:8px 10px;
+  background:#171715;
+  color:#d8b875;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:1.35px;
+}
+.product-photo-mark{
+  position:absolute;
+  z-index:2;
+  right:16px;
+  bottom:14px;
+  color:rgba(30,27,21,.45);
+  font:800 9px Manrope,sans-serif;
+  letter-spacing:2px;
+}
+.product-info-luxury{
+  display:flex;
+  flex:1;
+  flex-direction:column;
+  padding:22px 22px 20px;
+}
+.product-kicker{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  color:#98743a;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:1.4px;
+}
+.product-index{color:#aaa08e}
+.product-info-luxury h3{
+  margin:12px 0 8px;
+  color:#171715;
+  font:800 20px/1.25 Manrope,sans-serif;
+  letter-spacing:-.45px;
+}
+.product-info-luxury>p{
+  min-height:42px;
+  margin:0;
+  color:#77736b;
+  font-size:11px;
+  line-height:1.75;
+}
+.product-specs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin:15px 0 3px;
+  padding:0;
+  list-style:none;
+}
+.product-specs li{
+  padding:7px 9px;
+  border:1px solid #eee8dc;
+  background:#faf9f6;
+  color:#615b50;
+  font-size:9px;
+  line-height:1.2;
+}
+.product-price-row{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  margin-top:auto;
+  padding:17px 0 14px;
+  border-bottom:1px solid #eee9df;
+}
+.product-price-label{
+  color:#9a8e79;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:1.5px;
+}
+.product-price-row .price{
+  color:#171715;
+  font:800 18px Manrope,sans-serif;
+}
+.product-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  padding-top:14px;
+}
+.product-details-btn,.product-order-btn{
+  display:flex;
+  min-height:42px;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 12px;
+  border:1px solid #1a1916;
+  border-radius:0;
+  font:800 9px Manrope,sans-serif;
+  letter-spacing:.35px;
+  text-align:center;
+  text-decoration:none;
+  cursor:pointer;
+  transition:background .2s,color .2s,border-color .2s;
+}
+.product-details-btn{
+  background:#fff;
+  color:#171715;
+}
+.product-details-btn:hover{
+  border-color:#c9a45c;
+  background:#f8f5ef;
+}
+.product-details-btn span{color:#a68142;font-size:14px}
+.product-order-btn{
+  width:auto;
+  background:#171715;
+  color:#fff;
+}
+.product-order-btn:hover{
+  border-color:#c9a45c;
+  background:#a68142;
+  color:#171715;
+}
+.product-order-btn span{font-size:15px}
+.product-empty{
+  grid-column:1/-1;
+  padding:30px;
+  border:1px dashed #d9d0c0;
+  color:#777;
+  text-align:center;
+}
+@media(max-width:900px){
+  .product-photo-luxury{height:245px}
+  .product-info-luxury{padding:18px}
+}
+@media(max-width:600px){
+  .product-grid{gap:14px}
+  .product-photo-luxury{height:205px;min-height:185px}
+  .product-photo-luxury img{padding:12px}
+  .product-info-luxury{padding:15px 13px}
+  .product-info-luxury h3{font-size:16px}
+  .product-info-luxury>p{font-size:10px;min-height:48px}
+  .product-kicker{font-size:7px;letter-spacing:1px}
+  .product-actions{grid-template-columns:1fr;gap:7px}
+  .product-details-btn,.product-order-btn{min-height:40px}
+}

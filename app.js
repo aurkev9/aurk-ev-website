@@ -3,7 +3,47 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 const FALLBACK=[{id:1,name:"ROADKING R99 PRO",category:"premium",tag:"FEATURED MODEL",price_text:"Ask for price",description:"A bold electric ride for confident everyday journeys.",image_url:"https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80"},{id:2,name:"ROADKING RAPTOR",category:"premium",tag:"PERFORMANCE STYLE",price_text:"Ask for price",description:"Stand out with a striking design and electric convenience.",image_url:"https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=900&q=80"},{id:3,name:"AUR-K CITY SERIES",category:"commuter",tag:"CITY COMMUTE",price_text:"Ask for price",description:"A practical choice for your everyday city routine.",image_url:"https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80"}];
 const WHATSAPP_NUMBER="923239661747";let PRODUCTS=FALLBACK,cart=[];let supabase=null;const grid=document.getElementById('productGrid');
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function renderProducts(filter='all'){grid.innerHTML=PRODUCTS.filter(p=>filter==='all'||p.category===filter).map(p=>`<article class="product-card"><div class="product-photo"><img src="${esc(p.image_url||'')}" alt="${esc(p.name)} electric scooter"><span class="product-tag">${esc(p.tag||'AUR-K EV')}</span></div><div class="product-info"><small>AUR-K EV COLLECTION</small><h3>${esc(p.name)}</h3><p>${esc(p.description||'Contact us for details and availability.')}</p><div class="product-bottom"><span class="price">${esc(p.price_text||'Ask for price')}</span><button class="add-btn" onclick="addToCart('${String(p.id).replace(/'/g,'')}')">Add to bag +</button></div></div></article>`).join('');}
+function productSpecs(value){
+ if(!value)return [];
+ let parts=[];
+ try{
+  const parsed=JSON.parse(value);
+  if(Array.isArray(parsed))parts=parsed;
+  else if(parsed&&typeof parsed==='object')parts=Object.entries(parsed).map(([k,v])=>`${k}: ${v}`);
+  else parts=[String(value)];
+ }catch{parts=String(value).split(/\r?\n|[;,•]/);}
+ return parts.map(x=>String(x).trim()).filter(Boolean).slice(0,3);
+}
+function productEnquiry(p){
+ const message=`Assalam-o-Alaikum AUR-K EV,\nI would like to know more about ${p.name}.\nPlease share its latest price, specifications and availability.`;
+ return 'https://wa.me/'+WHATSAPP_NUMBER+'?text='+encodeURIComponent(message);
+}
+function renderProducts(filter='all'){
+ const visible=PRODUCTS.filter(p=>filter==='all'||p.category===filter);
+ grid.innerHTML=visible.map(p=>{
+  const specs=productSpecs(p.specifications);
+  const featured=p.featured===true||p.featured==='true';
+  return `<article class="product-card product-card-luxury">
+   <div class="product-photo product-photo-luxury">
+    <img loading="lazy" src="${esc(p.image_url||'')}" alt="${esc(p.name)} electric scooter">
+    <span class="product-tag">${esc(featured?'FEATURED MODEL':(p.tag||'AUR-K EV'))}</span>
+    <span class="product-photo-mark">AUR-K EV</span>
+   </div>
+   <div class="product-info product-info-luxury">
+    <div class="product-kicker"><span>THE AUR-K COLLECTION</span><span class="product-index">EV / ${String(PRODUCTS.indexOf(p)+1).padStart(2,'0')}</span></div>
+    <h3>${esc(p.name)}</h3>
+    <p>${esc(p.description||'Contact us for details and availability.')}</p>
+    ${specs.length?`<ul class="product-specs">${specs.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:''}
+    <div class="product-price-row"><span class="product-price-label">SHOWROOM PRICE</span><strong class="price">${esc(p.price_text||'Ask for price')}</strong></div>
+    <div class="product-actions">
+     <a class="product-details-btn" href="${esc(productEnquiry(p))}" target="_blank" rel="noopener">View details <span>↗</span></a>
+     <button class="add-btn product-order-btn" type="button" onclick="addToCart('${String(p.id).replace(/'/g,'')}')">Add to bag <span>＋</span></button>
+    </div>
+   </div>
+  </article>`;
+ }).join('');
+ if(!visible.length)grid.innerHTML='<p class="product-empty">No scooters are listed in this category yet. Please contact our showroom for assistance.</p>';
+}
 window.addToCart=id=>{const p=PRODUCTS.find(x=>String(x.id)===String(id));if(!p)return;const item=cart.find(x=>String(x.id)===String(id));if(item)item.qty++;else cart.push({...p,qty:1});renderCart();document.getElementById('cartOverlay').classList.add('open');};
 window.removeFromCart=id=>{cart=cart.filter(p=>String(p.id)!==String(id));renderCart();};
 function renderCart(){document.getElementById('cartCount').textContent=cart.reduce((n,p)=>n+p.qty,0);document.getElementById('cartItems').innerHTML=cart.length?cart.map(p=>`<div class="cart-line"><span><b>${esc(p.name)}</b><br>Quantity: ${p.qty}</span><button onclick="removeFromCart('${p.id}')">Remove</button></div>`).join(''):'<p class="empty">Your bag is waiting for its first ride.</p>';document.getElementById('cartTotal').textContent='Price on enquiry';}
