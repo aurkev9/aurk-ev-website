@@ -91,7 +91,7 @@ function renderProductDetail(product){
   <a class="detail-back-link" href="/">← Back to all scooters</a>
   <div class="product-detail-grid">
    <div class="detail-gallery">
-    <div class="detail-main-image"><img id="detailMainImage" src="${esc(image)}" alt="${esc(product.name)} electric scooter"></div>
+    <button type="button" class="detail-main-image detail-image-zoom" id="detailImageZoom" aria-label="Open larger product image"><img id="detailMainImage" src="${esc(image)}" alt="${esc(product.name)} electric scooter"><span class="detail-zoom-hint">＋ VIEW FULL IMAGE</span></button>
     ${gallery.length>1?`<div class="detail-thumbnails">${gallery.map((src,i)=>`<button type="button" class="detail-thumb ${i===0?'active':''}" data-image-src="${esc(src)}" aria-label="View product image ${i+1}"><img src="${esc(src)}" alt=""></button>`).join('')}</div>`:''}
    </div>
    <div class="detail-information">
@@ -106,6 +106,20 @@ function renderProductDetail(product){
    </div>
   </div>
   <div class="detail-contact-note"><b>Need help choosing?</b><span>Talk to AUR-K EV Bike Experts before placing your order.</span><a href="https://wa.me/923239661747" target="_blank" rel="noopener">Contact showroom ↗</a></div>`;
+ const zoomButton=content.querySelector('#detailImageZoom');
+ zoomButton?.addEventListener('click',()=>{
+  const src=content.querySelector('#detailMainImage')?.src;
+  if(!src)return;
+  let viewer=document.getElementById('productImageViewer');
+  if(!viewer){
+   viewer=document.createElement('div');viewer.id='productImageViewer';viewer.className='product-image-viewer';viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Product image preview');
+   viewer.innerHTML='<button type="button" class="product-image-viewer-close" aria-label="Close image preview">✕</button><img alt="Expanded scooter image">';
+   document.body.append(viewer);
+   viewer.addEventListener('click',e=>{if(e.target===viewer||e.target.closest('.product-image-viewer-close'))viewer.classList.remove('open');});
+  }
+  const preview=viewer.querySelector('img');preview.src=src;preview.alt=product.name+' electric scooter';
+  viewer.classList.add('open');
+ });
  const thumbButtons=content.querySelectorAll('.detail-thumb');
  thumbButtons.forEach(button=>button.addEventListener('click',()=>{
   const mainImage=content.querySelector('#detailMainImage');
