@@ -18,8 +18,19 @@ function productEnquiry(p){
  const message=`Assalam-o-Alaikum AUR-K EV,\nI would like to know more about ${p.name}.\nPlease share its latest price, specifications and availability.`;
  return 'https://wa.me/'+WHATSAPP_NUMBER+'?text='+encodeURIComponent(message);
 }
-function renderProducts(filter='all'){
- const visible=PRODUCTS.filter(p=>filter==='all'||p.category===filter);
+let activeProductFilter='all', activeProductQuery='', activeProductSort='featured';
+function numericProductValue(p,kind){
+ const spec=productSpecs(p.specifications).join(' ').toLowerCase();
+ if(kind==='price'){const m=String(p.price_text||'').replace(/,/g,'').match(/(?:rs\\.?\\s*)?(\\d+(?:\\.\\d+)?)/i);return m?Number(m[1]):Infinity;}
+ const patterns={motor:/(\\d+)\\s*w(?:att)?/i,speed:/(\\d+(?:\\s*[-–]\\s*\\d+)?)\\s*km\\s*\\/?\\s*h/i,range:/(\\d+(?:\\s*[-–]\\s*\\d+)?)\\s*km/i};
+ const m=spec.match(patterns[kind]);if(!m)return 0;
+ const nums=m[1].match(/\\d+/g)||[];return nums.length?Math.max(...nums.map(Number)):0;
+}
+function renderProducts(filter=activeProductFilter,query=activeProductQuery,sort=activeProductSort){
+ activeProductFilter=filter;activeProductQuery=query;activeProductSort=sort;
+ let visible=PRODUCTS.filter(p=>(filter==='all'||p.category===filter)&&(!query||[p.name,p.description,p.tag,p.price_text,p.specifications].filter(Boolean).join(' ').toLowerCase().includes(query)));
+ const sorters={name:(a,b)=>String(a.name).localeCompare(String(b.name)), 'price-low':(a,b)=>numericProductValue(a,'price')-numericProductValue(b,'price'),'price-high':(a,b)=>numericProductValue(b,'price')-numericProductValue(a,'price'),motor:(a,b)=>numericProductValue(b,'motor')-numericProductValue(a,'motor'),speed:(a,b)=>numericProductValue(b,'speed')-numericProductValue(a,'speed'),range:(a,b)=>numericProductValue(b,'range')-numericProductValue(a,'range')};
+ if(sorters[sort])visible=[...visible].sort(sorters[sort]);
  grid.innerHTML=visible.map(p=>{
   const specs=productSpecs(p.specifications);
   const featured=p.featured===true||p.featured==='true';
@@ -129,6 +140,8 @@ window.addToCart=id=>{const p=PRODUCTS.find(x=>String(x.id)===String(id));if(!p)
 window.removeFromCart=id=>{cart=cart.filter(p=>String(p.id)!==String(id));renderCart();};
 function renderCart(){document.getElementById('cartCount').textContent=cart.reduce((n,p)=>n+p.qty,0);document.getElementById('cartItems').innerHTML=cart.length?cart.map(p=>`<div class="cart-line"><span><b>${esc(p.name)}</b><br>Quantity: ${p.qty}</span><button onclick="removeFromCart('${p.id}')">Remove</button></div>`).join(''):'<p class="empty">Your bag is waiting for its first ride.</p>';document.getElementById('cartTotal').textContent='Price on enquiry';}
 document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProducts(b.dataset.filter);}));
+document.getElementById('productSearch')?.addEventListener('input',e=>renderProducts(activeProductFilter,e.target.value.trim().toLowerCase(),activeProductSort));
+document.getElementById('productSort')?.addEventListener('change',e=>renderProducts(activeProductFilter,activeProductQuery,e.target.value));
 document.getElementById('cartOpen').onclick=()=>document.getElementById('cartOverlay').classList.add('open');document.getElementById('cartClose').onclick=()=>document.getElementById('cartOverlay').classList.remove('open');document.getElementById('cartOverlay').addEventListener('click',e=>{if(e.target.id==='cartOverlay')e.currentTarget.classList.remove('open');});
 function whatsapp(m){window.open('https://wa.me/'+WHATSAPP_NUMBER+'?text='+encodeURIComponent(m),'_blank','noopener');}
 const orderModal=document.getElementById('orderModal');
