@@ -630,3 +630,65 @@ body.storefront .cart-button span{background:#171613;color:#e6cf9c}
  body.storefront .topbar-contact span{display:none}
  body.storefront .brand-logo{width:135px!important}
 }
+
+
+/* AUR-K EV premium black & gold showroom header — original logo artwork retained */
+body.storefront .premium-topbar{
+  background:#080807;border-bottom:1px solid #8e6e35;color:#e3c47e;
+}
+body.storefront .topbar-location{color:#d4c8ad}
+body.storefront .topbar-pin{color:#e2bd69}
+body.storefront .topbar-message{color:#f0d99f}
+body.storefront .topbar-contact span{color:#aaa18f}
+body.storefront .topbar-contact b{color:#f0d28a}
+body.storefront .site-header{
+  background:linear-gradient(180deg,#171714 0%,#0d0d0c 100%);
+  border-bottom:1px solid #9b783e;
+  box-shadow:0 9px 28px #0003;
+}
+body.storefront .site-header .brand{
+  width:88px;height:86px;max-width:88px;justify-content:center;
+  background:#f8f7f2;border:1px solid #d5c6a5;
+  box-shadow:0 5px 18px #0005;border-radius:3px;overflow:hidden;
+}
+body.storefront .site-header .brand-logo{
+  width:76px!important;height:82px!important;max-width:100%;
+  object-fit:contain;object-position:center;filter:none;
+}
+body.storefront .site-header nav a{color:#eee8dc}
+body.storefront .site-header nav a:hover{color:#e4c47e}
+body.storefront .site-header nav a:after{background:linear-gradient(90deg,#a77c35,#f0d48e)}
+body.storefront .cart-button{
+  color:#f0e7d4;border-color:#c5a15f;
+  background:linear-gradient(180deg,#211e17,#11110f);
+  box-shadow:inset 0 0 0 1px #ffffff08;
+}
+body.storefront .cart-button:hover{background:#302719;border-color:#e5c47b}
+body.storefront .cart-button span{background:#d6b46c;color:#17130b}
+body.storefront .hero-v2{
+  background:radial-gradient(ellipse at 78% 43%,#302719 0%,#171613 37%,#090909 82%);
+}
+body.storefront .hero-v2 .hero-actions .btn{
+  border:1px solid #e1c17c;box-shadow:0 8px 24px #c29a4b22;
+}
+body.storefront .hero-orbit{border-color:#c29a55;opacity:.75}
+body.storefront .hero-image-frame{border-color:#c6a15f;box-shadow:0 25px 70px #0009,0 0 0 1px #f4dfad22}
+body.storefront .hero-stamp{border-color:#c6a15f;box-shadow:0 12px 30px #0005}
+@media(max-width:900px){
+ body.storefront .site-header{grid-template-columns:100px 1fr auto}
+ body.storefront .site-header .brand{width:78px;height:78px;max-width:78px}
+ body.storefront .site-header .brand-logo{width:68px!important;height:74px!important}
+}
+@media(max-width:700px){
+ body.storefront .site-header{background:#11110f!important;border-bottom-color:#9b783e}
+ body.storefront .site-header .brand{width:66px;height:68px;max-width:66px}
+ body.storefront .site-header .brand-logo{width:59px!important;height:64px!important}
+ body.storefront .menu-toggle{color:#f1e6ce}
+ body.storefront .site-header nav{background:#11110f;border-top:1px solid #8e6e35}
+ body.storefront .site-header nav a{color:#eee8dc}
+ body.storefront .cart-button{color:#f0e7d4}
+}
+@media(max-width:380px){
+ body.storefront .site-header .brand{width:60px;height:63px;max-width:60px}
+ body.storefront .site-header .brand-logo{width:54px!important;height:59px!important}
+}
