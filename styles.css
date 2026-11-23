@@ -396,3 +396,10 @@ body.storefront .menu-toggle{display:none;background:none;border:0;font-size:24p
   .product-actions{grid-template-columns:1fr;gap:7px}
   .product-details-btn,.product-order-btn{min-height:40px}
 }
+
+
+/* AUR-K EV desktop brand visibility refinement */
+@media (min-width: 1100px){
+  body.storefront .site-header{height:96px}
+  body.storefront .brand-logo{width:176px;height:78px}
+}
