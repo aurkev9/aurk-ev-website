@@ -403,3 +403,48 @@ body.storefront .menu-toggle{display:none;background:none;border:0;font-size:24p
   body.storefront .site-header{height:96px}
   body.storefront .brand-logo{width:176px;height:78px}
 }
+
+/* AUR-K EV individual shareable product pages */
+.product-detail-page{background:#f8f6f1;padding:42px 7% 76px;min-height:62vh}
+.product-detail-wrap{max-width:1220px;margin:0 auto}
+.detail-back-link{display:inline-flex;align-items:center;gap:8px;margin:0 0 28px;color:#746b5c;font-size:11px;font-weight:700;text-decoration:none}
+.detail-back-link:hover{color:#a68142}
+.product-detail-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);gap:clamp(35px,6vw,82px);align-items:start}
+.detail-gallery{min-width:0}
+.detail-main-image{height:min(620px,55vw);min-height:360px;display:grid;place-items:center;background:#eeebe4;border:1px solid #e5dfd2;overflow:hidden}
+.detail-main-image img{width:100%;height:100%;object-fit:contain;padding:28px;mix-blend-mode:multiply}
+.detail-thumbnails{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.detail-thumb{width:82px;height:76px;padding:5px;border:1px solid #ddd5c6;background:#fff;cursor:pointer}
+.detail-thumb.active{border:2px solid #b38a45}
+.detail-thumb img{width:100%;height:100%;object-fit:contain}
+.detail-information{padding:12px 0}
+.detail-information>.eyebrow{font-size:9px;letter-spacing:2px;color:#a17c39;font-weight:800}
+.detail-information h1{font:800 clamp(32px,4vw,48px)/1.12 Manrope,sans-serif;letter-spacing:-1.5px;color:#171715;margin:15px 0}
+.detail-description{font-size:13px;line-height:1.9;color:#706b62}
+.detail-price{display:flex;flex-direction:column;gap:7px;margin:25px 0;padding:19px 0;border-top:1px solid #e5dfd2;border-bottom:1px solid #e5dfd2}
+.detail-price small{font-size:8px;letter-spacing:1.7px;color:#9a8e79;font-weight:800}
+.detail-price strong{font:800 27px Manrope,sans-serif;color:#171715}
+.detail-price span{font-size:10px;color:#898276}
+.detail-specifications h2{font:800 14px Manrope,sans-serif;margin:0 0 13px;color:#24211b}
+.detail-specifications ul{padding:0;margin:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.detail-specifications li{padding:11px 12px;background:#fff;border:1px solid #ece6db;color:#615b50;font-size:10px;line-height:1.5}
+.detail-specifications p{font-size:11px;color:#777;line-height:1.7}
+.detail-assurance{display:flex;flex-wrap:wrap;gap:9px;margin:23px 0;color:#6e675a;font-size:9px;font-weight:700}
+.detail-assurance span{padding:8px 10px;background:#eeebe4}
+.detail-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.detail-primary-btn,.detail-secondary-btn{min-height:48px;display:flex;align-items:center;justify-content:center;padding:12px 15px;border:1px solid #171715;font:800 10px Manrope,sans-serif;text-decoration:none;cursor:pointer}
+.detail-primary-btn{background:#c9a45c;color:#171715}
+.detail-primary-btn:hover{background:#b58c48}
+.detail-secondary-btn{background:#171715;color:#fff}
+.detail-secondary-btn:hover{background:#34312b}
+.detail-share-btn{border:0;background:transparent;padding:17px 0;color:#8b6b36;font-size:10px;font-weight:800;cursor:pointer}
+.detail-contact-note{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:48px;padding:20px 23px;background:#171715;color:#fff}
+.detail-contact-note b{font:700 12px Manrope;color:#d5b46f}
+.detail-contact-note span{font-size:10px;color:#c5c0b5;flex:1}
+.detail-contact-note a{font-size:10px;color:#d5b46f;font-weight:800}
+.detail-not-found{padding:70px 20px;text-align:center;background:#fff;border:1px solid #e9e2d6}
+.detail-not-found h1{font:800 30px Manrope}
+.detail-not-found p:not(.eyebrow){color:#777;font-size:12px}
+.detail-not-found .detail-primary-btn{display:inline-flex;margin-top:15px}
+@media(max-width:850px){.product-detail-grid{grid-template-columns:1fr;gap:25px}.detail-main-image{height:65vw;min-height:280px;max-height:520px}.detail-information{padding:0}.product-detail-page{padding:28px 6% 55px}}
+@media(max-width:520px){.detail-main-image{height:82vw;min-height:240px}.detail-main-image img{padding:15px}.detail-information h1{font-size:34px}.detail-actions{grid-template-columns:1fr}.detail-specifications ul{grid-template-columns:1fr}.detail-contact-note{align-items:flex-start;flex-direction:column;gap:9px}.detail-contact-note span{flex:auto}}
