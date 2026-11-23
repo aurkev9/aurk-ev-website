@@ -55,6 +55,8 @@ function renderProducts(filter=activeProductFilter,query=activeProductQuery,sort
   </article>`;
  }).join('');
  if(!visible.length)grid.innerHTML='<p class="product-empty">No scooters are listed in this category yet. Please contact our showroom for assistance.</p>';
+ const planSelect=document.getElementById('planProduct');
+ if(planSelect){const selected=planSelect.value;planSelect.innerHTML='<option value="">Select a scooter</option>'+PRODUCTS.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');if(PRODUCTS.some(p=>String(p.id)===selected))planSelect.value=selected;}
 }
 
 function detailPrice(value){
@@ -239,3 +241,43 @@ if(reviewForm){
   reviewForm.reset();msg.textContent='Thank you! Your review has been submitted and will appear after our team approves it.';
  });
 }
+
+
+/* AUR-K EV installment enquiry calculator — no financing terms are promised */
+(function setupInstallmentEnquiry(){
+ const priceInput=document.getElementById('planPrice');
+ const downInput=document.getElementById('planDownPayment');
+ const monthsInput=document.getElementById('planMonths');
+ const balanceOutput=document.getElementById('planBalance');
+ const monthlyOutput=document.getElementById('planMonthly');
+ const message=document.getElementById('planCalcMessage');
+ const format=n=>'PKR '+Math.round(n).toLocaleString('en-PK');
+ function calculate(){
+  const price=Math.max(0,Number(priceInput?.value)||0);
+  const down=Math.max(0,Number(downInput?.value)||0);
+  const months=Math.max(1,Number(monthsInput?.value)||1);
+  const valid=price>0&&down<=price;
+  if(balanceOutput)balanceOutput.textContent=valid?format(price-down):'—';
+  if(monthlyOutput)monthlyOutput.textContent=valid?format((price-down)/months):'—';
+  if(message)message.textContent=!price?'Enter the scooter price shared by our showroom.':down>price?'Down payment cannot exceed the scooter price.':'Illustrative estimate only. AUR-K EV will confirm eligibility, duration and final terms individually.';
+  const send=document.getElementById('planEnquiry');
+  if(send)send.disabled=!valid;
+ }
+ [priceInput,downInput,monthsInput].forEach(el=>el?.addEventListener('input',calculate));
+ document.getElementById('planProduct')?.addEventListener('change',()=>{
+  const p=PRODUCTS.find(x=>String(x.id)===document.getElementById('planProduct').value);
+  if(p&&p.price_text){const m=String(p.price_text).replace(/,/g,'').match(/(?:PKR|Rs\.?)[\s]*([0-9]+(?:\.[0-9]+)?)/i);if(m&&priceInput)priceInput.value=m[1];}
+  calculate();
+ });
+ document.getElementById('planEnquiry')?.addEventListener('click',()=>{
+  calculate();
+  const price=Number(priceInput.value),down=Number(downInput.value),months=Number(monthsInput.value);
+  if(!(price>0&&down>=0&&down<=price))return;
+  const product=PRODUCTS.find(p=>String(p.id)===document.getElementById('planProduct').value);
+  const name=product?.name||'Not selected';
+  const balance=price-down,monthly=balance/months;
+  const text='Assalam-o-Alaikum AUR-K EV, I would like to discuss an individual installment plan.\nScooter: '+name+'\nEstimated scooter price: PKR '+price.toLocaleString('en-PK')+'\nProposed down payment: PKR '+down.toLocaleString('en-PK')+'\nPreferred duration: '+months+' months\nIllustrative remaining balance: PKR '+balance.toLocaleString('en-PK')+'\nIllustrative monthly amount: PKR '+Math.round(monthly).toLocaleString('en-PK')+'\nPlease contact me to discuss eligibility and your available terms. I understand these figures are estimates and not a confirmed offer.';
+  window.open('https://wa.me/'+WHATSAPP_NUMBER+'?text='+encodeURIComponent(text),'_blank','noopener');
+ });
+ calculate();
+})();
