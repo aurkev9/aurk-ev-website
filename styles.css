@@ -809,3 +809,10 @@ body.storefront .hero-image-frame img{object-fit:contain;filter:none}
 /* Keep the Panther as the only decorative scooter photo on the homepage */
 body.storefront .why-image{display:none!important}
 body.storefront .why-v2{grid-template-columns:1fr}
+
+
+/* Featured homepage poster — original Supabase image, separate from the Panther product card */
+body.storefront .homepage-poster{background:#0c0c0b;padding:clamp(22px,4vw,54px) 7%;border-top:1px solid #8e6e35;border-bottom:1px solid #8e6e35}
+body.storefront .homepage-poster-frame{max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#111;box-shadow:0 18px 55px #0007}
+body.storefront .homepage-poster img{display:block;width:100%;height:auto;max-height:680px;object-fit:contain;object-position:center}
+@media(max-width:700px){body.storefront .homepage-poster{padding:16px 4%}body.storefront .homepage-poster-frame{box-shadow:0 10px 30px #0006}body.storefront .homepage-poster img{max-height:none}}
