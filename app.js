@@ -174,6 +174,7 @@ document.getElementById('contactWhatsApp').onclick=e=>{e.preventDefault();whatsa
 renderProducts();renderCart();
 if(!SUPABASE_URL.startsWith('PASTE_')&&!SUPABASE_ANON_KEY.startsWith('PASTE_')){try{supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const [{data:products,error:productError},{data:images}]=await Promise.all([supabase.from('site_products').select('id,name,category,tag,price_text,description,image_url,specifications,featured,created_at').order('created_at',{ascending:false}),supabase.from('site_images').select('*').order('created_at',{ascending:false})]);PRODUCT_IMAGES=images||[];if(!productError&&products?.length){PRODUCTS=products;renderProducts();}else if(!productError&&(!products||!products.length)&&images?.length){const imageProducts=images.filter(x=>x.slot==='product').map((x,i)=>({id:x.id||('image-'+i),name:x.product_name||x.title||'AUR-K EV Scooter',category:'premium',tag:'AUR-K EV',price_text:'Ask for price',description:'Contact us for details and availability.',image_url:x.public_url}));if(imageProducts.length){PRODUCTS=imageProducts;renderProducts();}}const hero=images?.find(x=>x.slot==='hero');const featuredProduct=products?.find(p=>p.featured&&p.image_url)||products?.find(p=>p.image_url);const heroImageUrl=hero?.public_url||featuredProduct?.image_url;if(heroImageUrl){const heroImage=document.getElementById('heroImage');if(heroImage)heroImage.src=heroImageUrl;}}catch(e){console.warn('Could not load live AUR-K EV content.',e);}}
 openRequestedProduct();
+if(supabase){loadPublicReviews();const reviewProduct=document.getElementById('reviewProduct');if(reviewProduct)PRODUCTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;reviewProduct.append(o);});}
 
 
 /* AUR-K EV side-by-side scooter comparison */
@@ -197,3 +198,24 @@ const aurkCompareSelection=new Set();
  };
  const observer=new MutationObserver(sync);observer.observe(document.getElementById('productGrid'),{childList:true});sync();
 })();
+
+/* AURK customer reviews */
+async function loadPublicReviews(){
+ const host=document.getElementById('publicReviews');if(!host||!supabase)return;
+ const {data,error}=await supabase.from('site_reviews').select('id,customer_name,rating,review_text,product_id,created_at').eq('status','approved').order('created_at',{ascending:false}).limit(12);
+ if(error){host.innerHTML='<p>Customer reviews will appear here soon.</p>';console.warn('Reviews unavailable',error);return;}
+ if(!data?.length){host.innerHTML='<p class="review-empty">Be among the first customers to share a verified experience.</p>';return;}
+ host.innerHTML=data.map(r=>'<article class="public-review-card"><div class="review-stars" aria-label="'+r.rating+' out of 5 stars">'+('★'.repeat(r.rating))+('☆'.repeat(5-r.rating))+'</div><p>'+esc(r.review_text)+'</p><div class="review-by"><b>'+esc(r.customer_name)+'</b><small>'+(PRODUCTS.find(p=>String(p.id)===String(r.product_id))?.name||'AUR-K EV customer')+'</small></div></article>').join('');
+}
+const reviewForm=document.getElementById('reviewForm');
+if(reviewForm){
+ reviewForm.addEventListener('submit',async e=>{
+  e.preventDefault();const msg=document.getElementById('reviewMessage');if(!supabase){msg.textContent='Please try again in a moment.';return;}
+  const btn=reviewForm.querySelector('button[type="submit"]');btn.disabled=true;msg.textContent='Submitting your review…';
+  const productId=document.getElementById('reviewProduct').value||null;
+  const {error}=await supabase.from('site_reviews').insert({customer_name:document.getElementById('reviewName').value.trim(),rating:Number(document.getElementById('reviewRating').value),review_text:document.getElementById('reviewText').value.trim(),product_id:productId,status:'pending'});
+  btn.disabled=false;
+  if(error){msg.textContent='Could not submit review: '+error.message;return;}
+  reviewForm.reset();msg.textContent='Thank you! Your review has been submitted and will appear after our team approves it.';
+ });
+}
