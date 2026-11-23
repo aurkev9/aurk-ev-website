@@ -44,7 +44,7 @@ function renderProducts(filter=activeProductFilter,query=activeProductQuery,sort
     <div class="product-kicker"><span>THE AUR-K COLLECTION</span><span class="product-index">EV / ${String(PRODUCTS.indexOf(p)+1).padStart(2,'0')}</span></div>
     <h3>${esc(p.name)}</h3>
     <p>${esc(p.description||'Contact us for details and availability.')}</p>
-    ${specs.length?`<ul class="product-specs">${specs.map((s,i)=>detailSpecMarkup(s,i)).join('')}</ul>`:''}
+    ${specs.length?`<ul class="product-specs">${specs.slice(0,3).map((s,i)=>detailSpecMarkup(s,i)).join('')}</ul>`:''}
     <div class="product-price-row"><span class="product-price-label">SHOWROOM PRICE</span><strong class="price">${esc(p.price_text||'Ask for price')}</strong></div>
     <div class="product-actions">
      <a class="product-details-btn" href="?product=${encodeURIComponent(p.id)}">View details <span>↗</span></a>
