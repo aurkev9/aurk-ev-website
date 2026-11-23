@@ -692,3 +692,29 @@ body.storefront .hero-stamp{border-color:#c6a15f;box-shadow:0 12px 30px #0005}
  body.storefront .site-header .brand{width:60px;height:63px;max-width:60px}
  body.storefront .site-header .brand-logo{width:54px!important;height:59px!important}
 }
+
+
+/* Remove the logo backing card: show only the existing AUR-K logo image */
+body.storefront .site-header .brand{
+  width:100px!important;height:90px!important;max-width:100px!important;
+  padding:0!important;margin:0!important;
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;border-radius:0!important;overflow:visible!important;
+}
+body.storefront .site-header .brand-logo{
+  display:block;width:100px!important;height:88px!important;
+  max-width:100%!important;object-fit:contain;object-position:left center;
+  background:transparent!important;box-shadow:none!important;
+}
+@media(max-width:900px){
+ body.storefront .site-header .brand{width:88px!important;height:82px!important;max-width:88px!important}
+ body.storefront .site-header .brand-logo{width:88px!important;height:80px!important}
+}
+@media(max-width:700px){
+ body.storefront .site-header .brand{width:72px!important;height:70px!important;max-width:72px!important}
+ body.storefront .site-header .brand-logo{width:72px!important;height:68px!important}
+}
+@media(max-width:380px){
+ body.storefront .site-header .brand{width:64px!important;height:64px!important;max-width:64px!important}
+ body.storefront .site-header .brand-logo{width:64px!important;height:62px!important}
+}
