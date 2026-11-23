@@ -51,6 +51,22 @@ function updateHomepageImagePreview(){
  if(!url){preview.textContent="Select an image to preview it.";return;}
  const img=document.createElement("img");img.src=url;img.alt="Homepage image preview";preview.append(img);
 }
+document.getElementById("homepageHeroUploadForm")?.addEventListener("submit",async e=>{
+ e.preventDefault();
+ const message=document.getElementById("homepageHeroUploadMessage"),file=document.getElementById("homepageHeroFile").files[0],title=document.getElementById("homepageHeroTitle").value.trim();
+ if(!file)return;
+ if(!["image/jpeg","image/png","image/webp"].includes(file.type)){message.textContent="Please choose JPG, PNG or WebP.";return;}
+ if(file.size>8*1024*1024){message.textContent="Image must be smaller than 8 MB.";return;}
+ message.textContent="Uploading image…";
+ const ext=file.name.split(".").pop().toLowerCase(),path="homepage-"+crypto.randomUUID()+"."+ext;
+ const {error:upErr}=await supabase.storage.from("website-images").upload(path,file,{upsert:false,contentType:file.type});
+ if(upErr){message.textContent=upErr.message;return;}
+ const {data:{publicUrl}}=supabase.storage.from("website-images").getPublicUrl(path);
+ const {error:dbErr}=await supabase.from("site_images").insert({title,slot:"hero",product_name:null,storage_path:path,public_url:publicUrl});
+ if(dbErr){await supabase.storage.from("website-images").remove([path]);message.textContent=dbErr.message;return;}
+ message.textContent="Uploaded and set as homepage image successfully.";
+ e.target.reset();await loadImages();await refreshHomepageImageOptions();
+});
 document.getElementById("homepageImageSelect")?.addEventListener("change",updateHomepageImagePreview);
 document.getElementById("setHomepageImage")?.addEventListener("click",async()=>{
  const select=document.getElementById("homepageImageSelect"),message=document.getElementById("homepageImageMessage"),id=select?.value;
