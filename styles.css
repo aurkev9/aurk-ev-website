@@ -1009,3 +1009,157 @@ body.storefront .compare-toggle:hover,body.storefront .compare-toggle.selected{b
 @media(max-width:700px){body.storefront .product-grid{gap:13px}body.storefront .product-photo-luxury{height:clamp(170px,42vw,230px);min-height:165px}body.storefront .product-photo-luxury img{padding:12px 10px 18px}body.storefront .product-info-luxury{padding:15px 13px 14px}body.storefront .product-info-luxury h3{font-size:16px;margin:10px 0 7px}body.storefront .product-info-luxury>p{font-size:10px;line-height:1.55;min-height:44px}body.storefront .product-price-row{padding:13px 0 11px}body.storefront .product-price-row .price{font-size:16px}body.storefront .product-actions{grid-template-columns:1fr;gap:7px;padding-top:11px}body.storefront .product-details-btn,body.storefront .product-order-btn{min-height:44px}body.storefront .compare-toggle{min-height:40px}}
 @media(max-width:430px){body.storefront .product-grid{grid-template-columns:1fr;gap:17px}body.storefront .product-photo-luxury{height:260px;min-height:240px}body.storefront .product-photo-luxury img{padding:18px 16px 22px}body.storefront .product-info-luxury{padding:19px 17px 17px}body.storefront .product-info-luxury h3{font-size:19px}body.storefront .product-info-luxury>p{font-size:11px;min-height:0}body.storefront .product-price-row .price{font-size:19px}body.storefront .product-actions{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){body.storefront .product-card-luxury,body.storefront .product-photo-luxury img{transition:none}}
+
+
+/* AUR-K EV collection area — premium showroom polish */
+body.storefront .collection-v2{
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(180deg,#f8f6f1 0%,#f2eee5 100%);
+  padding-top:clamp(76px,8vw,112px);
+  padding-bottom:clamp(78px,8vw,112px);
+}
+body.storefront .collection-v2:before{
+  content:"AUR-K";
+  position:absolute;
+  top:38px;right:5%;
+  color:rgba(173,143,88,.055);
+  font:800 clamp(76px,13vw,180px)/1 Manrope,sans-serif;
+  letter-spacing:-.09em;
+  pointer-events:none;
+}
+body.storefront .collection-v2 .section-heading{
+  position:relative;z-index:1;
+  align-items:end;
+  gap:clamp(28px,5vw,72px);
+  margin-bottom:34px;
+}
+body.storefront .collection-v2 .section-heading h2{
+  max-width:720px;
+  font-size:clamp(42px,5.3vw,68px);
+  line-height:1.02;
+  letter-spacing:-.065em;
+}
+body.storefront .collection-v2 .section-heading h2 em{
+  color:#a78349;font-style:normal;
+}
+body.storefront .collection-v2 .collection-intro{
+  max-width:390px;
+  padding:0 0 5px 22px;
+  border-left:1px solid #c9b58f;
+}
+body.storefront .collection-v2 .collection-intro p{
+  margin:0 0 14px;
+  font-size:12px;line-height:1.9;color:#6f695f;
+}
+body.storefront .collection-v2 .catalog-tools{
+  position:relative;z-index:1;
+  padding:17px;
+  margin:30px 0 15px;
+  border:1px solid #e4dccd;
+  background:rgba(255,255,255,.72);
+  box-shadow:0 8px 24px rgba(40,32,18,.035);
+}
+body.storefront .collection-v2 .catalog-tools label span{
+  letter-spacing:1.4px;color:#987744;
+}
+body.storefront .collection-v2 .catalog-tools input,
+body.storefront .collection-v2 .catalog-tools select{
+  border-color:#e2dacb;background:#fff;
+}
+body.storefront .collection-v2 .filters{
+  gap:9px;margin:17px 0 22px;
+}
+body.storefront .collection-v2 .filters .filter{
+  border-radius:30px;padding:11px 18px;
+  background:#fffefa;color:#625b50;
+  font-size:9px;font-weight:800;letter-spacing:.5px;
+  transition:all .2s ease;
+}
+body.storefront .collection-v2 .filters .filter.active,
+body.storefront .collection-v2 .filters .filter:hover{
+  background:#191814;border-color:#191814;color:#e4c98f;
+}
+body.storefront .collection-v2 .product-grid{
+  position:relative;z-index:1;
+  gap:22px;align-items:stretch;
+}
+body.storefront .collection-v2 .product-card-luxury{
+  border-radius:8px;
+  border-color:#e5ddce;
+  box-shadow:0 10px 28px rgba(35,29,19,.055);
+}
+body.storefront .collection-v2 .product-card-luxury:hover{
+  transform:translateY(-7px);
+  border-color:#b99a62;
+  box-shadow:0 22px 48px rgba(35,29,19,.13);
+}
+body.storefront .collection-v2 .product-photo-luxury{
+  height:clamp(245px,25vw,315px);
+  background:radial-gradient(ellipse at 50% 44%,#fff 0%,#f3f0e9 58%,#e9e3d7 100%);
+}
+body.storefront .collection-v2 .product-photo-luxury img{
+  padding:20px;
+  transition:transform .5s ease;
+}
+body.storefront .collection-v2 .product-card-luxury:hover .product-photo-luxury img{
+  transform:scale(1.045);
+}
+body.storefront .collection-v2 .product-tag{
+  border-radius:2px;
+}
+body.storefront .collection-v2 .product-info-luxury{
+  padding:23px 22px 20px;
+}
+body.storefront .collection-v2 .product-info-luxury h3{
+  font-size:21px;letter-spacing:-.7px;
+}
+body.storefront .collection-v2 .product-specs{
+  gap:6px;margin:14px 0 5px;
+}
+body.storefront .collection-v2 .product-specs li{
+  border-radius:2px;
+  border-color:#e9e1d3;
+  background:#f8f6f1;
+  color:#625b50;
+  font-size:9px;
+}
+body.storefront .collection-v2 .product-price-row{
+  margin-top:auto;padding:18px 0 15px;
+  border-bottom:1px solid #e7dfd1;
+}
+body.storefront .collection-v2 .product-price-row .price{
+  font-size:20px;color:#171715;
+}
+body.storefront .collection-v2 .product-details-btn,
+body.storefront .collection-v2 .product-order-btn{
+  min-height:46px;border-radius:2px;font-size:9px;
+}
+body.storefront .collection-v2 .compare-toggle{
+  margin-top:11px;
+  border-color:transparent;
+  color:#8b744d;
+  font-weight:800;letter-spacing:.5px;
+}
+body.storefront .collection-v2 .demo-note{
+  margin-top:28px;padding-top:18px;
+  border-top:1px solid #ded5c5;
+  color:#82796b;font-size:10px;letter-spacing:.3px;
+}
+@media(max-width:700px){
+  body.storefront .collection-v2{padding:62px 5% 70px}
+  body.storefront .collection-v2 .section-heading{display:block;margin-bottom:24px}
+  body.storefront .collection-v2 .section-heading h2{font-size:clamp(38px,10vw,48px)}
+  body.storefront .collection-v2 .collection-intro{
+    margin-top:20px;padding:0 0 0 14px;max-width:100%;
+  }
+  body.storefront .collection-v2 .catalog-tools{padding:12px}
+  body.storefront .collection-v2 .product-grid{gap:13px}
+  body.storefront .collection-v2 .product-photo-luxury{height:clamp(160px,46vw,220px);min-height:160px}
+  body.storefront .collection-v2 .product-info-luxury{padding:14px 12px 13px}
+  body.storefront .collection-v2 .product-info-luxury h3{font-size:15px}
+  body.storefront .collection-v2 .product-price-row .price{font-size:16px}
+  body.storefront .collection-v2 .product-specs li{font-size:8px;padding:6px 7px}
+  body.storefront .collection-v2 .product-details-btn,
+  body.storefront .collection-v2 .product-order-btn{min-height:42px}
+}
