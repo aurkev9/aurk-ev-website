@@ -873,3 +873,29 @@ body.storefront .hero-image-frame img{
 .detail-specifications li.detail-spec-card strong{font:700 12px/1.55 Manrope,sans-serif;color:#39342b;overflow-wrap:anywhere}
 .detail-specifications li.detail-spec-card-plain strong{font-weight:600}
 @media(max-width:520px){.detail-specifications{padding:17px 14px;margin-top:22px}.detail-specifications ul{grid-template-columns:1fr;gap:8px}.detail-specifications li.detail-spec-card{min-height:62px;padding:12px}}
+
+
+/* AUR-K EV installment enquiry section */
+.installment-section{padding:100px 7%;background:radial-gradient(ellipse at 12% 15%,#292319 0%,#171613 42%,#0c0c0b 100%);color:#f4eee1;border-top:1px solid #8c6d38;border-bottom:1px solid #8c6d38}
+.installment-inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,.82fr);gap:clamp(35px,7vw,90px);align-items:center}
+.installment-copy .eyebrow,.installment-calculator .eyebrow{font-size:9px;letter-spacing:2px;font-weight:800;color:#d2b574}
+.installment-copy h2{font:800 clamp(38px,5vw,58px)/1.08 Manrope,sans-serif;letter-spacing:-1.5px;margin:18px 0 22px;color:#f8f3e9}
+.installment-copy h2 em{font-style:normal;color:#d8bc80}
+.installment-copy>p:not(.eyebrow){max-width:540px;color:#c5bdad;font-size:14px;line-height:1.9}
+.installment-points{display:grid;gap:13px;margin:28px 0;color:#e5d8bd;font-size:12px;font-weight:700}
+.installment-copy>small{display:block;max-width:570px;color:#9f9787;font-size:10px;line-height:1.8}
+.installment-calculator{padding:27px;background:#f7f4ed;color:#201d17;border:1px solid #c9a45c;box-shadow:0 24px 65px #0006}
+.installment-calculator h3{font:800 22px Manrope;margin:7px 0 21px}
+.installment-calculator label{display:grid;gap:7px;margin:13px 0;color:#71654e;font-size:10px;font-weight:800;letter-spacing:.5px}
+.installment-calculator input,.installment-calculator select{width:100%;height:46px;padding:0 12px;border:1px solid #d8cfbd;background:#fff;color:#211e18;font:500 13px Manrope;border-radius:0}
+.installment-calculator input:focus,.installment-calculator select:focus{outline:2px solid #c5a15f;outline-offset:1px}
+.installment-results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0 12px}
+.installment-results>div{min-width:0;padding:13px;background:#eee9de;border:1px solid #e0d5c1;display:grid;gap:8px}
+.installment-results span{font-size:9px;line-height:1.4;color:#766a55;font-weight:700}
+.installment-results strong{font:800 clamp(13px,1.5vw,17px) Manrope;color:#211e18;overflow-wrap:anywhere}
+.installment-disclaimer{min-height:38px;color:#857a66;font-size:10px;line-height:1.6}
+.installment-submit{width:100%;min-height:50px;margin-top:8px;padding:13px;border:1px solid #b18a48;background:#c9a45c;color:#171613;font:800 10px Manrope;letter-spacing:.6px;cursor:pointer}
+.installment-submit:hover:not(:disabled){background:#d9b96f}
+.installment-submit:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:850px){.installment-section{padding:75px 6%}.installment-inner{grid-template-columns:1fr;gap:35px}.installment-calculator{max-width:620px;width:100%}}
+@media(max-width:520px){.installment-section{padding:62px 6%}.installment-calculator{padding:20px 16px}.installment-results{grid-template-columns:1fr 1fr}.installment-copy h2{font-size:42px}}
