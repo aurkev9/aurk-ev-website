@@ -21,10 +21,10 @@ function productEnquiry(p){
 let activeProductFilter='all', activeProductQuery='', activeProductSort='featured';
 function numericProductValue(p,kind){
  const spec=productSpecs(p.specifications).join(' ').toLowerCase();
- if(kind==='price'){const m=String(p.price_text||'').replace(/,/g,'').match(/(?:rs\\.?\\s*)?(\\d+(?:\\.\\d+)?)/i);return m?Number(m[1]):Infinity;}
- const patterns={motor:/(\\d+)\\s*w(?:att)?/i,speed:/(\\d+(?:\\s*[-–]\\s*\\d+)?)\\s*km\\s*\\/?\\s*h/i,range:/(\\d+(?:\\s*[-–]\\s*\\d+)?)\\s*km/i};
+ if(kind==='price'){const m=String(p.price_text||'').replace(/,/g,'').match(/(?:rs\.?\s*)?(\d+(?:\.\d+)?)/i);return m?Number(m[1]):Infinity;}
+ const patterns={motor:/(\d+)\s*w(?:att)?/i,speed:/(\d+(?:\s*[-–]\s*\d+)?)\s*km(?:\s*h)?/i,range:/(\d+(?:\s*[-–]\s*\d+)?)\s*km/i};
  const m=spec.match(patterns[kind]);if(!m)return 0;
- const nums=m[1].match(/\\d+/g)||[];return nums.length?Math.max(...nums.map(Number)):0;
+ const nums=m[1].match(/\d+/g)||[];return nums.length?Math.max(...nums.map(Number)):0;
 }
 function renderProducts(filter=activeProductFilter,query=activeProductQuery,sort=activeProductSort){
  activeProductFilter=filter;activeProductQuery=query;activeProductSort=sort;
