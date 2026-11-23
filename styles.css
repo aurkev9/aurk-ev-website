@@ -459,3 +459,98 @@ body.storefront .menu-toggle{display:none;background:none;border:0;font-size:24p
 
 /* Customer review submission and moderation presentation */
 .reviews-v2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(25px,5vw,70px);align-items:start}.public-reviews{display:grid;gap:12px;margin-top:24px}.public-review-card,.review-form-card{background:#fff;border:1px solid #e8e0d2;padding:20px}.review-stars{color:#b58a42;letter-spacing:3px;font-size:17px}.public-review-card>p{font-size:13px;line-height:1.7;color:#4f4a40}.review-by{display:flex;flex-direction:column;gap:3px}.review-by b{font-size:12px}.review-by small,.review-empty{font-size:11px;color:#8a8172}.review-form-card h3{font:800 23px Manrope;margin:5px 0 18px}.review-form{display:grid;gap:13px}.review-form label{display:grid;gap:6px;font-size:11px;font-weight:700;color:#625844}.review-form input,.review-form select,.review-form textarea{width:100%;border:1px solid #ddd3c2;padding:12px;background:#fff;color:#171715;font:13px 'DM Sans',sans-serif}.review-form textarea{resize:vertical}.review-form .message{font-size:11px;color:#817766;line-height:1.5}.review-form button:disabled{opacity:.6;cursor:wait}@media(max-width:760px){.reviews-v2{grid-template-columns:1fr}}
+
+
+/* AUR-K EV — Luxury identity & homepage refinement */
+:root{--black:#11110f;--ink:#191814;--muted:#777166;--gold:#c7a66a;--cream:#f4f1e9;--line:#e6dfd1;--champagne:#ddc493}
+body.storefront{background:#fbfaf7;color:#191814;font-family:"DM Sans",sans-serif}
+body.storefront .announcement{min-height:34px;padding:9px 5%;display:flex;align-items:center;justify-content:center;gap:clamp(16px,5vw,76px);background:#10100f;color:#d9c18f;border-bottom:1px solid #8e7140;font-size:8px;letter-spacing:2px}
+body.storefront .announcement span{margin:0;color:#9d988d}
+body.storefront .announcement b{font-size:8px;letter-spacing:2.4px;color:#eee8dc}
+body.storefront .announcement a{color:#d9c18f;font-size:8px;text-decoration:none;white-space:nowrap}
+body.storefront .site-header{height:94px;background:rgba(251,250,247,.97);padding:0 7%;border-bottom:1px solid #e8e1d4;box-shadow:0 8px 26px #1b160b08;backdrop-filter:blur(14px)}
+body.storefront .site-header nav{gap:clamp(17px,2.5vw,35px)}
+body.storefront .site-header nav a{font-size:10px;letter-spacing:.35px;color:#4f4b42}
+body.storefront .site-header nav a:hover{color:#9a773e}
+body.storefront .cart-button{border-color:#bca477;background:#fffdf8;letter-spacing:.6px}
+body.storefront .hero-v2{min-height:680px;padding:78px 8% 72px;background:radial-gradient(ellipse at 78% 45%,#29251d 0%,#171714 36%,#10100f 76%);grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:4%}
+body.storefront .hero-copy-v2{max-width:610px}
+body.storefront .hero-v2 .eyebrow{color:#c4a66d!important;letter-spacing:3.2px!important}
+body.storefront .hero-v2 h1{max-width:650px;font-size:clamp(48px,5.6vw,79px);line-height:1.01;letter-spacing:-.065em;font-weight:700;margin:0 0 26px}
+body.storefront .hero-v2 h1 em{color:#d9c18f;font-style:normal}
+body.storefront .hero-lead{max-width:470px;color:#c1bdb3;font-size:13px;line-height:2}
+body.storefront .hero-actions{margin:34px 0 48px;gap:25px}
+body.storefront .hero-actions .btn{min-height:50px;padding:0 23px;background:linear-gradient(135deg,#e0c995,#b99556);color:#17140e;letter-spacing:.7px}
+body.storefront .hero-actions .btn:hover{background:#ead8ae}
+body.storefront .hero-call{font-size:10px;color:#e4dfd4}
+body.storefront .hero-proof{gap:clamp(14px,2vw,28px);border-color:#4a4438}
+body.storefront .hero-proof b{color:#d5b97f}
+body.storefront .hero-proof span{color:#b6b0a4;line-height:1.5}
+body.storefront .hero-visual{height:500px}
+body.storefront .hero-orbit{border-color:#8b7144;opacity:.62;box-shadow:0 0 0 36px #d6bd8a08,0 0 0 76px #d6bd8a05}
+body.storefront .hero-image-frame{width:94%;height:88%;clip-path:none;border:1px solid #a58b5b;background:linear-gradient(145deg,#f5f1e8,#e7e0d2);box-shadow:0 28px 65px #0007}
+body.storefront .hero-image-frame:after{background:linear-gradient(135deg,#fff2,transparent 42%,#9a783322)}
+body.storefront .hero-image-frame img{object-fit:contain;padding:16px;filter:none;mix-blend-mode:multiply}
+body.storefront .hero-stamp{right:-2%;bottom:0;background:#11110f;color:#e3d0a4;border:1px solid #b7965d;padding:18px 22px;min-width:160px}
+body.storefront .hero-stamp small,body.storefront .hero-stamp span{color:#c5b58e}
+body.storefront .hero-stamp strong{color:#f8f4e9;font-size:27px;letter-spacing:-.8px}
+body.storefront .hero-index{color:#e0c995}
+body.storefront .marquee-band{background:#c6a66d;color:#17140e;gap:clamp(12px,3vw,38px);letter-spacing:2px;font-size:8px}
+body.storefront .trust-strip{background:#f7f4ed;padding:26px 8%;border-bottom:1px solid #e7dfd0}
+body.storefront .trust-icon{border-color:#b99a62;color:#97733c}
+body.storefront .collection-v2{background:#fbfaf7;padding:112px 8% 108px}
+body.storefront .section-heading h2{font-size:clamp(42px,4.7vw,62px);letter-spacing:-.055em;color:#191814}
+body.storefront .collection-intro p{color:#777166;line-height:2}
+body.storefront .catalog-tools input,body.storefront .catalog-tools select{border-color:#ded5c4;background:#fffefa;min-height:49px}
+body.storefront .filters .filter{border-color:#d7cbb5}
+body.storefront .filters .filter.active{background:#171714;border-color:#171714;color:#e2ca98}
+body.storefront .product-card-luxury{border-color:#e4dccd;box-shadow:0 12px 32px #211a0d09}
+body.storefront .product-card-luxury:hover{border-color:#b99a62;box-shadow:0 22px 48px #211a0d16}
+body.storefront .product-photo-luxury{background:linear-gradient(145deg,#f5f2eb,#e9e3d7)}
+body.storefront .product-info-luxury{padding:24px 23px 21px}
+body.storefront .product-info-luxury h3{font-size:21px;letter-spacing:-.6px}
+body.storefront .product-price-row .price{font-size:19px}
+body.storefront .product-details-btn,body.storefront .product-order-btn{min-height:45px}
+body.storefront .why-v2{background:#141411}
+body.storefront .why-image img{filter:grayscale(12%) brightness(.82)}
+body.storefront .why-content{padding-top:96px;padding-bottom:96px}
+body.storefront .why-content h2 em{color:#d8bd87}
+body.storefront .why-points article{border-color:#454034}
+body.storefront .why-points article>span{color:#d2b579}
+body.storefront .about-v2{background:#eee9de;padding-top:112px;padding-bottom:112px}
+body.storefront .about-mark{border-color:#b79a64;color:#201d16}
+body.storefront .about-v2 h2 em,body.storefront .contact-v2 h2 em{color:#9c7941}
+body.storefront .reviews-v2{background:#fbfaf7;padding-top:108px;padding-bottom:108px}
+body.storefront .review-form-card,body.storefront .public-review-card{border-color:#e5dccb;box-shadow:0 10px 30px #211a0d08}
+body.storefront .review-form-card{background:#fffefa;padding:27px}
+body.storefront .review-form input,body.storefront .review-form select,body.storefront .review-form textarea{border-color:#ddd2be;background:#fffefa}
+body.storefront .contact-v2{background:#eee9de;padding-top:105px;padding-bottom:105px}
+body.storefront .contact-card-v2{border-color:#e0d6c3;box-shadow:0 22px 55px #211a0d12}
+body.storefront .contact-card-v2 .btn{background:linear-gradient(135deg,#e0c995,#b99556)}
+body.storefront .footer-v2{background:#10100f;border-top:1px solid #8c7145}
+body.storefront .floating-whatsapp{box-shadow:0 10px 30px #0003}
+body.storefront :focus-visible{outline:2px solid #b99457;outline-offset:3px}
+@media(max-width:900px){body.storefront .hero-v2{padding:62px 6%;min-height:610px}body.storefront .hero-visual{height:410px}body.storefront .hero-proof{gap:13px}body.storefront .hero-proof span{max-width:110px}}
+@media(max-width:700px){
+body.storefront .announcement{gap:10px;justify-content:space-around;min-height:31px}
+body.storefront .announcement span{display:none}
+body.storefront .announcement b{font-size:7px;letter-spacing:1.1px}
+body.storefront .announcement a{font-size:7px;letter-spacing:.8px}
+body.storefront .site-header{height:76px!important;padding:0 5%}
+body.storefront .hero-v2{padding:49px 7% 40px;min-height:0}
+body.storefront .hero-v2 h1{font-size:clamp(43px,11vw,55px);line-height:1.04}
+body.storefront .hero-lead{font-size:12px;line-height:1.85}
+body.storefront .hero-actions{margin:25px 0 31px}
+body.storefront .hero-proof{gap:9px}
+body.storefront .hero-proof b{font-size:16px}
+body.storefront .hero-proof span{font-size:7px;max-width:95px}
+body.storefront .hero-visual{height:310px;margin-top:27px}
+body.storefront .hero-image-frame{width:94%;height:88%}
+body.storefront .hero-image-frame img{padding:9px}
+body.storefront .hero-stamp{right:0;bottom:0;min-width:125px;padding:12px 14px}
+body.storefront .hero-stamp strong{font-size:22px}
+body.storefront .collection-v2{padding:74px 7%}
+body.storefront .about-v2{padding:75px 8%}
+body.storefront .reviews-v2,body.storefront .contact-v2{padding-top:72px;padding-bottom:72px}
+}
+@media(max-width:430px){body.storefront .hero-v2 h1{font-size:42px}body.storefront .hero-proof span{font-size:6.5px}}
