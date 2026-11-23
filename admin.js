@@ -8,7 +8,7 @@ if(SUPABASE_URL.startsWith("PASTE_")||SUPABASE_ANON_KEY.startsWith("PASTE_")){
 }
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 let currentRole=null;
-const roleViews={owner:['overview','products','orders','customers','reports','finance','staff'],manager:['overview','orders','customers','reports','finance'],sales_staff:['overview','orders','customers'],product_staff:['overview','products']};
+const roleViews={owner:['overview','products','orders','customers','reports','finance','staff','reviews'],manager:['overview','orders','customers','reports','finance'],sales_staff:['overview','orders','customers'],product_staff:['overview','products']};
 const canView=view=>(roleViews[currentRole]||[]).includes(view);
 function applyRolePermissions(){
  document.querySelectorAll('[data-view]').forEach(b=>{b.hidden=!canView(b.dataset.view);});
