@@ -804,7 +804,7 @@ body.storefront .site-header .brand-logo{
 body.storefront .hero-orbit,body.storefront .hero-stamp,body.storefront .hero-index{display:none!important}
 body.storefront .hero-image-frame{width:100%;height:100%;clip-path:none;background:#111;}
 body.storefront .hero-image-frame:after{display:none}
-body.storefront .hero-image-frame img{object-fit:contain;filter:none}
+body.storefront .hero-image-frame img{object-fit:contain;filter:brightness(2.6) saturate(1.2) contrast(1.12)!important;mix-blend-mode:normal!important;padding:9px}
 
 /* Keep the Panther as the only decorative scooter photo on the homepage */
 body.storefront .why-image{display:none!important}
