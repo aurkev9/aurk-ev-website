@@ -39,6 +39,7 @@ function renderProducts(filter='all'){
      <a class="product-details-btn" href="?product=${encodeURIComponent(p.id)}">View details <span>↗</span></a>
      <button class="add-btn product-order-btn" type="button" onclick="addToCart('${String(p.id).replace(/'/g,'')}')">Add to bag <span>＋</span></button>
     </div>
+    <button type="button" class="compare-toggle" data-compare-id="${esc(p.id)}">＋ Compare</button>
    </div>
   </article>`;
  }).join('');
@@ -160,3 +161,26 @@ document.getElementById('contactWhatsApp').onclick=e=>{e.preventDefault();whatsa
 renderProducts();renderCart();
 if(!SUPABASE_URL.startsWith('PASTE_')&&!SUPABASE_ANON_KEY.startsWith('PASTE_')){try{supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const [{data:products,error:productError},{data:images}]=await Promise.all([supabase.from('site_products').select('id,name,category,tag,price_text,description,image_url,specifications,featured,created_at').order('created_at',{ascending:false}),supabase.from('site_images').select('*').order('created_at',{ascending:false})]);PRODUCT_IMAGES=images||[];if(!productError&&products?.length){PRODUCTS=products;renderProducts();}else if(!productError&&(!products||!products.length)&&images?.length){const imageProducts=images.filter(x=>x.slot==='product').map((x,i)=>({id:x.id||('image-'+i),name:x.product_name||x.title||'AUR-K EV Scooter',category:'premium',tag:'AUR-K EV',price_text:'Ask for price',description:'Contact us for details and availability.',image_url:x.public_url}));if(imageProducts.length){PRODUCTS=imageProducts;renderProducts();}}const hero=images?.find(x=>x.slot==='hero');const featuredProduct=products?.find(p=>p.featured&&p.image_url)||products?.find(p=>p.image_url);const heroImageUrl=hero?.public_url||featuredProduct?.image_url;if(heroImageUrl){const heroImage=document.getElementById('heroImage');if(heroImage)heroImage.src=heroImageUrl;}}catch(e){console.warn('Could not load live AUR-K EV content.',e);}}
 openRequestedProduct();
+
+
+/* AUR-K EV side-by-side scooter comparison */
+const aurkCompareSelection=new Set();
+(function setupAurkCompare(){
+ const styleDock=`<aside id="aurkCompareDock" class="compare-dock" hidden><div><b id="aurkCompareCount">0 scooters selected</b><span>Select 2 or 3 models to compare.</span></div><div class="compare-dock-actions"><button type="button" id="aurkCompareClear">Clear</button><button type="button" id="aurkCompareOpen" disabled>Compare now</button></div></aside><div id="aurkCompareModal" class="compare-modal" hidden><div class="compare-panel" role="dialog" aria-modal="true" aria-labelledby="aurkCompareTitle"><div class="compare-head"><div><p class="eyebrow">AUR-K EV • SIDE BY SIDE</p><h2 id="aurkCompareTitle">Compare scooters</h2></div><button type="button" id="aurkCompareClose" aria-label="Close comparison">✕</button></div><div id="aurkCompareTable" class="compare-table-wrap"></div><p class="compare-footnote">Prices and specifications are shown as listed. Confirm current availability and final price with our showroom.</p></div></div>`;
+ document.body.insertAdjacentHTML('beforeend',styleDock);
+ const sync=()=>{document.getElementById('aurkCompareDock').hidden=!aurkCompareSelection.size;document.getElementById('aurkCompareCount').textContent=aurkCompareSelection.size+' scooter'+(aurkCompareSelection.size===1?'':'s')+' selected';document.getElementById('aurkCompareOpen').disabled=aurkCompareSelection.size<2;document.querySelectorAll('.compare-toggle').forEach(b=>{const on=aurkCompareSelection.has(String(b.dataset.compareId));b.classList.toggle('selected',on);b.textContent=on?'✓ Added to compare':'＋ Compare';});};
+ document.getElementById('productGrid').addEventListener('click',e=>{const b=e.target.closest('.compare-toggle');if(!b)return;const id=String(b.dataset.compareId);if(aurkCompareSelection.has(id))aurkCompareSelection.delete(id);else if(aurkCompareSelection.size<3)aurkCompareSelection.add(id);else{alert('You can compare up to 3 scooters at a time.');return;}sync();});
+ document.getElementById('aurkCompareClear').onclick=()=>{aurkCompareSelection.clear();sync();};
+ document.getElementById('aurkCompareClose').onclick=()=>document.getElementById('aurkCompareModal').hidden=true;
+ document.getElementById('aurkCompareModal').addEventListener('click',e=>{if(e.target.id==='aurkCompareModal')e.currentTarget.hidden=true;});
+ document.getElementById('aurkCompareOpen').onclick=()=>{
+  const selected=PRODUCTS.filter(p=>aurkCompareSelection.has(String(p.id)));if(selected.length<2)return;
+  const parsed=selected.map(p=>{const m={};productSpecs(p.specifications).forEach(line=>{const n=line.indexOf(':');if(n>0)m[line.slice(0,n).trim()]=line.slice(n+1).trim();});return m;});
+  const keys=[...new Set(['Price',...parsed.flatMap(Object.keys)])];
+  const head='<thead><tr><th>Specification</th>'+selected.map(p=>'<th><div class="compare-product-head">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="">':'')+'<b>'+esc(p.name)+'</b><a href="?product='+encodeURIComponent(p.id)+'">View details ↗</a></div></th>').join('')+'</tr></thead>';
+  const body='<tbody>'+keys.map(k=>'<tr><th>'+esc(k)+'</th>'+selected.map((p,i)=>'<td>'+esc(k==='Price'?(p.price_text||'Ask for price'):(parsed[i][k]||'Not listed'))+'</td>').join('')+'</tr>').join('')+'</tbody>';
+  document.getElementById('aurkCompareTable').innerHTML='<table class="compare-table">'+head+body+'</table>';
+  document.getElementById('aurkCompareModal').hidden=false;
+ };
+ const observer=new MutationObserver(sync);observer.observe(document.getElementById('productGrid'),{childList:true});sync();
+})();
