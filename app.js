@@ -171,26 +171,23 @@ function closeOrder(){orderModal.classList.remove('open');orderModal.setAttribut
 document.getElementById('checkout').onclick=()=>{if(!cart.length){alert('Your bag is empty.');return;}document.getElementById('cartOverlay').classList.remove('open');orderModal.classList.add('open');orderModal.setAttribute('aria-hidden','false');};
 document.getElementById('orderClose').onclick=closeOrder;
 orderModal.addEventListener('click',e=>{if(e.target===orderModal)closeOrder();});
+function cartPriceTotal(){const a=cart.map(p=>{const m=String(p.price_text||'').match(/^\\s*(?:Rs\\.?|PKR)?\\s*([\\d,]+(?:\\.\\d{1,2})?)\\s*$/i);return m?Number(m[1].replace(/,/g,''))*p.qty:null;});return a.every(x=>x!==null)?a.reduce((x,y)=>x+y,0):null;}
+function updatePaymentOptions(){const method=document.querySelector('input[name="paymentChoice"]:checked')?.value||'Cash';document.getElementById('creditOptions').hidden=method==='Cash';document.getElementById('orderDownPaymentWrap').hidden=method!=='Both';const total=cartPriceTotal(),out=document.getElementById('orderCreditEstimate');if(method==='Cash'){out.textContent='Full payment in cash.';return;}if(total===null){out.textContent='Price not listed. The showroom will confirm the monthly amount.';return;}const months=Number(document.getElementById('orderCreditMonths').value),down=method==='Both'?Number(document.getElementById('orderDownPayment').value||0):0;if(down<0||down>=total){out.textContent='Down payment must be lower than the order total.';return;}out.textContent='Indicative balance PKR '+Math.round(total-down).toLocaleString('en-PK')+' • Approx. PKR '+Math.round((total-down)/months).toLocaleString('en-PK')+' / month.';}
+document.querySelectorAll('input[name="paymentChoice"]').forEach(x=>x.addEventListener('change',updatePaymentOptions));document.getElementById('orderCreditMonths').addEventListener('change',updatePaymentOptions);document.getElementById('orderDownPayment').addEventListener('input',updatePaymentOptions);
 document.getElementById('customerOrderForm').addEventListener('submit',async e=>{
  e.preventDefault();if(!cart.length){alert('Your bag is empty. Please add a scooter again.');closeOrder();return;}
  const msg=document.getElementById('orderMessage'),btn=document.getElementById('placeOrderBtn');btn.disabled=true;msg.textContent='Submitting your order…';
  const customer={name:document.getElementById('customerName').value.trim(),phone:document.getElementById('customerPhone').value.trim(),address:document.getElementById('customerAddress').value.trim(),city:document.getElementById('customerCity').value.trim(),note:document.getElementById('customerNote').value.trim()};
- const items=cart.map(p=>({product_id:String(p.id),name:p.name,quantity:p.qty,price_text:p.price_text||'Price on enquiry'}));
- const orderId=crypto.randomUUID();
- const parsePrice=value=>{const m=String(value??'').match(/^\s*(?:Rs\.?|PKR)?\s*([\d,]+(?:\.\d{1,2})?)\s*$/i);return m?Number(m[1].replace(/,/g,'')):null;};
- const subtotalValues=items.map(x=>{const n=parsePrice(x.price_text);return n===null?null:n*x.quantity;});
- const subtotal=subtotalValues.every(x=>x!==null)?subtotalValues.reduce((a,b)=>a+b,0):null;
- const order={id:orderId,customer_name:customer.name,customer_phone:customer.phone,delivery_address:customer.address,city:customer.city,customer_note:customer.note||null,items,subtotal_amount:subtotal,delivery_charge:null,final_amount:null,payment_method:'Cash on Delivery',status:'New'};
+ const method=document.querySelector('input[name="paymentChoice"]:checked')?.value||'Cash',months=method==='Cash'?null:Number(document.getElementById('orderCreditMonths').value),total=cartPriceTotal(),down=method==='Both'?Number(document.getElementById('orderDownPayment').value||0):0;
+ if(method!=='Cash'&&total!==null&&(down<0||down>=total)){msg.textContent='Enter a down payment lower than the order total.';btn.disabled=false;return;}
+ const balance=total===null?null:total-down,monthly=balance!==null&&months?Math.round(balance/months):null,items=cart.map(p=>({product_id:String(p.id),name:p.name,quantity:p.qty,price_text:p.price_text||'Price on enquiry'})),orderId=crypto.randomUUID();
+ const payNote=method==='Cash'?'Payment preference: Cash.':('Payment preference: '+method+'; duration: '+months+' months; cash down payment: '+(method==='Both'?'PKR '+down.toLocaleString('en-PK'):'PKR 0')+'; estimated financed balance: '+(balance===null?'To be confirmed':'PKR '+Math.round(balance).toLocaleString('en-PK'))+'; indicative monthly amount: '+(monthly===null?'To be confirmed':'PKR '+monthly.toLocaleString('en-PK'))+'. Subject to showroom confirmation.');
+ const order={id:orderId,customer_name:customer.name,customer_phone:customer.phone,delivery_address:customer.address,city:customer.city,customer_note:[customer.note,payNote].filter(Boolean).join('\\n'),items,subtotal_amount:total,delivery_charge:null,final_amount:null,payment_method:method,status:'New'};
  if(!supabase){msg.textContent='Order saving is not configured. Please contact us on WhatsApp.';btn.disabled=false;return;}
- const {error}=await supabase.from('site_orders').insert(order);
- if(error){msg.textContent='Could not save order: '+error.message+' Please try again or contact us on WhatsApp.';btn.disabled=false;return;}
- const pricedItems=items.map(x=>{const match=String(x.price_text||'').match(/^\s*(?:Rs\.?|PKR)?\s*([\d,]+(?:\.\d{1,2})?)\s*$/i);const unitPrice=match?Number(match[1].replace(/,/g,'')):null;return {...x,unitPrice,lineTotal:unitPrice===null?null:unitPrice*x.quantity};});
- const allPricesKnown=pricedItems.every(x=>x.lineTotal!==null);
- const money=n=>'PKR '+n.toLocaleString('en-PK',{maximumFractionDigits:2});
- const itemLines=pricedItems.map(x=>`• ${x.name}\n  Quantity: ${x.quantity}\n  Website Price: ${x.price_text}\n  Line Total: ${x.lineTotal===null?'To be confirmed':money(x.lineTotal)}`).join('\n');
- const message=`*NEW CASH ON DELIVERY ORDER*\n\nAssalam-o-Alaikum AUR-K EV Team,\nI have placed an order through your website. Please review the complete order details below.\n\n*ORDER DETAILS*\nOrder Reference: ${orderId}\n\n${itemLines}\n\n*PRICE SUMMARY*\nSubtotal: ${subtotal===null?'To be confirmed':money(subtotal)}\nDelivery Charges: To be confirmed\n*Final Amount Payable: To be confirmed by AUR-K EV Team*\n\n*CUSTOMER DETAILS*\nName: ${customer.name}\nMobile: ${customer.phone}\nDelivery Address: ${customer.address}, ${customer.city}\nSpecial Instructions: ${customer.note||'None'}\n\n*PAYMENT METHOD*\nCash on Delivery (COD)\n\nPlease confirm product availability, the final total price, delivery charges, and estimated delivery time.\n\nThank you!`;
- msg.textContent='Order saved successfully. Opening WhatsApp…';
- whatsapp(message);cart=[];renderCart();e.target.reset();closeOrder();btn.disabled=false;
+ const {error}=await supabase.from('site_orders').insert(order);if(error){msg.textContent='Could not save order: '+error.message+' Please try again or contact us on WhatsApp.';btn.disabled=false;return;}
+ const money=n=>'PKR '+Math.round(n).toLocaleString('en-PK'),detail=method==='Cash'?'Cash payment':method==='Credit'?'Credit plan for '+months+' months':'Both: cash down payment '+money(down)+' and balance on credit for '+months+' months';
+ const message='*NEW AUR-K EV ORDER*\\nOrder reference: '+orderId+'\\nItems: '+items.map(x=>x.name+' x '+x.quantity+' ('+x.price_text+')').join('; ')+'\\nCustomer: '+customer.name+'\\nPhone: '+customer.phone+'\\nAddress: '+customer.address+', '+customer.city+'\\nPayment preference: '+detail+'\\nEstimated monthly amount: '+(monthly===null?'To be confirmed':money(monthly)+' (indicative)')+'\\nPlease confirm final price, eligibility and actual terms.';
+ msg.textContent='Order saved successfully. Opening WhatsApp…';whatsapp(message);cart=[];renderCart();e.target.reset();updatePaymentOptions();closeOrder();btn.disabled=false;
 });
 document.getElementById('contactWhatsApp').onclick=e=>{e.preventDefault();whatsapp('Hello AUR-K EV, I would like to know more about your electric scooters.');};document.getElementById('menuToggle').onclick=()=>document.getElementById('nav').classList.toggle('show');document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>document.getElementById('nav').classList.remove('show')));document.getElementById('year').textContent=new Date().getFullYear();
 renderProducts();renderCart();
@@ -243,41 +240,3 @@ if(reviewForm){
 }
 
 
-/* AUR-K EV installment enquiry calculator — no financing terms are promised */
-(function setupInstallmentEnquiry(){
- const priceInput=document.getElementById('planPrice');
- const downInput=document.getElementById('planDownPayment');
- const monthsInput=document.getElementById('planMonths');
- const balanceOutput=document.getElementById('planBalance');
- const monthlyOutput=document.getElementById('planMonthly');
- const message=document.getElementById('planCalcMessage');
- const format=n=>'PKR '+Math.round(n).toLocaleString('en-PK');
- function calculate(){
-  const price=Math.max(0,Number(priceInput?.value)||0);
-  const down=Math.max(0,Number(downInput?.value)||0);
-  const months=Math.max(1,Number(monthsInput?.value)||1);
-  const valid=price>0&&down<=price;
-  if(balanceOutput)balanceOutput.textContent=valid?format(price-down):'—';
-  if(monthlyOutput)monthlyOutput.textContent=valid?format((price-down)/months):'—';
-  if(message)message.textContent=!price?'Enter the scooter price shared by our showroom.':down>price?'Down payment cannot exceed the scooter price.':'Illustrative estimate only. AUR-K EV will confirm eligibility, duration and final terms individually.';
-  const send=document.getElementById('planEnquiry');
-  if(send)send.disabled=!valid;
- }
- [priceInput,downInput,monthsInput].forEach(el=>el?.addEventListener('input',calculate));
- document.getElementById('planProduct')?.addEventListener('change',()=>{
-  const p=PRODUCTS.find(x=>String(x.id)===document.getElementById('planProduct').value);
-  if(p&&p.price_text){const m=String(p.price_text).replace(/,/g,'').match(/(?:PKR|Rs\.?)[\s]*([0-9]+(?:\.[0-9]+)?)/i);if(m&&priceInput)priceInput.value=m[1];}
-  calculate();
- });
- document.getElementById('planEnquiry')?.addEventListener('click',()=>{
-  calculate();
-  const price=Number(priceInput.value),down=Number(downInput.value),months=Number(monthsInput.value);
-  if(!(price>0&&down>=0&&down<=price))return;
-  const product=PRODUCTS.find(p=>String(p.id)===document.getElementById('planProduct').value);
-  const name=product?.name||'Not selected';
-  const balance=price-down,monthly=balance/months;
-  const text='Assalam-o-Alaikum AUR-K EV, I would like to discuss an individual installment plan.\nScooter: '+name+'\nEstimated scooter price: PKR '+price.toLocaleString('en-PK')+'\nProposed down payment: PKR '+down.toLocaleString('en-PK')+'\nPreferred duration: '+months+' months\nIllustrative remaining balance: PKR '+balance.toLocaleString('en-PK')+'\nIllustrative monthly amount: PKR '+Math.round(monthly).toLocaleString('en-PK')+'\nPlease contact me to discuss eligibility and your available terms. I understand these figures are estimates and not a confirmed offer.';
-  window.open('https://wa.me/'+WHATSAPP_NUMBER+'?text='+encodeURIComponent(text),'_blank','noopener');
- });
- calculate();
-})();
