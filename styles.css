@@ -813,3 +813,22 @@ body.storefront .why-v2{grid-template-columns:1fr}
 
 /* Featured homepage poster — original Supabase image, separate from the Panther product card */
 
+
+
+/* Homepage hero image correction: natural exposure and calmer premium framing */
+body.storefront .hero-visual{height:500px;min-height:0;}
+body.storefront .hero-image-frame{
+  width:94%;height:88%;padding:0;overflow:hidden;
+  background:#171613;border:1px solid #b7965d;
+  box-shadow:0 20px 48px #0008,0 0 0 1px #d7bd8a18;
+}
+body.storefront .hero-image-frame:after{display:none!important;}
+body.storefront .hero-image-frame img{
+  display:block;width:100%;height:100%;object-fit:contain;
+  padding:10px;background:#171613;
+  filter:brightness(.78) contrast(1.08) saturate(.92)!important;
+  mix-blend-mode:normal!important;opacity:1!important;
+}
+@media(max-width:900px){body.storefront .hero-visual{height:410px;}}
+@media(max-width:700px){body.storefront .hero-visual{height:310px;margin-top:24px;}body.storefront .hero-image-frame{width:96%;height:90%;}}
+@media(max-width:430px){body.storefront .hero-visual{height:270px;}body.storefront .hero-image-frame img{padding:7px;}}
