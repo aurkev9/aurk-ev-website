@@ -29,6 +29,7 @@ async function refreshSession(){
  if(['owner','product_staff'].includes(currentRole))loadImages();
  if(['owner','manager'].includes(currentRole))await loadProductCostMap();
  if(canView('staff'))loadStaff();
+ if(currentRole==='owner')loadReviews();
 }
 supabase.auth.onAuthStateChange(()=>refreshSession());
 document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();loginMessage.textContent="Signing in…";const {error}=await supabase.auth.signInWithPassword({email:document.getElementById("email").value,password:document.getElementById("password").value});loginMessage.textContent=error?error.message:"";await refreshSession();});
@@ -260,3 +261,23 @@ if(staffForm)staffForm.addEventListener('submit',async e=>{e.preventDefault();if
 document.getElementById('refreshOrders')?.addEventListener('click',loadOrders);
 const orderObserver=new MutationObserver(()=>{if(!dashboard.hidden&&canView('orders'))loadOrders();});
 orderObserver.observe(dashboard,{attributes:true,attributeFilter:['hidden']});
+
+/* Owner-only customer review moderation */
+async function loadReviews(){
+ if(currentRole!=='owner')return;
+ for(const id of ['pendingReviews','approvedReviews','rejectedReviews']){const el=document.getElementById(id);if(el)el.textContent='Loading…';}
+ const {data,error}=await supabase.from('site_reviews').select('id,customer_name,rating,review_text,product_id,status,created_at').order('created_at',{ascending:false});
+ if(error){['pendingReviews','approvedReviews','rejectedReviews'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=error.message;});return;}
+ const labels={pending:'pendingReviews',approved:'approvedReviews',rejected:'rejectedReviews'};
+ for(const [status,id] of Object.entries(labels)){
+  const host=document.getElementById(id);if(!host)continue;
+  const rows=(data||[]).filter(r=>r.status===status);
+  if(!rows.length){host.innerHTML='<p class="muted">No '+status+' reviews.</p>';continue;}
+  host.innerHTML='<table class="customer-table"><thead><tr><th>Customer</th><th>Rating</th><th>Review</th><th>Date</th><th>Actions</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+escHtml(r.customer_name)+'</td><td>'+('★'.repeat(r.rating))+'</td><td>'+escHtml(r.review_text)+'</td><td>'+new Date(r.created_at).toLocaleDateString()+'</td><td>'+(status==='pending'?'<button class="gold-btn" data-review-approve="'+r.id+'">Approve</button> ':'')+(status!=='rejected'?'<button class="outline-btn" data-review-reject="'+r.id+'">Reject</button> ':'')+'<button class="delete-btn" data-review-delete="'+r.id+'">Delete</button></td></tr>').join('')+'</tbody></table>';
+ }
+ document.querySelectorAll('[data-review-approve]').forEach(b=>b.onclick=()=>updateReview(b.dataset.reviewApprove,'approved'));
+ document.querySelectorAll('[data-review-reject]').forEach(b=>b.onclick=()=>updateReview(b.dataset.reviewReject,'rejected'));
+ document.querySelectorAll('[data-review-delete]').forEach(b=>b.onclick=async()=>{if(!confirm('Permanently delete this review?'))return;const {error}=await supabase.from('site_reviews').delete().eq('id',b.dataset.reviewDelete);if(error){alert(error.message);return;}await loadReviews();});
+}
+async function updateReview(id,status){const {error}=await supabase.from('site_reviews').update({status}).eq('id',id);if(error){alert('Could not update review: '+error.message);return;}await loadReviews();}
+document.getElementById('refreshReviews')?.addEventListener('click',loadReviews);
