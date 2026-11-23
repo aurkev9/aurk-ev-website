@@ -718,3 +718,84 @@ body.storefront .site-header .brand-logo{
  body.storefront .site-header .brand{width:64px!important;height:64px!important;max-width:64px!important}
  body.storefront .site-header .brand-logo{width:64px!important;height:62px!important}
 }
+
+
+/* AUR-K EV responsive refinement — tablet and mobile */
+@media (max-width:900px){
+  body.storefront .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  body.storefront .reviews-v2{grid-template-columns:1fr;gap:30px;align-items:start}
+  body.storefront .review-form-card{max-width:100%}
+  body.storefront .product-info-luxury{padding:20px 18px}
+  body.storefront .product-photo-luxury{height:250px}
+  body.storefront .contact-v2{grid-template-columns:1fr;gap:28px}
+}
+@media (max-width:700px){
+  body.storefront .premium-topbar{padding:0 12px;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  body.storefront .topbar-location{min-width:0;white-space:nowrap}
+  body.storefront .topbar-contact{white-space:nowrap}
+  body.storefront .site-header{height:74px!important;min-height:74px;padding:0 12px;gap:9px}
+  body.storefront .site-header .brand{flex:0 0 72px;width:72px!important;height:68px!important;max-width:72px!important}
+  body.storefront .site-header .brand-logo{width:72px!important;height:66px!important;object-position:left center}
+  body.storefront .menu-toggle{display:grid!important;place-items:center;width:44px;height:44px;min-width:44px;margin:0 0 0 auto;padding:0;font-size:25px;line-height:1}
+  body.storefront .cart-button{min-height:42px;padding:9px 10px!important;white-space:nowrap;font-size:8px!important}
+  body.storefront .site-header nav{top:74px;z-index:25;padding:17px 20px 22px;gap:4px;box-shadow:0 16px 25px #0004}
+  body.storefront .site-header nav a{display:block;padding:12px 2px;font-size:11px;letter-spacing:1px;border-bottom:1px solid #ffffff14}
+  body.storefront .hero-v2{padding:42px 7% 34px;gap:0}
+  body.storefront .hero-v2 h1{font-size:clamp(40px,10.5vw,49px);line-height:1.05;margin-bottom:17px}
+  body.storefront .hero-lead{font-size:12px;line-height:1.75}
+  body.storefront .hero-actions{gap:13px;margin:22px 0 27px}
+  body.storefront .hero-actions .btn{min-height:48px;padding:0 16px}
+  body.storefront .hero-proof{gap:8px;padding-top:16px}
+  body.storefront .hero-proof b{font-size:16px}
+  body.storefront .hero-proof span{font-size:7px;line-height:1.35;max-width:92px}
+  body.storefront .hero-visual{height:270px;margin-top:20px}
+  body.storefront .hero-orbit{width:68vw;max-width:290px}
+  body.storefront .hero-image-frame{width:91%;height:88%}
+  body.storefront .hero-stamp{right:0;bottom:0;min-width:116px;padding:11px 13px}
+  body.storefront .hero-index{top:1%;left:2%}
+  body.storefront .collection-v2{padding:62px 6% 68px}
+  body.storefront .section-heading h2{font-size:clamp(35px,9vw,43px);line-height:1.08}
+  body.storefront .catalog-tools{grid-template-columns:1fr;gap:10px;margin:18px 0 14px}
+  body.storefront .catalog-tools input,body.storefront .catalog-tools select{height:48px;min-height:48px;font-size:16px}
+  body.storefront .filters{display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;padding:2px 1px 9px;margin:20px 0 16px;scrollbar-width:thin}
+  body.storefront .filters .filter{flex:0 0 auto;min-height:40px;padding:10px 14px;white-space:nowrap}
+  body.storefront .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  body.storefront .product-photo-luxury{height:clamp(145px,43vw,205px);min-height:145px}
+  body.storefront .product-photo-luxury img{padding:9px}
+  body.storefront .product-info-luxury{padding:14px 12px 13px}
+  body.storefront .product-info-luxury h3{font-size:16px;line-height:1.2}
+  body.storefront .product-info-luxury p{font-size:10px;line-height:1.5}
+  body.storefront .product-price-row{gap:5px;flex-wrap:wrap}
+  body.storefront .product-price-row .price{font-size:15px}
+  body.storefront .product-actions{display:grid;grid-template-columns:1fr;gap:8px}
+  body.storefront .product-details-btn,body.storefront .product-order-btn{width:100%;min-height:42px;justify-content:center;padding:10px 8px;font-size:9px}
+  body.storefront .compare-toggle{min-height:38px;width:100%}
+  body.storefront .reviews-v2,body.storefront .contact-v2{padding:64px 7%;gap:25px}
+  body.storefront .review-form-card{padding:20px 16px}
+  body.storefront .review-form input,body.storefront .review-form select,body.storefront .review-form textarea{font-size:16px;min-height:44px}
+  body.storefront .footer-v2{padding:24px 7%;gap:15px}
+  body.storefront .product-detail-wrap{padding:25px 6% 55px}
+  body.storefront .detail-main-image{min-height:250px}
+  body.storefront .detail-information h1{font-size:clamp(32px,9vw,42px)}
+}
+@media (max-width:430px){
+  body.storefront .product-grid{grid-template-columns:1fr;gap:16px}
+  body.storefront .product-photo-luxury{height:245px;min-height:220px}
+  body.storefront .product-info-luxury{padding:19px 17px 17px}
+  body.storefront .product-info-luxury h3{font-size:19px}
+  body.storefront .product-price-row .price{font-size:18px}
+  body.storefront .product-actions{grid-template-columns:1fr 1fr}
+  body.storefront .product-details-btn,body.storefront .product-order-btn{font-size:9px;padding:9px 6px}
+  body.storefront .hero-v2{padding-top:38px}
+  body.storefront .hero-visual{height:245px}
+  body.storefront .hero-proof span{font-size:6.5px}
+}
+@media (max-width:360px){
+  body.storefront .topbar-location{font-size:6px;letter-spacing:.6px}
+  body.storefront .topbar-contact b{font-size:6px}
+  body.storefront .site-header .brand,body.storefront .site-header .brand-logo{width:64px!important;max-width:64px!important}
+  body.storefront .cart-button{padding:8px!important}
+  body.storefront .hero-v2 h1{font-size:38px}
+  body.storefront .hero-proof{gap:5px}
+  body.storefront .hero-proof span{font-size:6px}
+}
