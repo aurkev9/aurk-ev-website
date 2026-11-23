@@ -35,7 +35,33 @@ supabase.auth.onAuthStateChange(()=>refreshSession());
 document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();loginMessage.textContent="Signing in…";const {error}=await supabase.auth.signInWithPassword({email:document.getElementById("email").value,password:document.getElementById("password").value});loginMessage.textContent=error?error.message:"";await refreshSession();});
 document.getElementById("logout").addEventListener("click",async()=>{await supabase.auth.signOut();await refreshSession();});
 document.getElementById("uploadForm").addEventListener("submit",async e=>{e.preventDefault();uploadMessage.textContent="Uploading…";const file=document.getElementById("imageFile").files[0];if(!file)return;if(!["image/jpeg","image/png","image/webp"].includes(file.type)){uploadMessage.textContent="Please choose JPG, PNG or WebP.";return;}if(file.size>8*1024*1024){uploadMessage.textContent="Image must be smaller than 8 MB.";return;}const ext=file.name.split(".").pop().toLowerCase(),path=`${crypto.randomUUID()}.${ext}`;const {error:upErr}=await supabase.storage.from("website-images").upload(path,file,{upsert:false,contentType:file.type});if(upErr){uploadMessage.textContent=upErr.message;return;}const {data:{publicUrl}}=supabase.storage.from("website-images").getPublicUrl(path);const slot=document.getElementById("imageSlot").value;const {error:dbErr}=await supabase.from("site_images").insert({title:document.getElementById("imageTitle").value,slot,product_name:document.getElementById("productName").value,storage_path:path,public_url:publicUrl});if(dbErr){await supabase.storage.from("website-images").remove([path]);uploadMessage.textContent=dbErr.message;return;}uploadMessage.textContent="Image uploaded successfully. Refresh your website to see it.";e.target.reset();await loadImages();});
-async function loadImages(){const list=document.getElementById("imageList");list.textContent="Loading…";const {data,error}=await supabase.from("site_images").select("*").order("created_at",{ascending:false});if(error){list.textContent=error.message;return;}list.innerHTML="";if(!data?.length){list.textContent="No uploaded images yet.";return;}for(const item of data){const card=document.createElement("article");card.className="image-item";const img=document.createElement("img");img.src=item.public_url;img.alt=item.title;const body=document.createElement("div");const title=document.createElement("strong");title.textContent=item.title;const meta=document.createElement("small");meta.textContent=`${item.slot}${item.product_name?" • "+item.product_name:""}`;const del=document.createElement("button");del.className="delete-btn";del.textContent="Delete";del.addEventListener("click",async()=>{if(!confirm(`Delete ${item.title}?`))return;const {error:dbError}=await supabase.from("site_images").delete().eq("id",item.id);if(dbError){alert(dbError.message);return;}await supabase.storage.from("website-images").remove([item.storage_path]);await loadImages();});body.append(title,meta,del);card.append(img,body);list.append(card);}}
+async function loadImages(){const list=document.getElementById("imageList");list.textContent="Loading…";const {data,error}=await supabase.from("site_images").select("*").order("created_at",{ascending:false});if(error){list.textContent=error.message;return;}list.innerHTML="";if(!data?.length){list.textContent="No uploaded images yet.";return;}for(const item of data){const card=document.createElement("article");card.className="image-item";const img=document.createElement("img");img.src=item.public_url;img.alt=item.title;const body=document.createElement("div");const title=document.createElement("strong");title.textContent=item.title;const meta=document.createElement("small");meta.textContent=`${item.slot}${item.product_name?" • "+item.product_name:""}`;const del=document.createElement("button");del.className="delete-btn";del.textContent="Delete";del.addEventListener("click",async()=>{if(!confirm(`Delete ${item.title}?`))return;const {error:dbError}=await supabase.from("site_images").delete().eq("id",item.id);if(dbError){alert(dbError.message);return;}await supabase.storage.from("website-images").remove([item.storage_path]);await loadImages();});body.append(title,meta,del);card.append(img,body);list.append(card);}await refreshHomepageImageOptions();}
+async function refreshHomepageImageOptions(){
+ const select=document.getElementById("homepageImageSelect");if(!select)return;
+ const {data,error}=await supabase.from("site_images").select("id,title,slot,product_name,storage_path,public_url").order("created_at",{ascending:false});
+ if(error){select.innerHTML='<option value="">Could not load images</option>';return;}
+ const images=data||[];select.innerHTML='';
+ if(!images.length){select.innerHTML='<option value="">Upload an image first</option>';return;}
+ images.forEach(item=>{const option=document.createElement("option");option.value=item.id;option.textContent=item.title+" — "+item.slot+(item.product_name?" • "+item.product_name:"");option.dataset.url=item.public_url;select.append(option);});
+ const current=images.find(x=>x.slot==="hero");if(current)select.value=current.id;updateHomepageImagePreview();
+}
+function updateHomepageImagePreview(){
+ const select=document.getElementById("homepageImageSelect"),preview=document.getElementById("homepageImagePreview");if(!select||!preview)return;
+ const url=select.selectedOptions[0]?.dataset.url;preview.innerHTML="";
+ if(!url){preview.textContent="Select an image to preview it.";return;}
+ const img=document.createElement("img");img.src=url;img.alt="Homepage image preview";preview.append(img);
+}
+document.getElementById("homepageImageSelect")?.addEventListener("change",updateHomepageImagePreview);
+document.getElementById("setHomepageImage")?.addEventListener("click",async()=>{
+ const select=document.getElementById("homepageImageSelect"),message=document.getElementById("homepageImageMessage"),id=select?.value;
+ if(!id){message.textContent="Please choose an uploaded image.";return;}
+ const {data:chosen,error:readError}=await supabase.from("site_images").select("title,product_name,storage_path,public_url").eq("id",id).single();
+ if(readError||!chosen){message.textContent=readError?.message||"Image not found.";return;}
+ message.textContent="Applying homepage image…";
+ const {error}=await supabase.from("site_images").insert({title:chosen.title,slot:"hero",product_name:chosen.product_name,storage_path:chosen.storage_path,public_url:chosen.public_url});
+ if(error){message.textContent="Could not set homepage image: "+error.message;return;}
+ message.textContent="Homepage image updated. Refresh the live website to see it.";await loadImages();
+});
 refreshSession();
 // Product catalogue manager (requires the included product-table migration).
 let editingProductId=null;
