@@ -8,7 +8,7 @@ if(SUPABASE_URL.startsWith("PASTE_")||SUPABASE_ANON_KEY.startsWith("PASTE_")){
 }
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 let currentRole=null;
-const roleViews={owner:['overview','products','orders','customers','reports','finance','staff','reviews'],manager:['overview','orders','customers','reports','finance'],sales_staff:['overview','orders','customers'],product_staff:['overview','products']};
+const roleViews={owner:['overview','products','competitors','orders','customers','reports','finance','staff','reviews'],manager:['overview','orders','customers','reports','finance'],sales_staff:['overview','orders','customers'],product_staff:['overview','products']};
 const canView=view=>(roleViews[currentRole]||[]).includes(view);
 function applyRolePermissions(){
  document.querySelectorAll('[data-view]').forEach(b=>{b.hidden=!canView(b.dataset.view);});
@@ -29,6 +29,7 @@ async function refreshSession(){
  if(['owner','product_staff'].includes(currentRole))loadImages();
  if(['owner','manager'].includes(currentRole))await loadProductCostMap();
  if(canView('staff'))loadStaff();
+ if(currentRole==='owner')loadCompetitorAdmin();
  if(currentRole==='owner')loadReviews();
 }
 supabase.auth.onAuthStateChange(()=>refreshSession());
@@ -339,3 +340,37 @@ async function loadReviews(){
 }
 async function updateReview(id,status){const {error}=await supabase.from('site_reviews').update({status}).eq('id',id);if(error){alert('Could not update review: '+error.message);return;}await loadReviews();}
 document.getElementById('refreshReviews')?.addEventListener('click',loadReviews);
+
+
+/* Owner-only competitor scooter management */
+let editingCompetitorId=null;
+const competitorForm=document.getElementById('competitorForm');
+function resetCompetitorForm(){
+ editingCompetitorId=null;competitorForm?.reset();
+ const active=document.getElementById('competitorActive');if(active)active.checked=true;
+ const title=document.getElementById('competitorFormTitle');if(title)title.textContent='Add competitor scooter';
+ const save=document.getElementById('competitorSaveButton');if(save)save.textContent='Save competitor scooter';
+ const cancel=document.getElementById('competitorCancel');if(cancel)cancel.hidden=true;
+}
+async function loadCompetitorAdmin(){
+ if(currentRole!=='owner')return;
+ const host=document.getElementById('competitorList');if(!host)return;
+ host.textContent='Loading competitor models…';
+ const {data,error}=await supabase.from('site_competitor_scooters').select('*').order('company_name').order('model_name');
+ if(error){host.textContent='Could not load competitor models: '+error.message;return;}
+ if(!data?.length){host.innerHTML='<p class="muted">No competitor models added yet. Use the form above to add the first one.</p>';return;}
+ host.innerHTML='<table class="customer-table"><thead><tr><th>Company / model</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+data.map(p=>'<tr><td><b>'+escHtml(p.company_name)+'</b><br>'+escHtml(p.model_name)+'</td><td>'+escHtml(p.price_text||'Not provided')+'</td><td>'+(p.is_active?'Visible':'Hidden')+'</td><td><button class="outline-btn" type="button" data-competitor-edit="'+p.id+'">Edit</button> <button class="delete-btn" type="button" data-competitor-delete="'+p.id+'">Delete</button></td></tr>').join('')+'</tbody></table>';
+ host.querySelectorAll('[data-competitor-edit]').forEach(btn=>btn.onclick=()=>{const p=data.find(x=>x.id===btn.dataset.competitorEdit);if(!p)return;editingCompetitorId=p.id;for(const [id,key] of Object.entries({competitorCompany:'company_name',competitorModel:'model_name',competitorPrice:'price_text',competitorBattery:'battery',competitorMotor:'motor_w',competitorRange:'range_km',competitorSpeed:'top_speed_kmh',competitorWarranty:'warranty_text',competitorImage:'image_url',competitorNotes:'notes'})){document.getElementById(id).value=p[key]??'';}document.getElementById('competitorActive').checked=!!p.is_active;document.getElementById('competitorFormTitle').textContent='Edit competitor scooter';document.getElementById('competitorSaveButton').textContent='Update competitor scooter';document.getElementById('competitorCancel').hidden=false;document.getElementById('competitorForm').scrollIntoView({behavior:'smooth',block:'center'});});
+ host.querySelectorAll('[data-competitor-delete]').forEach(btn=>btn.onclick=async()=>{if(!confirm('Delete this competitor scooter?'))return;const {error}=await supabase.from('site_competitor_scooters').delete().eq('id',btn.dataset.competitorDelete);if(error){alert(error.message);return;}await loadCompetitorAdmin();});
+}
+competitorForm?.addEventListener('submit',async e=>{
+ e.preventDefault();if(currentRole!=='owner')return;
+ const val=id=>document.getElementById(id).value.trim();
+ const num=id=>val(id)===''?null:Number(val(id));
+ const row={company_name:val('competitorCompany'),model_name:val('competitorModel'),price_text:val('competitorPrice')||null,battery:val('competitorBattery')||null,motor_w:num('competitorMotor'),range_km:num('competitorRange'),top_speed_kmh:num('competitorSpeed'),warranty_text:val('competitorWarranty')||null,image_url:val('competitorImage')||null,notes:val('competitorNotes')||null,is_active:document.getElementById('competitorActive').checked,updated_at:new Date().toISOString()};
+ const msg=document.getElementById('competitorMessage');msg.textContent='Saving…';
+ const result=editingCompetitorId?await supabase.from('site_competitor_scooters').update(row).eq('id',editingCompetitorId):await supabase.from('site_competitor_scooters').insert(row);
+ if(result.error){msg.textContent='Could not save competitor scooter: '+result.error.message;return;}
+ msg.textContent='Competitor scooter saved.';resetCompetitorForm();await loadCompetitorAdmin();
+});
+document.getElementById('competitorCancel')?.addEventListener('click',resetCompetitorForm);
