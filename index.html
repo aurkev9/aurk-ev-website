@@ -13,7 +13,7 @@
   <header class="site-header" id="top">
     <a class="brand" href="#home" aria-label="AUR-K EV home"><img class="brand-logo" src="aurk-ev-logo.png" alt="AUR-K EV Bike Experts"></a>
     <button class="menu-toggle" id="menuToggle" aria-label="Open navigation">☰</button>
-    <nav id="nav"><a href="#home">Home</a><a href="#collection">Our scooters</a><a href="#why-us">Why AUR-K</a><a href="#about">About us</a><a href="#reviews">Feedback</a><a href="#contact">Visit us</a></nav>
+    <nav id="nav"><a href="#home">Home</a><a href="#collection">Our scooters</a><a href="#compare">Compare</a><a href="#why-us">Why AUR-K</a><a href="#about">About us</a><a href="#reviews">Feedback</a><a href="#contact">Visit us</a></nav>
     <button class="cart-button" id="cartOpen">Enquiry bag <span id="cartCount">0</span></button>
   </header>
   <main id="storefrontMain">
@@ -39,6 +39,16 @@
       <div class="filters"><button class="filter active" data-filter="all">All scooters</button><button class="filter" data-filter="commuter">City commute</button><button class="filter" data-filter="premium">Premium</button></div>
       <div class="product-grid" id="productGrid"></div>
       <p class="demo-note">For confirmed specifications, current prices and availability, please contact AUR-K EV directly.</p>
+    </section>
+    <section class="section competitor-compare" id="compare">
+      <div class="section-heading"><div><p class="eyebrow">MAKE AN INFORMED CHOICE</p><h2>Compare before<br><em>you choose.</em></h2></div><div class="collection-intro"><p>Compare an AUR-K EV scooter with models from other electric scooter companies. Specifications are shown as entered by our showroom.</p></div></div>
+      <div class="compare-picker">
+        <label>Your AUR-K scooter<select id="compareAurkProduct"><option value="">Choose an AUR-K model</option></select></label>
+        <label>Competitor scooter<select id="compareCompetitorProduct"><option value="">Choose a competitor model</option></select></label>
+        <button class="btn btn-gold" id="runCompetitorCompare" type="button">Compare scooters</button>
+      </div>
+      <div id="competitorCompareResult" class="competitor-compare-result" aria-live="polite"><p>Select one scooter from each list to see a side-by-side comparison.</p></div>
+      <p class="compare-disclaimer">Comparison details are supplied by AUR-K EV and should be confirmed with each manufacturer or dealer. Missing information is shown as “Not provided”.</p>
     </section>
     <section class="why-v2" id="why-us"><div class="why-image"><img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=85" alt="Close-up of a modern two-wheeler"></div><div class="why-content"><p class="eyebrow">WHY CHOOSE AUR-K EV</p><h2>A better way<br><em>to move forward.</em></h2><p class="why-intro">A premium buying experience is about more than the scooter. Expect clear information, personal guidance and support from our Faisalabad showroom.</p><div class="why-points"><article><span>01</span><div><b>Personal guidance</b><p>Talk through your daily travel needs with our showroom team.</p></div></article><article><span>02</span><div><b>Explore your options</b><p>Compare available models, features and current offers.</p></div></article><article><span>03</span><div><b>Local showroom support</b><p>Visit us in Faisalabad and ask about availability and after-sales support.</p></div></article></div><a class="btn btn-gold" href="https://wa.me/923239661747">Talk to AUR-K EV ↗</a></div></section>
     <section class="about-v2" id="about"><div class="about-mark">AUR-K<br><span>EV</span></div><div><p class="eyebrow">A LITTLE ABOUT US</p><h2>Rooted in Faisalabad.<br><em>Driven by what’s next.</em></h2><p>AUR-K EV Bike Experts brings modern electric mobility closer to home. Visit our Faisalabad showroom to explore the collection, compare models and receive personal guidance from our team.</p><a href="#contact" class="inline-link">Meet us at the showroom ↗</a></div></section>
