@@ -292,7 +292,46 @@ document.getElementById('customerOrderForm').addEventListener('submit',async e=>
 document.getElementById('contactWhatsApp').onclick=e=>{e.preventDefault();whatsapp('Hello AUR-K EV, I would like to know more about your electric scooters.');};document.getElementById('menuToggle').onclick=()=>document.getElementById('nav').classList.toggle('show');document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>document.getElementById('nav').classList.remove('show')));document.getElementById('year').textContent=new Date().getFullYear();
 renderProducts();renderCart();
 if(!SUPABASE_URL.startsWith('PASTE_')&&!SUPABASE_ANON_KEY.startsWith('PASTE_')){try{supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const [{data:products,error:productError},{data:images}]=await Promise.all([supabase.from('site_products').select('id,name,category,tag,price_text,description,image_url,specifications,featured,created_at').order('created_at',{ascending:false}),supabase.from('site_images').select('*').order('created_at',{ascending:false})]);PRODUCT_IMAGES=images||[];const activeHero=PRODUCT_IMAGES.find(x=>x.slot==="hero"&&x.public_url);const heroElement=document.getElementById("heroImage");if(activeHero&&heroElement)heroElement.src=activeHero.public_url;if(!productError&&products?.length){PRODUCTS=products;renderProducts();}else if(!productError&&(!products||!products.length)&&images?.length){const imageProducts=images.filter(x=>x.slot==='product').map((x,i)=>({id:x.id||('image-'+i),name:x.product_name||x.title||'AUR-K EV Scooter',category:'premium',tag:'AUR-K EV',price_text:'Ask for price',description:'Contact us for details and availability.',image_url:x.public_url}));if(imageProducts.length){PRODUCTS=imageProducts;renderProducts();}}}catch(e){console.warn('Could not load live AUR-K EV content.',e);}}
+
+/* AUR-K EV vs competitor comparison */
+let competitorScooters=[];
+const compareAurkSelect=document.getElementById('compareAurkProduct');
+const compareOtherSelect=document.getElementById('compareCompetitorProduct');
+const compareResult=document.getElementById('competitorCompareResult');
+function fillCompareChoices(){
+ if(compareAurkSelect){compareAurkSelect.innerHTML='<option value="">Choose an AUR-K model</option>'+PRODUCTS.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');}
+ if(compareOtherSelect){compareOtherSelect.innerHTML='<option value="">Choose a competitor model</option>'+competitorScooters.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.company_name)+' — '+esc(p.model_name)+'</option>').join('');}
+}
+function aurkCompareValue(p,key){
+ const spec=productSpecs(p.specifications).join(' | ');
+ const patterns={battery:/(?:battery|voltage|lithium|graphene)[^|,;]*/i,motor:/(?:motor|power)[^|,;]*/i,range:/(?:range|distance)[^|,;]*/i,speed:/(?:top speed|speed)[^|,;]*/i,warranty:/(?:warranty)[^|,;]*/i};
+ const m=spec.match(patterns[key]);return m?m[0].trim():'Not provided';
+}
+function renderCompetitorComparison(){
+ const a=PRODUCTS.find(p=>String(p.id)===String(compareAurkSelect?.value));
+ const b=competitorScooters.find(p=>String(p.id)===String(compareOtherSelect?.value));
+ if(!a||!b){if(compareResult)compareResult.innerHTML='<p>Please select both scooters to compare.</p>';return;}
+ const rows=[
+ ['Price',a.price_text||'Not provided',b.price_text||'Not provided'],
+ ['Battery',aurkCompareValue(a,'battery'),b.battery||'Not provided'],
+ ['Motor power',aurkCompareValue(a,'motor'),b.motor_w?Number(b.motor_w).toLocaleString()+' W':'Not provided'],
+ ['Range',aurkCompareValue(a,'range'),b.range_km?b.range_km+' km':'Not provided'],
+ ['Top speed',aurkCompareValue(a,'speed'),b.top_speed_kmh?b.top_speed_kmh+' km/h':'Not provided'],
+ ['Warranty',aurkCompareValue(a,'warranty'),b.warranty_text||'Not provided']
+ ];
+ compareResult.innerHTML='<div class="competitor-compare-head"><article><small>AUR-K EV</small><b>'+esc(a.name)+'</b></article><article><small>'+esc(b.company_name)+'</small><b>'+esc(b.model_name)+'</b></article></div><div class="competitor-compare-table">'+rows.map(r=>'<div class="competitor-compare-row"><b>'+esc(r[0])+'</b><span>'+esc(r[1])+'</span><span>'+esc(r[2])+'</span></div>').join('')+'</div>';
+}
+document.getElementById('runCompetitorCompare')?.addEventListener('click',renderCompetitorComparison);
+async function loadCompetitorScooters(){
+ if(!supabase)return;
+ const {data,error}=await supabase.from('site_competitor_scooters').select('id,company_name,model_name,price_text,battery,motor_w,range_km,top_speed_kmh,warranty_text,image_url,notes').eq('is_active',true).order('company_name').order('model_name');
+ if(error){if(compareResult)compareResult.innerHTML='<p>Competitor comparison is temporarily unavailable.</p>';console.warn('Competitor scooters unavailable',error);return;}
+ competitorScooters=data||[];fillCompareChoices();
+ if(!competitorScooters.length&&compareResult)compareResult.innerHTML='<p>Competitor models will appear here once AUR-K EV adds them in the Admin Panel.</p>';
+}
+
 openRequestedProduct();
+if(supabase){fillCompareChoices();loadCompetitorScooters();}
 if(supabase){loadPublicReviews();const reviewProduct=document.getElementById('reviewProduct');if(reviewProduct)PRODUCTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;reviewProduct.append(o);});}
 
 
