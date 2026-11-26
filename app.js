@@ -297,6 +297,11 @@ if(!SUPABASE_URL.startsWith('PASTE_')&&!SUPABASE_ANON_KEY.startsWith('PASTE_')){
 let competitorScooters=[];
 const compareSelects=[1,2,3].map(i=>document.getElementById('compareScooter'+i));
 const compareResult=document.getElementById('competitorCompareResult');
+compareResult?.addEventListener('error',e=>{
+ const image=e.target.closest('.three-brand-photo img');if(!image)return;
+ const photo=image.parentElement;photo.classList.add('no-photo');image.remove();
+ const label=photo.querySelector('span');if(label)label.textContent='IMAGE UNAVAILABLE';
+},true);
 compareResult?.addEventListener('click',e=>{
  const image=e.target.closest('.three-brand-photo img');if(!image)return;
  let viewer=document.getElementById('competitorPhotoViewer');
@@ -331,7 +336,7 @@ function renderCompetitorComparison(){
  const brands=selected.map(p=>p.brand.toLowerCase());
  if(new Set(brands).size!==3){if(compareResult)compareResult.innerHTML='<p>Please choose scooters from three different brands.</p>';return;}
  const labels=[['Price','price_text'],['Battery','battery'],['Motor power','motor'],['Range','range'],['Top speed','speed'],['Warranty','warranty']];
- const cards=selected.map(p=>'<article class="three-brand-card"><div class="three-brand-photo">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.brand+' '+p.name)+' scooter" loading="eager" decoding="async" referrerpolicy="no-referrer" tabindex="0" role="button" aria-label="View full image of '+esc(p.brand+' '+p.name)+'" onerror="this.parentElement.classList.add(\\'no-photo\\');this.remove();this.parentElement.querySelector(\\'span\\').textContent=\\'IMAGE UNAVAILABLE\\'">':'')+'<span>PHOTO NOT ADDED</span></div><div class="three-brand-name"><small>'+esc(p.brand)+'</small><b>'+esc(p.name)+'</b></div></article>').join('');
+ const cards=selected.map(p=>'<article class="three-brand-card"><div class="three-brand-photo">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.brand+' '+p.name)+' scooter" loading="eager" decoding="async" referrerpolicy="no-referrer" tabindex="0" role="button" aria-label="View full image of '+esc(p.brand+' '+p.name)+'">':'')+'<span>PHOTO NOT ADDED</span></div><div class="three-brand-name"><small>'+esc(p.brand)+'</small><b>'+esc(p.name)+'</b></div></article>').join('');
  const rows=labels.map(([label,key])=>'<div class="three-brand-spec-row"><b>'+esc(label)+'</b>'+selected.map(p=>'<span>'+esc(p[key]||'Not provided')+'</span>').join('')+'</div>').join('');
  compareResult.innerHTML='<div class="three-brand-compare">'+cards+'</div><div class="three-brand-specs">'+rows+'</div>';
 }
