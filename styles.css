@@ -1212,3 +1212,5 @@ body.storefront .three-brand-spec-row>b{color:#8b6a35}
 body.storefront .three-brand-spec-row span{overflow-wrap:anywhere}
 @media(max-width:800px){body.storefront .compare-picker-three{grid-template-columns:1fr 1fr}body.storefront .compare-picker-three button{grid-column:1/-1}body.storefront .three-brand-photo{height:150px}}
 @media(max-width:520px){body.storefront .compare-picker-three{grid-template-columns:1fr}body.storefront .three-brand-compare{gap:7px}body.storefront .three-brand-photo{height:105px}body.storefront .three-brand-name{padding:8px}body.storefront .three-brand-name b{font-size:11px}body.storefront .three-brand-name small{font-size:7px}body.storefront .three-brand-spec-row{grid-template-columns:72px repeat(3,minmax(0,1fr));gap:5px;padding:10px 3px;font-size:9px}}
+
+body.storefront .three-brand-photo img+span{display:none}
