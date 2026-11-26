@@ -1163,3 +1163,10 @@ body.storefront .collection-v2 .demo-note{
   body.storefront .collection-v2 .product-details-btn,
   body.storefront .collection-v2 .product-order-btn{min-height:42px}
 }
+
+
+/* Battery version selectors — cart and checkout */
+body.storefront .cart-variant-label,body.storefront .order-variant-row{display:grid;gap:7px;margin-top:12px;font-size:12px;font-weight:700;color:#72572a}
+body.storefront .cart-variant-select,body.storefront .order-variant-row select{display:block;width:100%;min-height:48px;padding:10px 12px;border:1px solid #b99a62;border-radius:8px;background:#fff;color:#171715;font:600 14px 'DM Sans',Arial,sans-serif;cursor:pointer;pointer-events:auto;position:relative;z-index:2;opacity:1}
+body.storefront .order-variant-choices{display:grid;gap:12px;margin:0 0 16px}
+body.storefront .order-variant-row span{font-size:11px;font-weight:500;color:#756d60}
