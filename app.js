@@ -171,7 +171,8 @@ function closeOrder(){orderModal.classList.remove('open');orderModal.setAttribut
 document.getElementById('checkout').onclick=()=>{if(!cart.length){alert('Your bag is empty.');return;}document.getElementById('cartOverlay').classList.remove('open');orderModal.classList.add('open');orderModal.setAttribute('aria-hidden','false');};
 document.getElementById('orderClose').onclick=closeOrder;
 orderModal.addEventListener('click',e=>{if(e.target===orderModal)closeOrder();});
-function cartPriceTotal(){const a=cart.map(p=>{const m=String(p.price_text||'').match(/^\\s*(?:Rs\\.?|PKR)?\\s*([\\d,]+(?:\\.\\d{1,2})?)\\s*$/i);return m?Number(m[1].replace(/,/g,''))*p.qty:null;});return a.every(x=>x!==null)?a.reduce((x,y)=>x+y,0):null;}
+function parsePriceAmount(value){const cleaned=String(value??'').replace(/,/g,'').replace(/[^0-9.]/g,'');if(!cleaned)return null;const amount=Number(cleaned);return Number.isFinite(amount)&&amount>0?amount:null;}
+function cartPriceTotal(){const amounts=cart.map(p=>{const unit=parsePriceAmount(p.price_text);return unit===null?null:unit*p.qty;});return amounts.every(x=>x!==null)?amounts.reduce((x,y)=>x+y,0):null;}
 function updatePaymentOptions(){const method=document.querySelector('input[name="paymentChoice"]:checked')?.value||'Cash';document.getElementById('creditOptions').hidden=method==='Cash';document.getElementById('orderDownPaymentWrap').hidden=method!=='Both';const total=cartPriceTotal(),out=document.getElementById('orderCreditEstimate'),grid=document.getElementById('orderPlanBreakdown');if(method==='Cash'){out.textContent='Full payment in cash.';grid.innerHTML='';return;}if(total===null){out.textContent='Price not listed. The showroom will confirm the monthly amounts.';grid.innerHTML='<p class="plan-empty">Plan prices will appear once the scooter price is confirmed.</p>';return;}const down=method==='Both'?Number(document.getElementById('orderDownPayment').value||0):0;if((method==='Both'&&down<=0)||down<0||down>=total){out.textContent='Enter a cash down payment above zero and lower than the order total.';grid.innerHTML='';return;}const balance=total-down,selected=Number(document.getElementById('orderCreditMonths').value),money=n=>'PKR '+Math.round(n).toLocaleString('en-PK');out.textContent=(method==='Both'?'Cash down payment: '+money(down)+' • ':'')+'Credit balance: '+money(balance)+'. Choose a plan below.';grid.innerHTML='<div class="plan-breakdown-title">Monthly plan estimates</div>'+[3,6,9,12,24].map(m=>'<button type="button" class="plan-price-card '+(m===selected?'selected':'')+'" data-months="'+m+'"><span>'+m+' months</span><b>'+money(balance/m)+'</b><small>per month · approx.</small></button>').join('');grid.querySelectorAll('[data-months]').forEach(b=>b.addEventListener('click',()=>{document.getElementById('orderCreditMonths').value=b.dataset.months;updatePaymentOptions();}));}
 document.querySelectorAll('input[name="paymentChoice"]').forEach(x=>x.addEventListener('change',updatePaymentOptions));document.getElementById('orderCreditMonths').addEventListener('change',updatePaymentOptions);document.getElementById('orderDownPayment').addEventListener('input',updatePaymentOptions);
 document.getElementById('customerOrderForm').addEventListener('submit',async e=>{
@@ -193,14 +194,37 @@ document.getElementById('customerOrderForm').addEventListener('submit',async e=>
  const itemLines=items.map((x,i)=>{const raw=String(x.price_text||'').replace(/,/g,'').match(/(?:PKR|Rs\\.?)*\\s*(\\d+(?:\\.\\d+)?)/i);const unit=raw?Number(raw[1]):null;const line=unit===null?'Price to confirm':money(unit*x.quantity);return (i+1)+'. '+x.name+'\\n   Qty: '+x.quantity+' | Unit Price: '+(unit===null?'To confirm':money(unit))+' | Amount: '+line;}).join('\\n');
  const totalLine=total===null?'To be confirmed':money(total);
  const itemRows=items.map((x,i)=>{
-  const raw=String(x.price_text||'').replace(/,/g,'').match(/(?:PKR|Rs\\.?)*\\s*(\\d+(?:\\.\\d+)?)/i);
-  const unit=raw?Number(raw[1]):null,amount=unit===null?null:unit*x.quantity;
-  return (i+1)+'. '+x.name+'\\n   '+x.quantity+' x '+(unit===null?'Rate TBC':money(unit))+' = '+(amount===null?'TBC':money(amount));
+  const unit=parsePriceAmount(x.price_text),amount=unit===null?null:unit*x.quantity;
+  return (i+1)+'. *'+x.name+'*\\n   Qty: '+x.quantity+'   Rate: '+(unit===null?'To be confirmed':money(unit))+'\\n   Amount: '+(amount===null?'To be confirmed':money(amount));
  }).join('\\n');
- const receiptTotal=total===null?'PRICE TO BE CONFIRMED':money(total);
+ const receiptTotal=total===null?'To be confirmed':money(total);
  const paymentReceipt=method==='Cash'
-  ? 'Mode: CASH\\nPayment: PAYABLE / TO BE CONFIRMED'
-  : 'Mode: '+method+'\\nPlan: '+months+' MONTHS\\nCash Paid/Down: '+money(method==='Both'?down:0)+'\\nCredit Balance: '+(balance===null?'TBC':money(balance))+'\\nMonthly Installment: '+(monthly===null?'TBC':money(monthly)+' approx.');
+  ? '*Payment method:* Cash\\n*Payment status:* Payable on confirmation'
+  : '*Payment method:* '+method+'\\n*Credit duration:* '+months+' months\\n*Cash down payment:* '+money(method==='Both'?down:0)+'\\n*Credit balance:* '+(balance===null?'To be confirmed':money(balance))+'\\n*Monthly installment:* '+(monthly===null?'To be confirmed':money(monthly)+' approx.');
+ const message='*AUR-K EV BIKE EXPERTS*\\n'+
+ '*CUSTOMER ORDER BILL*\\n'+
+ '━━━━━━━━━━━━━━━━━━━━\\n'+
+ '*Bill No:* '+orderId+'\\n'+
+ '*Date:* '+billDate+'\\n'+
+ '*Status:* Order received — payment pending\\n'+
+ '━━━━━━━━━━━━━━━━━━━━\\n'+
+ '*CUSTOMER DETAILS*\\n'+
+ 'Name: '+customer.name+'\\n'+
+ 'Mobile: '+customer.phone+'\\n'+
+ 'Address: '+customer.address+', '+customer.city+'\\n'+
+ '━━━━━━━━━━━━━━━━━━━━\\n'+
+ '*ITEMS*\\n'+itemRows+'\\n'+
+ '━━━━━━━━━━━━━━━━━━━━\\n'+
+ '*Subtotal:* '+receiptTotal+'\\n'+
+ '*Delivery charges:* To be confirmed\\n'+
+ '*GRAND TOTAL:* '+receiptTotal+'\\n'+
+ '━━━━━━━━━━━━━━━━━━━━\\n'+
+ '*PAYMENT DETAILS*\\n'+paymentReceipt+'\\n'+
+ '━━━━━━━━━━━━━━━━━━━━\\n'+
+ 'Mansoorabad, Jhumra Road, Faisalabad\\n'+
+ 'WhatsApp: 0323-9661747\\n'+
+ 'Thank you for choosing AUR-K EV.\\n'+
+ '_This is an order confirmation request, not a paid receipt._';
  const mono=String.fromCharCode(96,96,96);
  const message=mono+'\\n'+
  '       AUR-K EV BIKE EXPERTS\\n'+
