@@ -1170,3 +1170,19 @@ body.storefront .cart-variant-label,body.storefront .order-variant-row{display:g
 body.storefront .cart-variant-select,body.storefront .order-variant-row select{display:block;width:100%;min-height:48px;padding:10px 12px;border:1px solid #b99a62;border-radius:8px;background:#fff;color:#171715;font:600 14px 'DM Sans',Arial,sans-serif;cursor:pointer;pointer-events:auto;position:relative;z-index:2;opacity:1}
 body.storefront .order-variant-choices{display:grid;gap:12px;margin:0 0 16px}
 body.storefront .order-variant-row span{font-size:11px;font-weight:500;color:#756d60}
+
+/* AUR-K EV competitor comparison */
+.competitor-compare{background:#f3f0e9}
+.compare-picker{display:grid;grid-template-columns:1fr 1fr auto;gap:16px;align-items:end;background:#fff;border:1px solid #e8e0d2;padding:22px;border-radius:12px}
+.compare-picker label{display:flex;flex-direction:column;gap:8px;font-size:11px;font-weight:800;letter-spacing:.5px;color:#5b5347}
+.compare-picker select{height:46px;border:1px solid #d8d0c2;border-radius:6px;padding:0 12px;background:#fff;font:13px Arial;color:#222;min-width:0}
+.competitor-compare-result{margin-top:22px;background:#fff;border:1px solid #e8e0d2;border-radius:12px;padding:22px;min-height:75px}
+.competitor-compare-head{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.competitor-compare-head article{background:#171717;color:#fff;padding:18px;border-radius:8px;display:flex;flex-direction:column;gap:8px}
+.competitor-compare-head article:first-child{border-top:3px solid #c9a45c}
+.competitor-compare-head small{color:#d7b66f;font-size:9px;letter-spacing:1.5px;text-transform:uppercase}
+.competitor-compare-head b{font:700 16px Manrope}
+.competitor-compare-row{display:grid;grid-template-columns:140px 1fr 1fr;gap:12px;padding:14px 10px;border-bottom:1px solid #eee9df;font-size:12px;line-height:1.5}
+.competitor-compare-row>b{color:#8c6d37}
+.compare-disclaimer{font-size:10px;color:#888;line-height:1.6;margin-top:14px}
+@media(max-width:700px){.compare-picker{grid-template-columns:1fr}.compare-picker button{width:100%}.competitor-compare-result{padding:12px}.competitor-compare-row{grid-template-columns:90px 1fr 1fr;gap:7px;padding:12px 4px;font-size:10px}.competitor-compare-head b{font-size:13px}}
