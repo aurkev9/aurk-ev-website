@@ -1186,3 +1186,11 @@ body.storefront .order-variant-row span{font-size:11px;font-weight:500;color:#75
 .competitor-compare-row>b{color:#8c6d37}
 .compare-disclaimer{font-size:10px;color:#888;line-height:1.6;margin-top:14px}
 @media(max-width:700px){.compare-picker{grid-template-columns:1fr}.compare-picker button{width:100%}.competitor-compare-result{padding:12px}.competitor-compare-row{grid-template-columns:90px 1fr 1fr;gap:7px;padding:12px 4px;font-size:10px}.competitor-compare-head b{font-size:13px}}
+
+
+/* Clear route back to the AUR-K EV homepage from checkout */
+body.storefront .order-modal-head{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center}
+body.storefront .order-home-link{display:inline-flex;align-items:center;min-height:42px;color:#80612a;font-size:11px;font-weight:800;white-space:nowrap}
+body.storefront .order-home-link:hover{color:#171715;text-decoration:underline}
+body.storefront .order-modal-head h3{font-size:clamp(16px,2vw,22px)}
+@media(max-width:520px){body.storefront .order-modal-head{grid-template-columns:1fr auto;gap:8px}body.storefront .order-modal-head h3{grid-column:1;grid-row:1}body.storefront .order-modal-head .order-home-link{grid-column:1;grid-row:2;min-height:36px}body.storefront .order-modal-head #orderClose{grid-column:2;grid-row:1;align-self:start}}
