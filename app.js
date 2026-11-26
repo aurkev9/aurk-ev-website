@@ -177,9 +177,13 @@ function creditMarkupPercent(months){return ({3:10,6:25,9:30,12:40,24:50})[Numbe
 function updatePaymentOptions(){const method=document.querySelector('input[name="paymentChoice"]:checked')?.value||'Cash';document.getElementById('creditOptions').hidden=method==='Cash';document.getElementById('orderDownPaymentWrap').hidden=method!=='Both';const total=cartPriceTotal(),out=document.getElementById('orderCreditEstimate'),grid=document.getElementById('orderPlanBreakdown');if(method==='Cash'){out.textContent='Full payment in cash.';grid.innerHTML='';return;}if(total===null){out.textContent='Price not listed. The showroom will confirm the monthly amounts.';grid.innerHTML='<p class="plan-empty">Plan prices will appear once the scooter price is confirmed.</p>';return;}const down=method==='Both'?Number(document.getElementById('orderDownPayment').value||0):0;if((method==='Both'&&down<=0)||down<0||down>=total){out.textContent='Enter a cash down payment above zero and lower than the order total.';grid.innerHTML='';return;}const balance=total-down,selected=Number(document.getElementById('orderCreditMonths').value),money=n=>'PKR '+Math.round(n).toLocaleString('en-PK');out.textContent=(method==='Both'?'Cash down payment: '+money(down)+' • ':'')+'Credit balance: '+money(balance)+'. Markup is added according to the selected plan.';grid.innerHTML='<div class="plan-breakdown-title">Monthly plan estimates</div>'+[3,6,9,12,24].map(m=>{const rate=creditMarkupPercent(m),payable=balance*(1+rate/100),monthly=payable/m;return '<button type="button" class="plan-price-card '+(m===selected?'selected':'')+'" data-months="'+m+'"><span>'+m+' months · '+rate+'% markup</span><b>'+money(monthly)+'</b><small>per month · total '+money(payable)+'</small></button>';}).join('');grid.querySelectorAll('[data-months]').forEach(b=>b.addEventListener('click',()=>{document.getElementById('orderCreditMonths').value=b.dataset.months;updatePaymentOptions();}));}
 document.querySelectorAll('input[name="paymentChoice"]').forEach(x=>x.addEventListener('change',updatePaymentOptions));document.getElementById('orderCreditMonths').addEventListener('change',updatePaymentOptions);document.getElementById('orderDownPayment').addEventListener('input',updatePaymentOptions);
 
-function generateAurkInvoicePDF({invoiceNo,billDate,customer,items,total,method,months,markup,down,balance,creditTotal,monthly}){
- const JsPDF=window.jspdf?.jsPDF;
- if(!JsPDF)throw new Error('Invoice PDF library did not load. Please refresh and try again.');
+async function generateAurkInvoicePDF({invoiceNo,billDate,customer,items,total,method,months,markup,down,balance,creditTotal,monthly}){
+ let JsPDF=window.jspdf?.jsPDF;
+ if(!JsPDF){
+  const sources=['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js'];
+  for(const src of sources){try{await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=src;script.onload=resolve;script.onerror=()=>reject(new Error('Could not load '+src));document.head.appendChild(script);});JsPDF=window.jspdf?.jsPDF;if(JsPDF)break;}catch(loadError){console.warn('AUR-K invoice library source failed',loadError);}}
+ }
+ if(!JsPDF)throw new Error('PDF library could not load. Check your internet connection and try again.');
  const doc=new JsPDF({unit:'mm',format:'a4'});
  const W=210, left=16, right=194;
  const gold=[197,157,83], ink=[24,24,24], muted=[105,105,105], pale=[247,244,237];
@@ -262,10 +266,10 @@ document.getElementById('customerOrderForm').addEventListener('submit',async e=>
  const invoiceNo='AURK-'+new Date().getFullYear()+'-'+orderId.slice(0,8).toUpperCase();
  let invoiceFile;
  try{
-  invoiceFile=generateAurkInvoicePDF({invoiceNo,billDate,customer,items,total,method,months,markup,down,balance,creditTotal,monthly});
+  invoiceFile=await generateAurkInvoicePDF({invoiceNo,billDate,customer,items,total,method,months,markup,down,balance,creditTotal,monthly});
  }catch(pdfError){
   console.error('Invoice PDF could not be generated',pdfError);
-  msg.textContent='Your order is saved, but the PDF could not be generated. Please refresh and contact our showroom with order '+invoiceNo+'.';
+  msg.textContent='Your order is saved, but the PDF could not be generated ('+(pdfError?.message||'unknown PDF error')+'). Please contact our showroom with order '+invoiceNo+'.';
   btn.disabled=false;return;
  }
  const message='*AUR-K EV BIKE EXPERTS*\\n'+
