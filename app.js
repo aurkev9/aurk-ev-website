@@ -225,36 +225,6 @@ document.getElementById('customerOrderForm').addEventListener('submit',async e=>
  'WhatsApp: 0323-9661747\\n'+
  'Thank you for choosing AUR-K EV.\\n'+
  '_This is an order confirmation request, not a paid receipt._';
- const mono=String.fromCharCode(96,96,96);
- const message=mono+'\\n'+
- '       AUR-K EV BIKE EXPERTS\\n'+
- '     MANSOORABAD, FAISALABAD\\n'+
- '         PH: 0323-9661747\\n'+
- '================================\\n'+
- '          CUSTOMER BILL\\n'+
- '================================\\n'+
- 'Bill No : '+orderId+'\\n'+
- 'Date    : '+billDate+'\\n'+
- 'Status  : ORDER REQUEST\\n'+
- '--------------------------------\\n'+
- 'CUSTOMER INFORMATION\\n'+
- 'Name    : '+customer.name+'\\n'+
- 'Mobile  : '+customer.phone+'\\n'+
- 'Address : '+customer.address+', '+customer.city+'\\n'+
- '--------------------------------\\n'+
- 'ITEMS\\n'+itemRows+'\\n'+
- '--------------------------------\\n'+
- 'Subtotal          : '+receiptTotal+'\\n'+
- 'Delivery Charges  : TO BE CONFIRMED\\n'+
- '================================\\n'+
- 'GRAND TOTAL       : '+receiptTotal+'\\n'+
- '================================\\n'+
- 'PAYMENT INFORMATION\\n'+paymentReceipt+'\\n'+
- '================================\\n'+
- 'Thank you for shopping with AUR-K EV!\\n'+
- 'We will contact you to confirm your order.\\n'+
- 'This is an order estimate/request, NOT a\\n'+
- 'proof of payment.\\n'+mono;;
  msg.textContent='Order saved successfully. Opening WhatsApp…';whatsapp(message);cart=[];renderCart();e.target.reset();updatePaymentOptions();closeOrder();btn.disabled=false;
 });
 document.getElementById('contactWhatsApp').onclick=e=>{e.preventDefault();whatsapp('Hello AUR-K EV, I would like to know more about your electric scooters.');};document.getElementById('menuToggle').onclick=()=>document.getElementById('nav').classList.toggle('show');document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>document.getElementById('nav').classList.remove('show')));document.getElementById('year').textContent=new Date().getFullYear();
