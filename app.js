@@ -185,8 +185,42 @@ document.getElementById('customerOrderForm').addEventListener('submit',async e=>
  const order={id:orderId,customer_name:customer.name,customer_phone:customer.phone,delivery_address:customer.address,city:customer.city,customer_note:[customer.note,payNote].filter(Boolean).join('\\n'),items,subtotal_amount:total,delivery_charge:null,final_amount:null,payment_method:method,credit_duration_months:method==='Cash'?null:months,cash_down_payment_amount:method==='Both'?down:(method==='Credit'?0:null),credit_balance_amount:method==='Cash'?null:balance,monthly_installment_amount:method==='Cash'?null:monthly,status:'New'};
  if(!supabase){msg.textContent='Order saving is not configured. Please contact us on WhatsApp.';btn.disabled=false;return;}
  const {error}=await supabase.from('site_orders').insert(order);if(error){msg.textContent='Could not save order: '+error.message+' Please try again or contact us on WhatsApp.';btn.disabled=false;return;}
- const money=n=>'PKR '+Math.round(n).toLocaleString('en-PK'),detail=method==='Cash'?'Cash payment':method==='Credit'?'Credit plan for '+months+' months':'Both: cash down payment '+money(down)+' and balance on credit for '+months+' months';
- const message='*NEW AUR-K EV ORDER*\\nOrder reference: '+orderId+'\\nItems: '+items.map(x=>x.name+' x '+x.quantity+' ('+x.price_text+')').join('; ')+'\\nCustomer: '+customer.name+'\\nPhone: '+customer.phone+'\\nAddress: '+customer.address+', '+customer.city+'\\nPayment preference: '+detail+'\\nEstimated monthly amount: '+(monthly===null?'To be confirmed':money(monthly)+' (indicative)')+'\\nPlease confirm final price, eligibility and actual terms.';
+ const money=n=>'PKR '+Math.round(n).toLocaleString('en-PK');
+ const billDate=new Date().toLocaleString('en-PK',{timeZone:'Asia/Karachi',dateStyle:'medium',timeStyle:'short'});
+ const paymentLines=method==='Cash'
+  ? 'Payment Method: CASH\\nPayment Status: To be confirmed at showroom/delivery'
+  : 'Payment Method: '+method+'\\nCredit Duration: '+months+' months\\nCash Down Payment: '+money(method==='Both'?down:0)+'\\nCredit Balance: '+(balance===null?'To be confirmed':money(balance))+'\\nEstimated Monthly Installment: '+(monthly===null?'To be confirmed':money(monthly)+' (approx.)');
+ const itemLines=items.map((x,i)=>{const raw=String(x.price_text||'').replace(/,/g,'').match(/(?:PKR|Rs\\.?)*\\s*(\\d+(?:\\.\\d+)?)/i);const unit=raw?Number(raw[1]):null;const line=unit===null?'Price to confirm':money(unit*x.quantity);return (i+1)+'. '+x.name+'\\n   Qty: '+x.quantity+' | Unit Price: '+(unit===null?'To confirm':money(unit))+' | Amount: '+line;}).join('\\n');
+ const totalLine=total===null?'To be confirmed':money(total);
+ const message='*AUR-K EV | ORDER BILL*\\n' +
+ '━━━━━━━━━━━━━━━━━━━━\\n' +
+ '*AUR-K EV BIKE EXPERTS*\\n' +
+ 'Mansoorabad, Jhumra Road, Faisalabad\\n' +
+ 'WhatsApp: 0323-9661747\\n' +
+ '━━━━━━━━━━━━━━━━━━━━\\n' +
+ '*ORDER DETAILS*\\n' +
+ 'Order No: '+orderId+'\\n' +
+ 'Date: '+billDate+'\\n' +
+ 'Status: NEW ORDER REQUEST\\n' +
+ '━━━━━━━━━━━━━━━━━━━━\\n' +
+ '*CUSTOMER DETAILS*\\n' +
+ 'Name: '+customer.name+'\\n' +
+ 'Mobile: '+customer.phone+'\\n' +
+ 'Address: '+customer.address+', '+customer.city+'\\n' +
+ (customer.note?'Note: '+customer.note+'\\n':'') +
+ '━━━━━━━━━━━━━━━━━━━━\\n' +
+ '*ITEM DETAILS*\\n' + itemLines+'\\n' +
+ '━━━━━━━━━━━━━━━━━━━━\\n' +
+ '*ORDER SUMMARY*\\n' +
+ 'Subtotal: '+totalLine+'\\n' +
+ 'Delivery Charges: To be confirmed\\n' +
+ '*ORDER TOTAL: '+totalLine+'*\\n' +
+ '━━━━━━━━━━━━━━━━━━━━\\n' +
+ '*PAYMENT DETAILS*\\n' + paymentLines+'\\n' +
+ '━━━━━━━━━━━━━━━━━━━━\\n' +
+ 'Thank you for choosing AUR-K EV!\\n' +
+ 'Our team will contact you to confirm final price, delivery charges and order details.\\n' +
+ '_This is an order request, not a paid receipt._';
  msg.textContent='Order saved successfully. Opening WhatsApp…';whatsapp(message);cart=[];renderCart();e.target.reset();updatePaymentOptions();closeOrder();btn.disabled=false;
 });
 document.getElementById('contactWhatsApp').onclick=e=>{e.preventDefault();whatsapp('Hello AUR-K EV, I would like to know more about your electric scooters.');};document.getElementById('menuToggle').onclick=()=>document.getElementById('nav').classList.toggle('show');document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>document.getElementById('nav').classList.remove('show')));document.getElementById('year').textContent=new Date().getFullYear();
