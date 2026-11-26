@@ -272,14 +272,36 @@ document.getElementById('customerOrderForm').addEventListener('submit',async e=>
   msg.textContent='Your order is saved, but the PDF could not be generated ('+(pdfError?.message||'unknown PDF error')+'). Please contact our showroom with order '+invoiceNo+'.';
   btn.disabled=false;return;
  }
- const message='*AUR-K EV BIKE EXPERTS*\\n'+
-  '*Your order has been received.*\\n\\n'+
-  '*Invoice:* '+invoiceNo+'\\n'+
-  '*Order total:* '+(total===null?'To be confirmed':money(total))+'\\n'+
-  '*Payment:* '+method+(method==='Cash'?'':' • '+months+' months • '+markup+'% markup')+'\\n'+
-  (method==='Cash'?'':'*Total credit repayment:* '+(creditTotal===null?'To be confirmed':money(creditTotal))+'\\n*Monthly installment:* '+(monthly===null?'To be confirmed':money(monthly))+'\\n')+
-  '\\nYour AUR-K order invoice PDF has been downloaded. Please attach the downloaded PDF to this WhatsApp chat before sending.\\n\\n'+
-  'Payment is pending showroom confirmation. Thank you for choosing AUR-K EV.';
+ const orderHeading=method==='Cash'?'NEW CASH ON DELIVERY ORDER':(method==='Credit'?'NEW CREDIT ORDER':'NEW CASH + CREDIT ORDER');
+ const itemLines=items.map(item=>{
+  const unit=parsePriceAmount(item.price_text),lineTotal=unit===null?null:unit*item.quantity;
+  return '• '+item.name+'\\n  Quantity: '+item.quantity+'\\n  Website Price: '+(unit===null?'To be confirmed':Math.round(unit).toLocaleString('en-PK'))+'\\n  Line Total: '+(lineTotal===null?'To be confirmed':money(lineTotal));
+ }).join('\\n\\n');
+ const paymentDetails=method==='Cash'?'Cash on Delivery (COD)':(
+  method==='Credit'?'Credit\\nDuration: '+months+' months\\nMarkup: '+markup+'%\\nCredit Balance: '+(balance===null?'To be confirmed':money(balance))+'\\nTotal Credit Repayment: '+(creditTotal===null?'To be confirmed':money(creditTotal))+'\\nMonthly Installment: '+(monthly===null?'To be confirmed':money(monthly)):
+  'Cash + Credit\\nCash Down Payment: '+money(down)+'\\nCredit Duration: '+months+' months\\nMarkup: '+markup+'%\\nRemaining Credit Balance: '+(balance===null?'To be confirmed':money(balance))+'\\nTotal Credit Repayment: '+(creditTotal===null?'To be confirmed':money(creditTotal))+'\\nMonthly Installment: '+(monthly===null?'To be confirmed':money(monthly))
+ );
+ const message='*'+orderHeading+'*\\n\\n'+
+  'Assalam-o-Alaikum AUR-K EV Team,\\n'+
+  'I have placed an order through your website. Please review the complete order details below.\\n\\n'+
+  '*ORDER DETAILS*\\n'+
+  'Order Reference: '+orderId+'\\n'+
+  'Invoice Number: '+invoiceNo+'\\n\\n'+itemLines+'\\n\\n'+
+  '*PRICE SUMMARY*\\n'+
+  'Subtotal: '+(total===null?'To be confirmed':money(total))+'\\n'+
+  'Delivery Charges: To be confirmed\\n'+
+  '*Final Amount Payable: To be confirmed by AUR-K EV Team*\\n\\n'+
+  '*CUSTOMER DETAILS*\\n'+
+  'Name: '+customer.name+'\\n'+
+  'Mobile: '+customer.phone+'\\n'+
+  'Delivery Address: '+customer.address+'\\n'+
+  'City: '+customer.city+'\\n'+
+  'Special Instructions: '+(customer.note||'None')+'\\n\\n'+
+  '*PAYMENT METHOD*\\n'+paymentDetails+'\\n\\n'+
+  'Please confirm product availability, the final total price, delivery charges, and estimated delivery time.\\n\\n'+
+  'Thank you!\\n\\n'+
+  '*AUR-K EV BIKE EXPERTS*\\n'+
+  'Your order invoice PDF has been downloaded. Please attach the downloaded PDF to this WhatsApp chat before sending.';
  msg.textContent='Order saved. Invoice PDF downloaded. Opening WhatsApp…';whatsapp(message);cart=[];renderCart();e.target.reset();updatePaymentOptions();closeOrder();btn.disabled=false;
 });
 document.getElementById('contactWhatsApp').onclick=e=>{e.preventDefault();whatsapp('Hello AUR-K EV, I would like to know more about your electric scooters.');};document.getElementById('menuToggle').onclick=()=>document.getElementById('nav').classList.toggle('show');document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>document.getElementById('nav').classList.remove('show')));document.getElementById('year').textContent=new Date().getFullYear();
