@@ -297,6 +297,19 @@ if(!SUPABASE_URL.startsWith('PASTE_')&&!SUPABASE_ANON_KEY.startsWith('PASTE_')){
 let competitorScooters=[];
 const compareSelects=[1,2,3].map(i=>document.getElementById('compareScooter'+i));
 const compareResult=document.getElementById('competitorCompareResult');
+compareResult?.addEventListener('click',e=>{
+ const image=e.target.closest('.three-brand-photo img');if(!image)return;
+ let viewer=document.getElementById('competitorPhotoViewer');
+ if(!viewer){
+  viewer=document.createElement('div');viewer.id='competitorPhotoViewer';viewer.className='competitor-photo-viewer';viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Full scooter photo');
+  viewer.innerHTML='<button type="button" aria-label="Close full photo">✕</button><img alt="">';
+  document.body.append(viewer);
+  viewer.addEventListener('click',ev=>{if(ev.target===viewer||ev.target.closest('button'))viewer.classList.remove('open');});
+  document.addEventListener('keydown',ev=>{if(ev.key==='Escape')viewer.classList.remove('open');});
+ }
+ const preview=viewer.querySelector('img');preview.src=image.currentSrc||image.src;preview.alt=image.alt;viewer.classList.add('open');
+});
+compareResult?.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.three-brand-photo img')){e.preventDefault();e.target.click();}});
 function aurkCompareValue(p,key){
  const spec=productSpecs(p.specifications).join(' | ');
  const patterns={battery:/(?:battery|voltage|lithium|graphene)[^|,;]*/i,motor:/(?:motor|power)[^|,;]*/i,range:/(?:range|distance)[^|,;]*/i,speed:/(?:top speed|speed)[^|,;]*/i,warranty:/(?:warranty)[^|,;]*/i};
@@ -318,7 +331,7 @@ function renderCompetitorComparison(){
  const brands=selected.map(p=>p.brand.toLowerCase());
  if(new Set(brands).size!==3){if(compareResult)compareResult.innerHTML='<p>Please choose scooters from three different brands.</p>';return;}
  const labels=[['Price','price_text'],['Battery','battery'],['Motor power','motor'],['Range','range'],['Top speed','speed'],['Warranty','warranty']];
- const cards=selected.map(p=>'<article class="three-brand-card"><div class="three-brand-photo">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.brand+' '+p.name)+' scooter" loading="lazy" onerror="this.parentElement.classList.add(\'no-photo\');this.remove()">':'')+'<span>PHOTO NOT ADDED</span></div><div class="three-brand-name"><small>'+esc(p.brand)+'</small><b>'+esc(p.name)+'</b></div></article>').join('');
+ const cards=selected.map(p=>'<article class="three-brand-card"><div class="three-brand-photo">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.brand+' '+p.name)+' scooter" loading="eager" decoding="async" referrerpolicy="no-referrer" tabindex="0" role="button" aria-label="View full image of '+esc(p.brand+' '+p.name)+'" onerror="this.parentElement.classList.add(\\'no-photo\\');this.remove();this.parentElement.querySelector(\\'span\\').textContent=\\'IMAGE UNAVAILABLE\\'">':'')+'<span>PHOTO NOT ADDED</span></div><div class="three-brand-name"><small>'+esc(p.brand)+'</small><b>'+esc(p.name)+'</b></div></article>').join('');
  const rows=labels.map(([label,key])=>'<div class="three-brand-spec-row"><b>'+esc(label)+'</b>'+selected.map(p=>'<span>'+esc(p[key]||'Not provided')+'</span>').join('')+'</div>').join('');
  compareResult.innerHTML='<div class="three-brand-compare">'+cards+'</div><div class="three-brand-specs">'+rows+'</div>';
 }
