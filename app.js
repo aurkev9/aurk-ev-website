@@ -176,6 +176,76 @@ function cartPriceTotal(){const amounts=cart.map(p=>{const unit=parsePriceAmount
 function creditMarkupPercent(months){return ({3:10,6:25,9:30,12:40,24:50})[Number(months)]||0;}
 function updatePaymentOptions(){const method=document.querySelector('input[name="paymentChoice"]:checked')?.value||'Cash';document.getElementById('creditOptions').hidden=method==='Cash';document.getElementById('orderDownPaymentWrap').hidden=method!=='Both';const total=cartPriceTotal(),out=document.getElementById('orderCreditEstimate'),grid=document.getElementById('orderPlanBreakdown');if(method==='Cash'){out.textContent='Full payment in cash.';grid.innerHTML='';return;}if(total===null){out.textContent='Price not listed. The showroom will confirm the monthly amounts.';grid.innerHTML='<p class="plan-empty">Plan prices will appear once the scooter price is confirmed.</p>';return;}const down=method==='Both'?Number(document.getElementById('orderDownPayment').value||0):0;if((method==='Both'&&down<=0)||down<0||down>=total){out.textContent='Enter a cash down payment above zero and lower than the order total.';grid.innerHTML='';return;}const balance=total-down,selected=Number(document.getElementById('orderCreditMonths').value),money=n=>'PKR '+Math.round(n).toLocaleString('en-PK');out.textContent=(method==='Both'?'Cash down payment: '+money(down)+' • ':'')+'Credit balance: '+money(balance)+'. Markup is added according to the selected plan.';grid.innerHTML='<div class="plan-breakdown-title">Monthly plan estimates</div>'+[3,6,9,12,24].map(m=>{const rate=creditMarkupPercent(m),payable=balance*(1+rate/100),monthly=payable/m;return '<button type="button" class="plan-price-card '+(m===selected?'selected':'')+'" data-months="'+m+'"><span>'+m+' months · '+rate+'% markup</span><b>'+money(monthly)+'</b><small>per month · total '+money(payable)+'</small></button>';}).join('');grid.querySelectorAll('[data-months]').forEach(b=>b.addEventListener('click',()=>{document.getElementById('orderCreditMonths').value=b.dataset.months;updatePaymentOptions();}));}
 document.querySelectorAll('input[name="paymentChoice"]').forEach(x=>x.addEventListener('change',updatePaymentOptions));document.getElementById('orderCreditMonths').addEventListener('change',updatePaymentOptions);document.getElementById('orderDownPayment').addEventListener('input',updatePaymentOptions);
+
+function generateAurkInvoicePDF({invoiceNo,billDate,customer,items,total,method,months,markup,down,balance,creditTotal,monthly}){
+ const JsPDF=window.jspdf?.jsPDF;
+ if(!JsPDF)throw new Error('Invoice PDF library did not load. Please refresh and try again.');
+ const doc=new JsPDF({unit:'mm',format:'a4'});
+ const W=210, left=16, right=194;
+ const gold=[197,157,83], ink=[24,24,24], muted=[105,105,105], pale=[247,244,237];
+ const money=n=>n===null||n===undefined?'To be confirmed':'PKR '+Math.round(n).toLocaleString('en-PK');
+ const line=(y)=>{doc.setDrawColor(220,215,205);doc.setLineWidth(.25);doc.line(left,y,right,y);};
+ doc.setFillColor(...ink);doc.rect(0,0,W,43,'F');
+ doc.setFillColor(...gold);doc.rect(0,43,W,2,'F');
+ doc.setTextColor(...gold);doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text('AUR-K',left,17);
+ doc.setTextColor(255,255,255);doc.setFontSize(9);doc.text('EV BIKE EXPERTS',left,24);
+ doc.setTextColor(238,232,220);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('FAISALABAD, PAKISTAN',left,31);
+ doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text('CUSTOMER ORDER INVOICE',right,18,{align:'right'});
+ doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('ORDER CONFIRMATION  •  PAYMENT PENDING',right,25,{align:'right'});
+ let y=55;
+ doc.setTextColor(...muted);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('INVOICE NUMBER',left,y);
+ doc.text('ORDER DATE',right-48,y);
+ y+=6;doc.setTextColor(...ink);doc.setFontSize(10);doc.text(invoiceNo,left,y);doc.text(billDate,right-48,y);
+ y+=9;line(y);y+=8;
+ doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...ink);doc.text('BILL TO',left,y);
+ doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(String(customer.name||'').slice(0,70),left,y+7);
+ doc.setTextColor(...muted);doc.setFontSize(8);doc.text(String(customer.phone||''),left,y+13);
+ const address=(String(customer.address||'')+', '+String(customer.city||'')).slice(0,100);
+ const addrLines=doc.splitTextToSize(address,105);doc.text(addrLines,left,y+19);
+ y+=27+Math.max(0,addrLines.length-1)*4;line(y);y+=9;
+ doc.setTextColor(...ink);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text('ORDER DETAILS',left,y);y+=7;
+ doc.setFillColor(...pale);doc.roundedRect(left,y,right-left,9,1.5,1.5,'F');
+ doc.setFontSize(7);doc.setTextColor(...muted);doc.text('PRODUCT',left+3,y+6);doc.text('QTY',140,y+6,{align:'center'});doc.text('UNIT PRICE',160,y+6,{align:'right'});doc.text('AMOUNT',right-3,y+6,{align:'right'});
+ y+=14;
+ for(let i=0;i<items.length;i++){
+  const item=items[i], unit=parsePriceAmount(item.price_text), amount=unit===null?null:unit*item.quantity;
+  const nameLines=doc.splitTextToSize(String(item.name||'Electric scooter'),95);
+  if(y+Math.max(12,nameLines.length*4)+12>265){doc.addPage();y=22;}
+  doc.setTextColor(...ink);doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text(nameLines,left+3,y);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text(String(item.quantity),140,y,{align:'center'});doc.text(money(unit),160,y,{align:'right'});doc.text(money(amount),right-3,y,{align:'right'});
+  y+=Math.max(9,nameLines.length*4+3);line(y);y+=6;
+ }
+ if(y>245){doc.addPage();y=22;}
+ const totalBoxY=y;
+ doc.setTextColor(...muted);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('Subtotal',right-62,y+5);doc.setTextColor(...ink);doc.text(money(total),right-3,y+5,{align:'right'});
+ doc.setTextColor(...muted);doc.text('Delivery charges',right-62,y+12);doc.setTextColor(...ink);doc.text('To be confirmed',right-3,y+12,{align:'right'});
+ doc.setFillColor(...ink);doc.roundedRect(left,y+18,right-left,13,1.5,1.5,'F');
+ doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text('ORDER TOTAL',left+4,y+26);doc.setTextColor(...gold);doc.setFontSize(11);doc.text(money(total),right-4,y+26,{align:'right'});
+ y+=42;
+ if(y>245){doc.addPage();y=22;}
+ doc.setTextColor(...ink);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text('PAYMENT SUMMARY',left,y);y+=7;
+ const rows=method==='Cash'?[['Payment method','Cash'],['Payment status','Pending confirmation']]:[
+  ['Payment method',method],['Credit duration',months+' months'],['Markup rate',markup+'%'],
+  ['Cash down payment',money(method==='Both'?down:0)],['Credit balance before markup',money(balance)],
+  ['Total credit repayment',money(creditTotal)],['Monthly installment',money(monthly)+' approx.']
+ ];
+ const rowH=8, boxH=rows.length*rowH+6;
+ doc.setFillColor(...pale);doc.roundedRect(left,y,right-left,boxH,2,2,'F');
+ rows.forEach((r,i)=>{const yy=y+6+i*rowH;doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...muted);doc.text(r[0],left+4,yy);doc.setFont('helvetica','bold');doc.setTextColor(...ink);doc.text(String(r[1]),right-4,yy,{align:'right'});});
+ y+=boxH+10;
+ if(y>263){doc.addPage();y=22;}
+ doc.setDrawColor(...gold);doc.setLineWidth(.6);doc.line(left,y,right,y);y+=8;
+ doc.setTextColor(...ink);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text('THANK YOU FOR CHOOSING AUR-K EV.',W/2,y,{align:'center'});
+ doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...muted);
+ doc.text('Mansoorabad, Jhumra Road, Faisalabad  •  WhatsApp: 0323-9661747',W/2,y+6,{align:'center'});
+ doc.setFontSize(7);doc.text('This is an order confirmation request, not proof of payment.',W/2,y+12,{align:'center'});
+ const pages=doc.getNumberOfPages();
+ for(let p=1;p<=pages;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...muted);doc.text('AUR-K EV BIKE EXPERTS',left,287);doc.text('Page '+p+' of '+pages,right,287,{align:'right'});}
+ const filename='AURK-ORDER-'+invoiceNo.replace(/[^A-Z0-9-]/g,'')+'.pdf';
+ doc.save(filename);
+ return filename;
+}
+
 document.getElementById('customerOrderForm').addEventListener('submit',async e=>{
  e.preventDefault();if(!cart.length){alert('Your bag is empty. Please add a scooter again.');closeOrder();return;}
  const msg=document.getElementById('orderMessage'),btn=document.getElementById('placeOrderBtn');btn.disabled=true;msg.textContent='Submitting your order…';
@@ -189,44 +259,24 @@ document.getElementById('customerOrderForm').addEventListener('submit',async e=>
  const {error}=await supabase.from('site_orders').insert(order);if(error){msg.textContent='Could not save order: '+error.message+' Please try again or contact us on WhatsApp.';btn.disabled=false;return;}
  const money=n=>'PKR '+Math.round(n).toLocaleString('en-PK');
  const billDate=new Date().toLocaleString('en-PK',{timeZone:'Asia/Karachi',dateStyle:'medium',timeStyle:'short'});
- const paymentLines=method==='Cash'
-  ? 'Payment Method: CASH\\nPayment Status: To be confirmed at showroom/delivery'
-  : 'Payment Method: '+method+'\\nCredit Duration: '+months+' months\\nCash Down Payment: '+money(method==='Both'?down:0)+'\\nCredit Balance: '+(balance===null?'To be confirmed':money(balance))+'\\nEstimated Monthly Installment: '+(monthly===null?'To be confirmed':money(monthly)+' (approx.)');
- const itemLines=items.map((x,i)=>{const raw=String(x.price_text||'').replace(/,/g,'').match(/(?:PKR|Rs\\.?)*\\s*(\\d+(?:\\.\\d+)?)/i);const unit=raw?Number(raw[1]):null;const line=unit===null?'Price to confirm':money(unit*x.quantity);return (i+1)+'. '+x.name+'\\n   Qty: '+x.quantity+' | Unit Price: '+(unit===null?'To confirm':money(unit))+' | Amount: '+line;}).join('\\n');
- const totalLine=total===null?'To be confirmed':money(total);
- const itemRows=items.map((x,i)=>{
-  const unit=parsePriceAmount(x.price_text),amount=unit===null?null:unit*x.quantity;
-  return (i+1)+'. *'+x.name+'*\\n   Qty: '+x.quantity+'   Rate: '+(unit===null?'To be confirmed':money(unit))+'\\n   Amount: '+(amount===null?'To be confirmed':money(amount));
- }).join('\\n');
- const receiptTotal=total===null?'To be confirmed':money(total);
- const paymentReceipt=method==='Cash'
-  ? '*Payment method:* Cash\\n*Payment status:* Payable on confirmation'
-  : '*Payment method:* '+method+'\\n*Credit duration:* '+months+' months\\n*Markup:* '+markup+'%\\n*Cash down payment:* '+money(method==='Both'?down:0)+'\\n*Credit balance before markup:* '+(balance===null?'To be confirmed':money(balance))+'\\n*Total credit repayment:* '+(creditTotal===null?'To be confirmed':money(creditTotal))+'\\n*Monthly installment:* '+(monthly===null?'To be confirmed':money(monthly)+' approx.');
+ const invoiceNo='AURK-'+new Date().getFullYear()+'-'+orderId.slice(0,8).toUpperCase();
+ let invoiceFile;
+ try{
+  invoiceFile=generateAurkInvoicePDF({invoiceNo,billDate,customer,items,total,method,months,markup,down,balance,creditTotal,monthly});
+ }catch(pdfError){
+  console.error('Invoice PDF could not be generated',pdfError);
+  msg.textContent='Your order is saved, but the PDF could not be generated. Please refresh and contact our showroom with order '+invoiceNo+'.';
+  btn.disabled=false;return;
+ }
  const message='*AUR-K EV BIKE EXPERTS*\\n'+
- '*CUSTOMER ORDER BILL*\\n'+
- '━━━━━━━━━━━━━━━━━━━━\\n'+
- '*Bill No:* '+orderId+'\\n'+
- '*Date:* '+billDate+'\\n'+
- '*Status:* Order received — payment pending\\n'+
- '━━━━━━━━━━━━━━━━━━━━\\n'+
- '*CUSTOMER DETAILS*\\n'+
- 'Name: '+customer.name+'\\n'+
- 'Mobile: '+customer.phone+'\\n'+
- 'Address: '+customer.address+', '+customer.city+'\\n'+
- '━━━━━━━━━━━━━━━━━━━━\\n'+
- '*ITEMS*\\n'+itemRows+'\\n'+
- '━━━━━━━━━━━━━━━━━━━━\\n'+
- '*Subtotal:* '+receiptTotal+'\\n'+
- '*Delivery charges:* To be confirmed\\n'+
- '*GRAND TOTAL:* '+receiptTotal+'\\n'+
- '━━━━━━━━━━━━━━━━━━━━\\n'+
- '*PAYMENT DETAILS*\\n'+paymentReceipt+'\\n'+
- '━━━━━━━━━━━━━━━━━━━━\\n'+
- 'Mansoorabad, Jhumra Road, Faisalabad\\n'+
- 'WhatsApp: 0323-9661747\\n'+
- 'Thank you for choosing AUR-K EV.\\n'+
- '_This is an order confirmation request, not a paid receipt._';
- msg.textContent='Order saved successfully. Opening WhatsApp…';whatsapp(message);cart=[];renderCart();e.target.reset();updatePaymentOptions();closeOrder();btn.disabled=false;
+  '*Your order has been received.*\\n\\n'+
+  '*Invoice:* '+invoiceNo+'\\n'+
+  '*Order total:* '+(total===null?'To be confirmed':money(total))+'\\n'+
+  '*Payment:* '+method+(method==='Cash'?'':' • '+months+' months • '+markup+'% markup')+'\\n'+
+  (method==='Cash'?'':'*Total credit repayment:* '+(creditTotal===null?'To be confirmed':money(creditTotal))+'\\n*Monthly installment:* '+(monthly===null?'To be confirmed':money(monthly))+'\\n')+
+  '\\nYour AUR-K order invoice PDF has been downloaded. Please attach the downloaded PDF to this WhatsApp chat before sending.\\n\\n'+
+  'Payment is pending showroom confirmation. Thank you for choosing AUR-K EV.';
+ msg.textContent='Order saved. Invoice PDF downloaded. Opening WhatsApp…';whatsapp(message);cart=[];renderCart();e.target.reset();updatePaymentOptions();closeOrder();btn.disabled=false;
 });
 document.getElementById('contactWhatsApp').onclick=e=>{e.preventDefault();whatsapp('Hello AUR-K EV, I would like to know more about your electric scooters.');};document.getElementById('menuToggle').onclick=()=>document.getElementById('nav').classList.toggle('show');document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>document.getElementById('nav').classList.remove('show')));document.getElementById('year').textContent=new Date().getFullYear();
 renderProducts();renderCart();
