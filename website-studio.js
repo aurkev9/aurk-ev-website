@@ -47,6 +47,7 @@ function highlightSelected(){
 }
 function attachPreviewEditor(){
  const doc=frame.contentDocument;if(!doc?.body)return;
+ if(new URL(frame.src).searchParams.get("page")!=="home")return;
  doc.querySelectorAll("style[data-studio-editor-style]").forEach(n=>n.remove());
  const style=doc.createElement("style");style.dataset.studioEditorStyle="true";style.textContent='[data-studio-selected="true"]{outline:3px solid #c9a45c!important;outline-offset:3px!important;cursor:crosshair!important} body{cursor:crosshair}';doc.head.append(style);
  doc.addEventListener("click",event=>{
@@ -108,7 +109,7 @@ function applyCurrent(){
 function resetCurrent(){
  if(!selectedSelector)return;
  draft.elements=draft.elements.filter(x=>x.selector!==selectedSelector);
- selectedSelector="";frame.src="index.html?page=home&studioPreview=1&refresh="+Date.now();setStatus("Element reset in preview. Save draft to keep the reset.");
+ selectedSelector="";frame.src="index.html?page=home&pageId="+encodeURIComponent(studioPages.find(p=>p.slug==="home")?.id||"")+"&studioPreview=1&refresh="+Date.now();setStatus("Element reset in preview. Save draft to keep the reset.");
 }
 async function loadStudio(){
  const {data:{session}}=await supabase.auth.getSession();
@@ -228,7 +229,7 @@ function renderBlockList(){
  const host=$("studioBlockList");host.innerHTML="";
  if(!pageDraft.sections.length){const empty=document.createElement("p");empty.className="studio-block-empty";empty.textContent="No sections yet. Choose a block from the library to start building.";host.append(empty);return;}
  pageDraft.sections.forEach((block,index)=>{
-  const row=document.createElement("div");row.className="studio-block-row"+(block.id===selectedBlockId?" active":"");
+  const row=document.createElement("div");row.className="studio-block-row"+(block.id===selectedBlockId?" active":"");row.draggable=true;row.addEventListener("dragstart",event=>{event.dataTransfer.setData("text/aurk-block-index",String(index));event.dataTransfer.effectAllowed="move";});row.addEventListener("dragover",event=>event.preventDefault());row.addEventListener("drop",event=>{event.preventDefault();const from=Number(event.dataTransfer.getData("text/aurk-block-index"));if(!Number.isInteger(from)||from===index||from<0||from>=pageDraft.sections.length)return;const [moved]=pageDraft.sections.splice(from,1);pageDraft.sections.splice(index,0,moved);renderBlockList();pageMessage("Sections reordered. Save the page draft to keep this order.");});
   const choose=document.createElement("button");choose.type="button";choose.className="studio-block-select";choose.textContent=(index+1)+". "+(block.heading||blockNames[block.type]||"Section");choose.addEventListener("click",()=>{selectedBlockId=block.id;renderBlockList();renderBlockFields();});
   const up=document.createElement("button");up.type="button";up.textContent="↑";up.title="Move up";up.disabled=index===0;up.addEventListener("click",()=>moveStudioBlock(index,-1));
   const down=document.createElement("button");down.type="button";down.textContent="↓";down.title="Move down";down.disabled=index===pageDraft.sections.length-1;down.addEventListener("click",()=>moveStudioBlock(index,1));
@@ -308,7 +309,7 @@ async function saveStudioPage(publish=false){
 }
 function previewStudioPage(){
  if(!activeStudioPage)return;
- frame.src="index.html?page="+encodeURIComponent(activeStudioPage.draft_slug||activeStudioPage.slug)+"&studioPreview=1&refresh="+Date.now();
+ frame.src="index.html?page="+encodeURIComponent(activeStudioPage.draft_slug||activeStudioPage.slug)+"&pageId="+encodeURIComponent(activeStudioPage.id)+"&studioPreview=1&refresh="+Date.now();
  $("studioSelectorLabel").value="";selectedSelector="";
 }
 
