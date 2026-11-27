@@ -44,22 +44,22 @@ async function renderSection(section){
  const wrap=node("section","studio-custom-section studio-block-"+(section.type||"text"));
  if(section.type==="hero"||section.type==="promo"){
   const bg=section.background_color||"#171717";wrap.style.setProperty("--studio-section-bg",bg);
-  if(section.image_url){wrap.style.setProperty("--studio-section-image",'url("'+String(section.image_url).replace(/["\\]/g,"")+'")');}
+  const heroImage=safeUrl(section.image_url);if(/^https?:\/\//i.test(heroImage)){wrap.style.setProperty("--studio-section-image",'url("'+heroImage+'")');}
  }
  const inner=node("div","studio-section-inner");
  if(section.eyebrow)inner.append(node("p","studio-section-eyebrow",section.eyebrow));
  if(section.heading)inner.append(node("h2","studio-section-heading",section.heading));
  if(section.body)inner.append(node("p","studio-section-body",section.body));
- if(section.type==="image"&&section.image_url){
-  const img=node("img","studio-section-image");img.src=section.image_url;img.alt=section.image_alt||section.heading||"AUR-K EV";img.loading="lazy";inner.append(img);
+ if(section.type==="image"&&/^https?:\/\//i.test(safeUrl(section.image_url))){
+  const img=node("img","studio-section-image");img.src=safeUrl(section.image_url);img.alt=section.image_alt||section.heading||"AUR-K EV";img.loading="lazy";inner.append(img);
  }
  if(section.type==="video"&&section.video_url){
   const id=youtubeId(section.video_url);
   if(id){const box=node("div","studio-video-frame");const iframe=node("iframe");iframe.src="https://www.youtube-nocookie.com/embed/"+id;iframe.title=section.heading||"AUR-K EV video";iframe.loading="lazy";iframe.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";iframe.allowFullscreen=true;box.append(iframe);inner.append(box);}
   else if(/^https?:\/\//i.test(section.video_url)){const video=node("video","studio-video-frame");video.controls=true;video.src=section.video_url;inner.append(video);}
  }
- if((section.type==="hero"||section.type==="promo")&&section.image_url&&!section.background_color){
-  const img=node("img","studio-section-hero-image");img.src=section.image_url;img.alt=section.heading||"AUR-K EV";img.loading="lazy";inner.append(img);
+ if((section.type==="hero"||section.type==="promo")&&/^https?:\/\//i.test(safeUrl(section.image_url))&&!section.background_color){
+  const img=node("img","studio-section-hero-image");img.src=safeUrl(section.image_url);img.alt=section.heading||"AUR-K EV";img.loading="lazy";inner.append(img);
  }
  const button=makeButton(section.button_text,section.button_url);if(button)inner.append(button);
  wrap.append(inner);return wrap;
