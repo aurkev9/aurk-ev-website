@@ -404,7 +404,7 @@ async function loadModelMediaList(){
   }else{media=item.media_type==='video'?document.createElement('video'):document.createElement('img');media.src=item.public_url;media.alt=item.title;media.controls=item.media_type==='video';media.muted=true;media.playsInline=true;}
   const body=document.createElement('div'),title=document.createElement('strong'),meta=document.createElement('small'),del=document.createElement('button');
   title.textContent=item.title;meta.textContent=item.media_type.toUpperCase();del.className='delete-btn';del.textContent='Delete';
-  del.onclick=async()=>{if(!confirm('Delete this gallery media?'))return;const {error:de}=await supabase.from('site_model_media').delete().eq('id',item.id);if(de){alert(de.message);return;}if(item.storage_path)await supabase.storage.from('website-images').remove([item.storage_path]);await loadModelMediaList();};
+  del.onclick=async()=>{if(!confirm('Delete this gallery media?'))return;const {error:de}=await supabase.from('site_model_media').delete().eq('id',item.id);if(de){alert(de.message);return;}if(item.storage_path?.startsWith('model-media/'))await supabase.storage.from('website-images').remove([item.storage_path]);await loadModelMediaList();};
   body.append(title,meta,del);card.append(media,body);host.append(card);
  });
 }
