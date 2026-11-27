@@ -90,6 +90,7 @@ async function addNavigationPages(){
 }
 function applyVisualContent(raw){
  const content=raw&&typeof raw==="object"?raw:{};
+ if(content.theme&&typeof content.theme==="object"){if(content.theme.gold)document.documentElement.style.setProperty("--gold",content.theme.gold);if(content.theme.paper)document.documentElement.style.setProperty("--paper",content.theme.paper);if(content.theme.ink)document.documentElement.style.setProperty("--ink",content.theme.ink);}
  (Array.isArray(content.elements)?content.elements:[]).forEach(item=>{
   let target;try{target=document.querySelector(item.selector);}catch{return;}
   if(!target)return;
@@ -99,6 +100,10 @@ function applyVisualContent(raw){
   if(item.color)target.style.color=item.color;
   if(item.background)target.style.backgroundColor=item.background;
   if(item.fontSize)target.style.fontSize=Number(item.fontSize)+"px";
+  if(item.fontFamily){target.style.fontFamily='"'+String(item.fontFamily).replace(/["\\]/g,"")+'", sans-serif';if(item.fontUrl){const styleId="studio-font-"+String(item.fontFamily).toLowerCase().replace(/[^a-z0-9]+/g,"-");if(!document.getElementById(styleId)){const style=document.createElement("style");style.id=styleId;style.textContent='@font-face{font-family:"'+String(item.fontFamily).replace(/["\\]/g,"")+'";src:url("'+String(item.fontUrl).replace(/["\\]/g,"")+'");font-display:swap}';document.head.append(style);}}}
+  if(item.fontWeight)target.style.fontWeight=item.fontWeight;
+  if(item.textAlign)target.style.textAlign=item.textAlign;
+  if(item.borderColor)target.style.borderColor=item.borderColor;
   if(item.hidden!==undefined)target.hidden=!!item.hidden;
  });
  const root=document.querySelector("#storefrontMain");
