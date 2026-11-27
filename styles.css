@@ -1354,3 +1354,31 @@ body.storefront .product-image-viewer img{background:#f8f6f1;padding:12px;border
  .detail-mobile-actions button{background:#c9a45c;color:#171715;cursor:pointer}
  body.storefront:has(.product-detail-page:not([hidden])) .footer-v2{padding-bottom:90px}
 }
+
+
+/* AUR-K EV — customer confidence and showroom visit refinement */
+body.storefront .trust-strip-v2{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:24px 7%;background:#f5f1e8;border-top:1px solid #e4dac8;border-bottom:1px solid #e4dac8}
+body.storefront .trust-strip-v2 article{display:flex;align-items:center;gap:13px;min-width:0;padding:8px 18px;border-right:1px solid #ded4c2}
+body.storefront .trust-strip-v2 article:first-child{padding-left:0}
+body.storefront .trust-strip-v2 article:last-child{border-right:0;padding-right:0}
+body.storefront .trust-strip-v2 .trust-icon{flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center;border:1px solid #c8a66a;border-radius:50%;color:#96743d;font:800 9px Manrope,sans-serif}
+body.storefront .trust-strip-v2 article>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+body.storefront .trust-strip-v2 article b{font:800 10px Manrope,sans-serif;color:#28251f}
+body.storefront .trust-strip-v2 article small{font-size:9px;line-height:1.5;color:#777064}
+body.storefront .why-v2 .why-points article{align-items:flex-start}
+body.storefront .why-v2 .why-points article p{max-width:440px}
+body.storefront .showroom-map-link{display:flex;flex-direction:column;gap:8px;max-width:380px;color:#d0c8b9;text-decoration:none;font-size:11px;line-height:1.7}
+body.storefront .showroom-map-link b{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#d7b66f}
+body.storefront .showroom-map-link:hover b{color:#fff}
+@media(max-width:900px){
+ body.storefront .trust-strip-v2{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:12px}
+ body.storefront .trust-strip-v2 article:nth-child(2){border-right:0;padding-right:0}
+ body.storefront .trust-strip-v2 article:nth-child(3){padding-left:0}
+}
+@media(max-width:560px){
+ body.storefront .trust-strip-v2{padding:18px 6%;gap:10px}
+ body.storefront .trust-strip-v2 article{gap:9px;padding:9px 8px;border-right:0}
+ body.storefront .trust-strip-v2 .trust-icon{flex-basis:29px;width:29px;height:29px;font-size:8px}
+ body.storefront .trust-strip-v2 article b{font-size:9px}
+ body.storefront .trust-strip-v2 article small{font-size:8px}
+}
