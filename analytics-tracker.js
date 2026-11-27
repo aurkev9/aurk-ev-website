@@ -43,8 +43,6 @@ document.addEventListener("click",event=>{
  else if(href.startsWith("tel:"))record("call_click");
  else if(/compare/.test(href)||/compare/.test(label))record("compare_click");
  else if(/order|checkout|enquiry|enquire|whatsapp/.test(label))record("enquiry_click");
-
- }
 });
 document.getElementById("customerOrderForm")?.addEventListener("submit",()=>{
  const product=productFromUrl();
