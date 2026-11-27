@@ -1319,3 +1319,38 @@ body.storefront .detail-thumb img{display:block;width:100%;height:100%;object-fi
 body.storefront .product-image-viewer img{background:#f8f6f1;padding:12px;border:1px solid rgba(220,190,130,.25);border-radius:6px}
 @media(max-width:850px){body.storefront .detail-main-image{height:clamp(320px,68vw,540px);min-height:320px}}
 @media(max-width:520px){body.storefront .detail-main-image{height:82vw;min-height:260px}body.storefront .detail-main-image img{padding:16px}body.storefront .detail-thumb{height:72px}}
+
+
+/* AUR-K EV Step 3 — clearer product discovery and always-available mobile actions */
+.detail-specifications li.detail-spec-card{display:flex;flex-direction:column;gap:6px;min-height:76px;padding:13px 14px;background:linear-gradient(145deg,#fff 0%,#f8f5ee 100%);border:1px solid #e8dfcf;border-left:2px solid #c5a15f;color:#27241e}
+.detail-specifications .detail-spec-label{font-size:8px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#9a7a42}
+.detail-specifications li.detail-spec-card strong{font:700 12px/1.5 Manrope,sans-serif;color:#343027}
+.detail-recommendations{margin-top:54px;padding-top:32px;border-top:1px solid #e4ddcf}
+.detail-recommendations-heading{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:18px}
+.detail-recommendations-heading .eyebrow{font-size:8px;letter-spacing:1.7px;color:#a17c39;font-weight:800;margin:0 0 7px}
+.detail-recommendations-heading h2{font:800 clamp(22px,3vw,30px)/1.15 Manrope,sans-serif;color:#1b1a17;margin:0}
+.detail-recommendations-heading>a{font-size:10px;font-weight:800;color:#8c6b35;text-decoration:none;white-space:nowrap}
+.detail-recommendation-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.detail-recommendation-card{min-width:0;background:#fff;border:1px solid #e8e0d2;transition:transform .2s ease,box-shadow .2s ease}
+.detail-recommendation-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px #211a1012}
+.detail-recommendation-card>a{display:block;color:inherit;text-decoration:none}
+.detail-recommendation-photo{height:170px;background:radial-gradient(ellipse at 50% 45%,#fff 0%,#f3efe6 100%);display:grid;place-items:center}
+.detail-recommendation-photo img{width:100%;height:100%;padding:12px;object-fit:contain}
+.detail-recommendation-copy{display:flex;flex-direction:column;gap:7px;padding:14px}
+.detail-recommendation-copy b{font:800 11px Manrope;color:#26231d}
+.detail-recommendation-copy span{font-size:10px;color:#746c5e}
+.detail-recommendation-copy em{font-size:9px;font-style:normal;font-weight:800;color:#98763c;margin-top:3px}
+.detail-mobile-actions{display:none}
+@media(max-width:600px){
+ .detail-recommendations{margin-top:36px;padding-top:25px}
+ .detail-recommendations-heading{align-items:start;flex-direction:column;gap:9px}
+ .detail-recommendation-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .detail-recommendation-photo{height:125px}
+ .detail-recommendation-copy{padding:11px;gap:6px}
+ .detail-recommendation-copy b{font-size:10px}
+ .detail-mobile-actions{position:fixed;z-index:85;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:10px max(14px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));background:rgba(17,17,15,.97);border-top:1px solid #b99655;box-shadow:0 -8px 25px #0002}
+ .detail-mobile-actions a,.detail-mobile-actions button{min-height:46px;display:flex;align-items:center;justify-content:center;border:1px solid #c9a45c;font:800 10px Manrope,sans-serif;text-decoration:none}
+ .detail-mobile-actions a{background:transparent;color:#e5c982}
+ .detail-mobile-actions button{background:#c9a45c;color:#171715;cursor:pointer}
+ body.storefront:has(.product-detail-page:not([hidden])) .footer-v2{padding-bottom:90px}
+}
