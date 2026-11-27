@@ -90,7 +90,7 @@ function currentPatch(){
  if(tag==="A")item.href=$("studioHref").value.trim();
  if(tag==="IMG")item.src=$("studioImage").value.trim();
  const color=$("studioColor").value,bg=$("studioBackground").value,size=$("studioFontSize").value;
- if(color!==selectedBaseline.color)item.color=color;if(bg!==selectedBaseline.background)item.background=bg;if(size&&Number(size)>=8&&Number(size)<=120&&Number(size)!==Number(selectedBaseline.fontSize))item.fontSize=Number(size);
+ if(color!==selectedBaseline.color)item.color=color;if(bg!==selectedBaseline.background&&!(selectedBaseline.background===null&&bg==="#ffffff"))item.background=bg;if(size&&Number(size)>=8&&Number(size)<=120&&Number(size)!==Number(selectedBaseline.fontSize))item.fontSize=Number(size);
  item.hidden=$("studioHidden").checked;return item;
 }
 function applyCurrent(){
@@ -143,7 +143,7 @@ $("studioResetElement")?.addEventListener("click",resetCurrent);
 $("studioSaveDraft")?.addEventListener("click",()=>saveDraft(false));
 $("studioPublish")?.addEventListener("click",()=>{if(confirm("Publish the current Website Studio draft to the live AUR-K EV website?"))saveDraft(true);});
 $("studioRefreshPreview")?.addEventListener("click",()=>{frame.src="index.html?studioPreview=1&refresh="+Date.now();});
-$("studioRestoreVersion")?.addEventListener("click",()=>{if(!selectedVersion)return;draft=normalize(selectedVersion.content);applyDraftToPreview();setStatus("Version restored into the editor. Save draft to keep it.");});
+$("studioRestoreVersion")?.addEventListener("click",()=>{if(!selectedVersion)return;draft=normalize(selectedVersion.content);selectedSelector="";frame.src="index.html?studioPreview=1&refresh="+Date.now();setStatus("Version restored into the editor. Save draft to keep it.");});
 $("studioMoveUp")?.addEventListener("click",()=>moveSection(-1));
 $("studioMoveDown")?.addEventListener("click",()=>moveSection(1));
 function moveSection(direction){
