@@ -190,11 +190,11 @@ async function initPageBuilder(){
  pageBuilderInitialized=true;
  const [draftResult,publishedResult]=await Promise.all([
   supabase.from("site_studio_page_drafts").select("*").order("created_at",{ascending:true}),
-  supabase.from("site_studio_pages").select("id,slug,title,published_content,status,show_in_nav,nav_order,meta_description,published_at").order("created_at",{ascending:true})
+  supabase.from("site_studio_pages").select("id,slug,title,published_content,status,show_in_nav,nav_order,meta_description,meta_title,meta_keywords,og_image_url,published_at").order("created_at",{ascending:true})
  ]);
  if(draftResult.error||publishedResult.error){pageMessage("Page builder could not load: "+(draftResult.error||publishedResult.error).message,true);return;}
  const publishedById=new Map((publishedResult.data||[]).map(p=>[p.id,p]));
- studioPages=(draftResult.data||[]).map(d=>({...d,...(publishedById.get(d.id)||{}),draft_slug:d.draft_slug,draft_title:d.draft_title,draft_content:d.draft_content,draft_meta_description:d.draft_meta_description,draft_show_in_nav:d.draft_show_in_nav}));
+ studioPages=(draftResult.data||[]).map(d=>({...d,...(publishedById.get(d.id)||{}),draft_slug:d.draft_slug,draft_title:d.draft_title,draft_content:d.draft_content,draft_meta_description:d.draft_meta_description,draft_meta_title:d.draft_meta_title,draft_meta_keywords:d.draft_meta_keywords,draft_og_image_url:d.draft_og_image_url,draft_show_in_nav:d.draft_show_in_nav}));
  if(!studioPages.some(p=>p.slug==="home")){
   pageMessage("Homepage page record is missing. Refresh and try again.",true);return;
  }
@@ -222,6 +222,9 @@ function selectStudioPage(page){
  $("studioPageSlug").readOnly=page.slug==="home";
  $("studioPageTitle").readOnly=page.slug==="home";
  $("studioPageMeta").value=page.draft_meta_description??page.meta_description??"";
+ $("studioPageSeoTitle").value=page.draft_meta_title??page.meta_title??page.draft_title??page.title??"";
+ $("studioPageKeywords").value=page.draft_meta_keywords??page.meta_keywords??"";
+ $("studioPageOgImage").value=page.draft_og_image_url??page.og_image_url??"";
  $("studioPageNav").checked=page.slug==="home"?false:(page.draft_show_in_nav??page.show_in_nav);
  $("studioPageNavOrder").value=page.draft_nav_order??page.nav_order??studioPages.indexOf(page);
  $("studioDeletePage").disabled=page.slug==="home";
@@ -300,16 +303,16 @@ async function saveStudioPage(publish=false){
  if(activeStudioPage.slug==="home"&&slug!=="home"){button.disabled=false;pageMessage("The homepage URL cannot be changed here.",true);return;}
  if(studioPages.some(p=>p.id!==activeStudioPage.id&&(p.slug===slug||p.draft_slug===slug))){button.disabled=false;pageMessage("This URL is already used by another page.",true);return;}
  const user=(await supabase.auth.getUser()).data.user,now=new Date().toISOString();
- const draftPayload={draft_title:title,draft_slug:slug,draft_meta_description:$("studioPageMeta").value.trim(),draft_show_in_nav:activeStudioPage.slug==="home"?false:$("studioPageNav").checked,draft_nav_order:Math.max(0,Math.min(99,Number($("studioPageNavOrder").value)||0)),draft_content:pageDraft,updated_by:user?.id,updated_at:now};
+ const draftPayload={draft_title:title,draft_slug:slug,draft_meta_description:$("studioPageMeta").value.trim(),draft_meta_title:$("studioPageSeoTitle").value.trim(),draft_meta_keywords:$("studioPageKeywords").value.trim(),draft_og_image_url:$("studioPageOgImage").value.trim(),draft_show_in_nav:activeStudioPage.slug==="home"?false:$("studioPageNav").checked,draft_nav_order:Math.max(0,Math.min(99,Number($("studioPageNavOrder").value)||0)),draft_content:pageDraft,updated_by:user?.id,updated_at:now};
  const {data:draftData,error}=await supabase.from("site_studio_page_drafts").update(draftPayload).eq("id",activeStudioPage.id).select("*").single();
  if(error){button.disabled=false;pageMessage("Could not save page draft: "+error.message,true);return;}
  if(publish){
-  const publicPayload={id:activeStudioPage.id,slug,title,published_content:pageDraft,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:draftPayload.draft_nav_order,meta_description:draftPayload.draft_meta_description,published_at:now};
+  const publicPayload={id:activeStudioPage.id,slug,title,published_content:pageDraft,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:draftPayload.draft_nav_order,meta_description:draftPayload.draft_meta_description,meta_title:draftPayload.draft_meta_title,meta_keywords:draftPayload.draft_meta_keywords,og_image_url:draftPayload.draft_og_image_url,published_at:now};
   const {error:publishError}=await supabase.from("site_studio_pages").upsert(publicPayload,{onConflict:"id"});
   if(publishError){button.disabled=false;pageMessage("Draft saved, but publishing failed: "+publishError.message,true);return;}
  }
  button.disabled=false;
- const publishedData=publish?{slug,title,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:activeStudioPage.nav_order??studioPages.indexOf(activeStudioPage),meta_description:draftPayload.draft_meta_description,published_content:pageDraft,published_at:now}:{};
+ const publishedData=publish?{slug,title,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:activeStudioPage.nav_order??studioPages.indexOf(activeStudioPage),meta_description:draftPayload.draft_meta_description,meta_title:draftPayload.draft_meta_title,meta_keywords:draftPayload.draft_meta_keywords,og_image_url:draftPayload.draft_og_image_url,published_content:pageDraft,published_at:now}:{};
  activeStudioPage={...activeStudioPage,...draftData,...publishedData};
  studioPages=studioPages.map(p=>p.id===activeStudioPage.id?activeStudioPage:p);
  const option=$("studioPageSelect").querySelector('option[value="'+activeStudioPage.id+'"]');if(option)option.textContent=activeStudioPage.draft_title;
