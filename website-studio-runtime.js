@@ -114,6 +114,17 @@ function applyVisualContent(raw){
   if(item.borderColor)target.style.borderColor=item.borderColor;
   if(item.hidden!==undefined)target.hidden=!!item.hidden;
  });
+
+ (Array.isArray(content.decorations)?content.decorations:[]).forEach(item=>{
+  let anchor;try{anchor=document.querySelector(item.anchor);}catch{return;}if(!anchor)return;
+  if(getComputedStyle(anchor).position==="static")anchor.style.position="relative";
+  const shape=document.createElement("div");shape.setAttribute("aria-hidden","true");
+  Object.assign(shape.style,{position:"absolute",left:(Number(item.x)||0)+"px",top:(Number(item.y)||0)+"px",width:Math.max(1,Number(item.width)||120)+"px",height:item.type==="line"?"0px":Math.max(1,Number(item.height)||60)+"px",background:item.type==="line"?"transparent":(item.fill||"#c9a45c"),border:item.type==="line"?"0":((Number(item.borderWidth)||0)+"px solid "+(item.borderColor||"#171717")),borderRadius:item.type==="circle"?"50%":(item.type==="pill"?"999px":(Number(item.radius)||0)+"px"),opacity:String(Math.max(0,Math.min(1,Number(item.opacity??1)))),zIndex:String(item.zIndex||2),pointerEvents:"none"});
+  if(item.type==="line")shape.style.borderTop=(Number(item.borderWidth)||3)+"px solid "+(item.borderColor||item.fill||"#c9a45c");
+  if(item.type==="triangle")shape.style.clipPath="polygon(50% 0, 0 100%, 100% 100%)";
+  if(item.type==="diamond")shape.style.clipPath="polygon(50% 0, 100% 50%, 50% 100%, 0 50%)";
+  anchor.append(shape);
+ });
  const root=document.querySelector("#storefrontMain");
  if(root&&Array.isArray(content.sectionOrder)&&content.sectionOrder.length){
   const sections=[...root.children].filter(el=>el.tagName==="SECTION");
