@@ -350,8 +350,14 @@ function renderCompetitorComparison(){
 }
 document.getElementById('runCompetitorCompare')?.addEventListener('click',renderCompetitorComparison);
 
-function openModelMediaGallery(model){
- const items=model?.media||[];let viewer=document.getElementById('modelMediaViewer');
+async function openModelMediaGallery(model){
+ let items=model?.media||[];
+ // Fetch the latest gallery rows on open so a comparison made before media loading cannot show a stale empty gallery.
+ if(supabase&&model?.id){
+  const {data,error}=await supabase.from('site_model_media').select('id,model_type,model_id,model_label,title,media_type,public_url,sort_order').eq('model_type',model.kind).eq('model_id',String(model.id)).eq('is_active',true).order('sort_order').order('created_at',{ascending:false});
+  if(!error){items=data||[];model.media=items;}
+ }
+ let viewer=document.getElementById('modelMediaViewer');
  if(!viewer){viewer=document.createElement('div');viewer.id='modelMediaViewer';viewer.className='model-media-viewer';viewer.innerHTML='<div class="model-media-panel"><button type="button" class="model-media-close" aria-label="Close gallery">✕</button><h2 class="model-media-heading"></h2><div class="model-media-content"></div></div>';document.body.append(viewer);viewer.addEventListener('click',e=>{if(e.target===viewer||e.target.closest('.model-media-close'))viewer.classList.remove('open');});document.addEventListener('keydown',e=>{if(e.key==='Escape')viewer.classList.remove('open');});}
  viewer.querySelector('.model-media-heading').textContent=model.brand+' — '+model.name;
  const host=viewer.querySelector('.model-media-content');
