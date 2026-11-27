@@ -108,7 +108,7 @@ function applyCurrent(){
 function resetCurrent(){
  if(!selectedSelector)return;
  draft.elements=draft.elements.filter(x=>x.selector!==selectedSelector);
- selectedSelector="";frame.src="index.html?studioPreview=1&refresh="+Date.now();setStatus("Element reset in preview. Save draft to keep the reset.");
+ selectedSelector="";frame.src="index.html?page=home&studioPreview=1&refresh="+Date.now();setStatus("Element reset in preview. Save draft to keep the reset.");
 }
 async function loadStudio(){
  const {data:{session}}=await supabase.auth.getSession();
@@ -120,7 +120,7 @@ async function loadStudio(){
  draft=normalize(data?.draft_content||emptyDraft());
  $("studioLastPublished").textContent="Published version: "+(data?.published_at?new Date(data.published_at).toLocaleString():"Not published yet");
  setStatus(data?.updated_at?"Draft loaded. Select an element in the preview to begin.":"Ready. Your first draft has not been saved yet.");
- await loadVersions();if(frame.contentDocument?.readyState==="complete")attachPreviewEditor();
+ await loadVersions();await initPageBuilder();if(frame.contentDocument?.readyState==="complete")attachPreviewEditor();
 }
 async function saveDraft(publish=false){
  const button=publish?$("studioPublish"):$("studioSaveDraft");button.disabled=true;setStatus(publish?"Publishing website changes…":"Saving draft…");
@@ -167,4 +167,149 @@ document.querySelectorAll(".studio-device").forEach(button=>button.addEventListe
 }));
 frame?.addEventListener("load",()=>{attachPreviewEditor();});
 document.querySelector('[data-view="website-studio"]')?.addEventListener("click",()=>loadStudio());
+
+/* Advanced pages and reusable section builder */
+let studioPages=[],activeStudioPage=null,pageDraft={sections:[]},selectedBlockId=null,pageBuilderInitialized=false;
+const blockDefaults={
+ hero:{type:"hero",eyebrow:"WELCOME TO AUR-K EV",heading:"A better way to ride.",body:"Discover a more refined way to move with AUR-K EV.",image_url:"",button_text:"Explore scooters",button_url:"/#collection"},
+ text:{type:"text",heading:"A story worth sharing",body:"Write your page content here. Share your story, services or important information."},
+ image:{type:"image",heading:"Designed for your journey",body:"Add supporting details alongside a product or lifestyle image.",image_url:"",image_alt:""},
+ video:{type:"video",heading:"See it in action",body:"Show customers a product video or brand film.",video_url:""},
+ cta:{type:"cta",heading:"Ready for your next ride?",body:"Speak with our showroom team for friendly guidance.",button_text:"Contact AUR-K EV",button_url:"https://wa.me/923239661747"},
+ promo:{type:"promo",eyebrow:"LIMITED-TIME OFFER",heading:"A smarter way to move",body:"Add your promotional message and details here.",image_url:"",button_text:"Explore offers",button_url:"/#collection",background_color:"#171717"},
+ products:{type:"products",heading:"Explore our scooters",body:"Discover selected models from the AUR-K EV collection.",product_limit:4}
+};
+const blockNames={hero:"Hero banner",text:"Text section",image:"Image & text",video:"Video section",cta:"Call to action",promo:"Promotion banner",products:"Product showcase"};
+function pageMessage(message,error=false){const el=$("studioPageMessage");if(el){el.textContent=message;el.classList.toggle("is-error",error);}}
+function slugify(value){return String(value||"").toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,70);}
+function makeBlock(type){return {id:crypto.randomUUID(),...(blockDefaults[type]||blockDefaults.text)};}
+function normalizePageContent(value){return {sections:Array.isArray(value?.sections)?value.sections:[]};}
+async function initPageBuilder(){
+ if(pageBuilderInitialized)return;
+ pageBuilderInitialized=true;
+ const {data,error}=await supabase.from("site_studio_pages").select("*").order("created_at",{ascending:true});
+ if(error){pageMessage("Page builder could not load: "+error.message,true);return;}
+ studioPages=data||[];
+ if(!studioPages.some(p=>p.slug==="home")){
+  pageMessage("Homepage page record is missing. Refresh and try again.",true);return;
+ }
+ const select=$("studioPageSelect");select.innerHTML="";
+ studioPages.forEach(p=>{const opt=document.createElement("option");opt.value=p.id;opt.textContent=p.slug==="home"?"Homepage":p.draft_title||p.title;select.append(opt);});
+ select.addEventListener("change",()=>{const p=studioPages.find(x=>x.id===select.value);if(p)selectStudioPage(p);});
+ $("studioNewPage").addEventListener("click",createStudioPage);
+ $("studioDeletePage").addEventListener("click",deleteStudioPage);
+ $("studioPageTitle").addEventListener("input",()=>{if(activeStudioPage?.slug==="home")return;if(!$("studioPageSlug").dataset.edited)$("studioPageSlug").value=slugify($("studioPageTitle").value);});
+ $("studioPageSlug").addEventListener("input",()=>{$("studioPageSlug").dataset.edited="true";$("studioPageSlug").value=slugify($("studioPageSlug").value);});
+ document.querySelectorAll("[data-add-block]").forEach(button=>button.addEventListener("click",()=>addStudioBlock(button.dataset.addBlock)));
+ $("studioPageSave").addEventListener("click",()=>saveStudioPage(false));
+ $("studioPagePublish").addEventListener("click",()=>{if(confirm("Publish this page and make it visible on your website?"))saveStudioPage(true);});
+ $("studioPagePreview").addEventListener("click",previewStudioPage);
+ $("studioPageNav").addEventListener("change",()=>{if(activeStudioPage?.slug==="home")$("studioPageNav").checked=false;});
+ selectStudioPage(studioPages.find(p=>p.slug==="home")||studioPages[0]);
+}
+function selectStudioPage(page){
+ activeStudioPage=page;pageDraft=normalizePageContent(page.draft_content||page.page_content);
+ selectedBlockId=null;
+ $("studioPageSelect").value=page.id;
+ $("studioPageTitle").value=page.draft_title||page.title;
+ $("studioPageSlug").value=page.draft_slug||page.slug;
+ $("studioPageSlug").dataset.edited="";
+ $("studioPageSlug").readOnly=page.slug==="home";
+ $("studioPageTitle").readOnly=page.slug==="home";
+ $("studioPageMeta").value=page.draft_meta_description??page.meta_description??"";
+ $("studioPageNav").checked=page.slug==="home"?false:(page.draft_show_in_nav??page.show_in_nav);
+ $("studioDeletePage").disabled=page.slug==="home";
+ $("studioPageState").textContent=page.status==="published"?"Published page — draft edits stay private":"Unpublished draft";
+ renderBlockList();renderBlockFields();
+ pageMessage(page.slug==="home"?"Add custom sections to your existing homepage without replacing its current content.":"Edit this page, preview it, then publish when ready.");
+ previewStudioPage();
+}
+function renderBlockList(){
+ const host=$("studioBlockList");host.innerHTML="";
+ if(!pageDraft.sections.length){const empty=document.createElement("p");empty.className="studio-block-empty";empty.textContent="No sections yet. Choose a block from the library to start building.";host.append(empty);return;}
+ pageDraft.sections.forEach((block,index)=>{
+  const row=document.createElement("div");row.className="studio-block-row"+(block.id===selectedBlockId?" active":"");
+  const choose=document.createElement("button");choose.type="button";choose.className="studio-block-select";choose.textContent=(index+1)+". "+(block.heading||blockNames[block.type]||"Section");choose.addEventListener("click",()=>{selectedBlockId=block.id;renderBlockList();renderBlockFields();});
+  const up=document.createElement("button");up.type="button";up.textContent="↑";up.title="Move up";up.disabled=index===0;up.addEventListener("click",()=>moveStudioBlock(index,-1));
+  const down=document.createElement("button");down.type="button";down.textContent="↓";down.title="Move down";down.disabled=index===pageDraft.sections.length-1;down.addEventListener("click",()=>moveStudioBlock(index,1));
+  const copy=document.createElement("button");copy.type="button";copy.textContent="⧉";copy.title="Duplicate section";copy.addEventListener("click",()=>duplicateStudioBlock(index));
+  const del=document.createElement("button");del.type="button";del.textContent="×";del.title="Delete section";del.addEventListener("click",()=>deleteStudioBlock(index));
+  row.append(choose,up,down,copy,del);host.append(row);
+ });
+}
+function renderBlockFields(){
+ const host=$("studioBlockFields");host.innerHTML="";
+ const block=pageDraft.sections.find(x=>x.id===selectedBlockId);
+ if(!block){const empty=document.createElement("div");empty.className="studio-block-empty";empty.textContent="Select a section to edit its content and layout.";host.append(empty);return;}
+ const heading=document.createElement("h4");heading.textContent=(blockNames[block.type]||"Section")+" settings";host.append(heading);
+ const fields={
+  hero:[["eyebrow","Small label"],["heading","Main heading"],["body","Description"],["image_url","Background / product image URL"],["button_text","Button label"],["button_url","Button link"]],
+  text:[["heading","Heading"],["body","Text content"]],
+  image:[["heading","Heading"],["body","Text content"],["image_url","Image URL"],["image_alt","Image description"]],
+  video:[["heading","Heading"],["body","Description"],["video_url","YouTube or video URL"]],
+  cta:[["heading","Heading"],["body","Description"],["button_text","Button label"],["button_url","Button link"]],
+  promo:[["eyebrow","Small label"],["heading","Promotion heading"],["body","Promotion details"],["image_url","Image URL"],["button_text","Button label"],["button_url","Button link"],["background_color","Banner background colour"]],
+  products:[["heading","Heading"],["body","Description"],["product_limit","Number of products (1–8)"]]
+ }[block.type]||[["heading","Heading"],["body","Text content"]];
+ fields.forEach(([key,labelText])=>{
+  const label=document.createElement("label");label.textContent=labelText;
+  let input;
+  if(key==="body"){input=document.createElement("textarea");input.rows=4;}
+  else if(key==="background_color"){input=document.createElement("input");input.type="color";}
+  else {input=document.createElement("input");input.type=key==="product_limit"?"number":"text";if(key==="product_limit"){input.min="1";input.max="8";}}
+  input.value=block[key]??(key==="background_color"?"#171717":"");
+  input.dataset.field=key;
+  input.addEventListener("input",()=>{block[key]=key==="product_limit"?Math.max(1,Math.min(8,Number(input.value)||4)):input.value;const row=$("studioBlockList").querySelector(".active .studio-block-select");if(row)row.textContent=(pageDraft.sections.indexOf(block)+1)+". "+(block.heading||blockNames[block.type]);});
+  label.append(input);host.append(label);
+ });
+ const hint=document.createElement("p");hint.className="studio-field-hint";hint.textContent="Changes appear in the preview when you select Preview page. Remember to save your draft.";host.append(hint);
+}
+function addStudioBlock(type){const block=makeBlock(type);pageDraft.sections.push(block);selectedBlockId=block.id;renderBlockList();renderBlockFields();pageMessage((blockNames[type]||"Section")+" added. Edit its fields, then preview and save.");}
+function moveStudioBlock(index,direction){const target=index+direction;if(target<0||target>=pageDraft.sections.length)return;[pageDraft.sections[index],pageDraft.sections[target]]=[pageDraft.sections[target],pageDraft.sections[index]];renderBlockList();pageMessage("Section order changed. Save the page draft to keep it.");}
+function duplicateStudioBlock(index){const clone={...pageDraft.sections[index],id:crypto.randomUUID()};pageDraft.sections.splice(index+1,0,clone);selectedBlockId=clone.id;renderBlockList();renderBlockFields();pageMessage("Section duplicated.");}
+function deleteStudioBlock(index){const block=pageDraft.sections[index];if(!confirm("Delete this "+(blockNames[block.type]||"section")+"?"))return;pageDraft.sections.splice(index,1);if(selectedBlockId===block.id)selectedBlockId=null;renderBlockList();renderBlockFields();pageMessage("Section removed from the draft.");}
+async function createStudioPage(){
+ const title=prompt("Enter the new page title (for example: About Us):");if(!title?.trim())return;
+ const slug=slugify(title);if(!slug||slug==="home"){pageMessage("Please choose a valid page title.",true);return;}
+ if(studioPages.some(p=>(p.draft_slug||p.slug)===slug)){pageMessage("That page URL already exists. Choose a different title.",true);return;}
+ const user=(await supabase.auth.getUser()).data.user;
+ const payload={slug,title:title.trim(),draft_slug:slug,draft_title:title.trim(),meta_description:"",draft_meta_description:"",show_in_nav:true,draft_show_in_nav:true,status:"draft",page_content:{sections:[]},draft_content:{sections:[]},created_by:user?.id,updated_by:user?.id};
+ const {data,error}=await supabase.from("site_studio_pages").insert(payload).select("*").single();
+ if(error){pageMessage("Could not create page: "+error.message,true);return;}
+ studioPages.push(data);const option=document.createElement("option");option.value=data.id;option.textContent=data.draft_title;$("studioPageSelect").append(option);selectStudioPage(data);pageMessage("New page created as a private draft. Add sections to build it.");
+}
+async function deleteStudioPage(){
+ if(!activeStudioPage||activeStudioPage.slug==="home")return;
+ if(!confirm("Permanently delete this page and remove it from your website menu?"))return;
+ const {error}=await supabase.from("site_studio_pages").delete().eq("id",activeStudioPage.id);
+ if(error){pageMessage("Could not delete page: "+error.message,true);return;}
+ studioPages=studioPages.filter(p=>p.id!==activeStudioPage.id);$("studioPageSelect").querySelector('option[value="'+activeStudioPage.id+'"]')?.remove();
+ selectStudioPage(studioPages.find(p=>p.slug==="home"));pageMessage("Page deleted.");
+}
+async function saveStudioPage(publish=false){
+ if(!activeStudioPage)return;
+ const button=publish?$("studioPagePublish"):$("studioPageSave");button.disabled=true;
+ const title=$("studioPageTitle").value.trim(),slug=slugify($("studioPageSlug").value);
+ if(!title||!slug){button.disabled=false;pageMessage("Page title and URL slug are required.",true);return;}
+ if(activeStudioPage.slug==="home"&&slug!=="home"){button.disabled=false;pageMessage("The homepage URL cannot be changed here.",true);return;}
+ if(studioPages.some(p=>p.id!==activeStudioPage.id&&(p.slug===slug||p.draft_slug===slug))){button.disabled=false;pageMessage("This URL is already used by another page.",true);return;}
+ const user=(await supabase.auth.getUser()).data.user,now=new Date().toISOString();
+ const payload={draft_title:title,draft_slug:slug,draft_meta_description:$("studioPageMeta").value.trim(),draft_show_in_nav:activeStudioPage.slug==="home"?false:$("studioPageNav").checked,draft_content:pageDraft,updated_by:user?.id,updated_at:now};
+ if(publish){payload.title=title;payload.slug=slug;payload.meta_description=payload.draft_meta_description;payload.show_in_nav=payload.draft_show_in_nav;payload.published_content=pageDraft;payload.page_content=pageDraft;payload.status="published";payload.published_at=now;}
+ else {payload.page_content=pageDraft;}
+ const {data,error}=await supabase.from("site_studio_pages").update(payload).eq("id",activeStudioPage.id).select("*").single();
+ button.disabled=false;
+ if(error){pageMessage("Could not save page: "+error.message,true);return;}
+ activeStudioPage=data;studioPages=studioPages.map(p=>p.id===data.id?data:p);
+ const option=$("studioPageSelect").querySelector('option[value="'+data.id+'"]');if(option)option.textContent=data.draft_title;
+ $("studioPageState").textContent=data.status==="published"?(publish?"Published just now":"Published page — draft edits stay private"):"Unpublished draft";
+ pageMessage(publish?"Page published successfully. It is now available on your website.":"Page draft saved. Visitors will continue seeing the last published version.");
+ if(publish)previewStudioPage();
+}
+function previewStudioPage(){
+ if(!activeStudioPage)return;
+ frame.src="index.html?page="+encodeURIComponent(activeStudioPage.draft_slug||activeStudioPage.slug)+"&studioPreview=1&refresh="+Date.now();
+ $("studioSelectorLabel").value="";selectedSelector="";
+}
+
 loadStudio();
