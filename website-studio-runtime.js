@@ -105,8 +105,10 @@ async function main(){
   const {data:{session}}=await supabase.auth.getSession();
   let isOwner=false;
   if(studioPreview&&session){const {data:role}=await supabase.rpc("current_staff_role");isOwner=role==="owner";}
-  const pageQuery=supabase.from("site_studio_pages").select("*");
-  const {data:page,error}=studioPreview&&isOwner&&previewPageId?await pageQuery.eq("id",previewPageId).maybeSingle():await pageQuery.eq("slug",requestedSlug).maybeSingle();
+  const pageQuery=studioPreview&&isOwner&&previewPageId
+   ?supabase.from("site_studio_page_drafts").select("*").eq("id",previewPageId)
+   :supabase.from("site_studio_pages").select("id,slug,title,published_content,status,show_in_nav,nav_order,meta_description,published_at").eq("slug",requestedSlug);
+  const {data:page,error}=await pageQuery.maybeSingle();
   if(error)console.warn("Website page lookup failed:",error.message);
   if(requestedSlug!=="home"){
    if(!page||(!isOwner&&page.status!=="published")){
@@ -115,8 +117,8 @@ async function main(){
     if(main)main.hidden=true;
     document.getElementById("productDetailPage")?.setAttribute("hidden","");
     const root=node("main","studio-custom-page");root.id="studioCustomPageRoot";
-    const title=isOwner?page.draft_title||page.title:page.title;
-    const meta=isOwner?page.draft_meta_description||page.meta_description:page.meta_description;
+    const title=isOwner?page.draft_title:page.title;
+    const meta=isOwner?page.draft_meta_description:page.meta_description;
     document.title=title+" | AUR-K EV";
     if(meta){let desc=document.querySelector('meta[name="description"]');if(desc)desc.content=meta;}
     await renderSections(root,(isOwner?page.draft_content:page.published_content)?.sections||[]);
