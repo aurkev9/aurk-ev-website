@@ -288,12 +288,12 @@ function renderBlockFields(){
   products:[["heading","Heading"],["body","Description"],["product_limit","Number of products (1–8)"]]
  }[block.type]||[["heading","Heading"],["body","Text content"]];
   if(!fields.some(([key])=>key==="background_color"))fields.push(["background_color","Section background colour"]);
-  fields.push(["text_color","Section text colour"],["accent_color","Button / accent colour"],["font_family","Section font family"]);
+  fields.push(["text_color","Section text colour"],["accent_color","Button / accent colour"],["font_family","Section font family"],["font_url","Custom font file URL (optional)"]);
  fields.forEach(([key,labelText])=>{
   const label=document.createElement("label");label.textContent=labelText;
   let input;
   if(key==="body"){input=document.createElement("textarea");input.rows=4;}
-  else if(key==="background_color"){input=document.createElement("input");input.type="color";}
+  else if(["background_color","text_color","accent_color"].includes(key)){input=document.createElement("input");input.type="color";}
   else {input=document.createElement("input");input.type=key==="product_limit"?"number":"text";if(key==="product_limit"){input.min="1";input.max="8";}}
   input.value=block[key]??(key==="background_color"?"#171717":"");
   input.dataset.field=key;
