@@ -74,14 +74,15 @@ function populateControls(node){
  $("studioText").value=$("studioTextWrap").hidden?"":node.textContent.trim();
  $("studioHref").value=tag==="A"?(node.getAttribute("href")||""):"";
  $("studioImage").value=tag==="IMG"?(node.getAttribute("src")||""):"";
- $("studioColor").value=toHex(getComputedStyle(node).color)||"#171717";
- $("studioBackground").value=toHex(getComputedStyle(node).backgroundColor)||"#ffffff";
- $("studioFontSize").value=parseFloat(getComputedStyle(node).fontSize)||"";
+ selectedBaseline={color:toHex(getComputedStyle(node).color),background:toHex(getComputedStyle(node).backgroundColor),fontSize:parseFloat(getComputedStyle(node).fontSize)||""};
+ $("studioColor").value=selectedBaseline.color||"#171717";
+ $("studioBackground").value=selectedBaseline.background||"#ffffff";
+ $("studioFontSize").value=selectedBaseline.fontSize||"";
  $("studioHidden").checked=getComputedStyle(node).display==="none";
  $("studioMoveUp").disabled=!node.matches("main > section[id]")||!node.previousElementSibling;
  $("studioMoveDown").disabled=!node.matches("main > section[id]")||!node.nextElementSibling;
 }
-function toHex(value){const m=String(value).match(/\d+/g);return m&&m.length>=3?"#"+m.slice(0,3).map(x=>Number(x).toString(16).padStart(2,"0")).join(""):null;}
+function toHex(value){const match=String(value).match(/rgba?\(([^)]+)\)/);if(!match)return null;const parts=match[1].split(",").map(x=>x.trim());if(parts.length>3&&Number(parts[3])===0)return null;const nums=parts.slice(0,3).map(Number);return nums.length===3?"#"+nums.map(x=>Math.max(0,Math.min(255,x)).toString(16).padStart(2,"0")).join(""):null;}
 function currentPatch(){
  const node=frame.contentDocument?.querySelector(selectedSelector);if(!node)return null;
  const tag=node.tagName,item={selector:selectedSelector};
@@ -89,7 +90,7 @@ function currentPatch(){
  if(tag==="A")item.href=$("studioHref").value.trim();
  if(tag==="IMG")item.src=$("studioImage").value.trim();
  const color=$("studioColor").value,bg=$("studioBackground").value,size=$("studioFontSize").value;
- if(color)item.color=color;if(bg)item.background=bg;if(size&&Number(size)>=8&&Number(size)<=120)item.fontSize=Number(size);
+ if(color!==selectedBaseline.color)item.color=color;if(bg!==selectedBaseline.background)item.background=bg;if(size&&Number(size)>=8&&Number(size)<=120&&Number(size)!==Number(selectedBaseline.fontSize))item.fontSize=Number(size);
  item.hidden=$("studioHidden").checked;return item;
 }
 function applyCurrent(){
@@ -102,8 +103,7 @@ function applyCurrent(){
 function resetCurrent(){
  if(!selectedSelector)return;
  draft.elements=draft.elements.filter(x=>x.selector!==selectedSelector);
- const node=frame.contentDocument?.querySelector(selectedSelector);if(node){node.removeAttribute("style");node.style.display="";node.removeAttribute("data-studio-selected");}
- populateControls(node);setStatus("Element reset in preview. Save draft to keep the reset.");
+ selectedSelector="";frame.src="index.html?studioPreview=1&refresh="+Date.now();setStatus("Element reset in preview. Save draft to keep the reset.");
 }
 async function loadStudio(){
  const {data:{session}}=await supabase.auth.getSession();
