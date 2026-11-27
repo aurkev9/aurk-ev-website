@@ -79,6 +79,11 @@ function detailSpecMarkup(spec,index){
  if(split)return `<li class="detail-spec-card"><span class="detail-spec-label">${esc(split[1])}</span><strong>${esc(split[2])}</strong></li>`;
  return `<li class="detail-spec-card detail-spec-card-plain"><span class="detail-spec-label">HIGHLIGHT ${String(index+1).padStart(2,'0')}</span><strong>${esc(text)}</strong></li>`;
 }
+function modelVideoMarkup(url,title){
+ const safeUrl=esc(url),safeTitle=esc(title);
+ if(/youtube-nocookie\\.com\\/embed\\//.test(url))return '<iframe loading="lazy" src="'+safeUrl+'" title="'+safeTitle+'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+ return '<video controls playsinline preload="metadata" src="'+safeUrl+'"></video>';
+}
 function renderProductDetail(product){
  const page=document.getElementById('productDetailPage');
  const content=document.getElementById('productDetailContent');
@@ -115,7 +120,7 @@ function renderProductDetail(product){
     <button type="button" class="detail-share-btn" id="detailShare">Share this scooter ↗</button>
    </div>
   </div>
-  ${productVideos.length?`<section class="model-video-gallery"><p class="eyebrow">SEE IT IN ACTION</p><h2>Videos & walkarounds</h2><div class="model-video-grid">${productVideos.map(v=>`<article><video controls playsinline preload="metadata" src="${esc(v.public_url)}"></video><b>${esc(v.title)}</b></article>`).join('')}</div></section>`:''}
+  ${productVideos.length?`<section class="model-video-gallery"><p class="eyebrow">SEE IT IN ACTION</p><h2>Videos & walkarounds</h2><div class="model-video-grid">${productVideos.map(v=>`<article>${modelVideoMarkup(v.public_url,v.title)}<b>${esc(v.title)}</b></article>`).join('')}</div></section>`:''}
   <div class="detail-contact-note"><b>Need help choosing?</b><span>Talk to AUR-K EV Bike Experts before placing your order.</span><a href="https://wa.me/923239661747" target="_blank" rel="noopener">Contact showroom ↗</a></div>`;
  const zoomButton=content.querySelector('#detailImageZoom');
  zoomButton?.addEventListener('click',()=>{
@@ -350,7 +355,7 @@ function openModelMediaGallery(model){
  if(!viewer){viewer=document.createElement('div');viewer.id='modelMediaViewer';viewer.className='model-media-viewer';viewer.innerHTML='<div class="model-media-panel"><button type="button" class="model-media-close" aria-label="Close gallery">✕</button><h2 class="model-media-heading"></h2><div class="model-media-content"></div></div>';document.body.append(viewer);viewer.addEventListener('click',e=>{if(e.target===viewer||e.target.closest('.model-media-close'))viewer.classList.remove('open');});document.addEventListener('keydown',e=>{if(e.key==='Escape')viewer.classList.remove('open');});}
  viewer.querySelector('.model-media-heading').textContent=model.brand+' — '+model.name;
  const host=viewer.querySelector('.model-media-content');
- host.innerHTML=items.length?items.map(m=>m.media_type==='video'?'<article><video controls playsinline preload="metadata" src="'+esc(m.public_url)+'"></video><b>'+esc(m.title)+'</b></article>':'<article><img loading="lazy" src="'+esc(m.public_url)+'" alt="'+esc(m.title)+'"><b>'+esc(m.title)+'</b></article>').join(''):'<p>No extra photos or videos have been added for this model yet.</p>';
+ host.innerHTML=items.length?items.map(m=>m.media_type==='video'?'<article>'+modelVideoMarkup(m.public_url,m.title)+'<b>'+esc(m.title)+'</b></article>':'<article><img loading="lazy" src="'+esc(m.public_url)+'" alt="'+esc(m.title)+'"><b>'+esc(m.title)+'</b></article>').join(''):'<p>No extra photos or videos have been added for this model yet.</p>';
  if(model.image_url&&!items.some(m=>m.media_type==='image'&&m.public_url===model.image_url))host.insertAdjacentHTML('afterbegin','<article><img src="'+esc(model.image_url)+'" alt="'+esc(model.brand+' '+model.name)+'"><b>Main model photo</b></article>');
  viewer.classList.add('open');
 }
