@@ -9,7 +9,7 @@ function dateBounds(){const start=$("analyticsStart")?.value,end=$("analyticsEnd
 function count(type){return events.filter(e=>e.event_type===type).length;}
 function renderKpis(){
  const sessions=new Set(events.map(e=>e.session_id)).size;
- const tiles=[["Page views",count("page_view")],["Unique visitors",sessions],["Product views",count("product_view")],["WhatsApp clicks",count("whatsapp_click")],["Call clicks",count("call_click")],["Order requests",count("order_request")]];
+ const tiles=[["Page views",count("page_view")],["Visitor sessions",sessions],["Product views",count("product_view")],["WhatsApp clicks",count("whatsapp_click")],["Call clicks",count("call_click")],["Order requests",count("order_request")]];
  $("analyticsKpis").innerHTML=tiles.map(([label,value])=>'<article class="analytics-tile"><small>'+label+'</small><strong>'+Number(value).toLocaleString()+'</strong></article>').join("");
 }
 function renderBars(hostId,items,empty){
@@ -23,8 +23,7 @@ function render(){
  events.forEach(e=>{
   if(e.event_type==="product_view"){const key=e.product_id||e.product_name||"Unknown";const item=productMap.get(key)||{label:e.product_name||"Product "+key,value:0};item.value++;productMap.set(key,item);}
   if(e.event_type==="page_view"){const key=e.page_path||"/";pageMap.set(key,(pageMap.get(key)||0)+1);const day=String(e.created_at).slice(0,10);dayMap.set(day,(dayMap.get(day)||0)+1);}
-  const src=e.referrer_host||"Direct / unknown";sourceMap.set(src,(sourceMap.get(src)||0)+1);
-  const device=e.device_type||"unknown";deviceMap.set(device,(deviceMap.get(device)||0)+1);
+  if(e.event_type==="page_view"){const src=e.referrer_host||"Direct / unknown";sourceMap.set(src,(sourceMap.get(src)||0)+1);const device=e.device_type||"unknown";deviceMap.set(device,(deviceMap.get(device)||0)+1);}
  });
  renderBars("analyticsProducts",[...productMap.values()].sort((a,b)=>b.value-a.value).slice(0,8),"Product views will appear as customers explore scooter details.");
  renderBars("analyticsPages",[...pageMap].map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value).slice(0,8),"Page views will appear here.");
