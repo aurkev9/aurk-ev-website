@@ -6,7 +6,7 @@ const frame=$("studioPreviewFrame"),status=$("studioStatus");
 let draft={elements:[],sectionOrder:[]},selectedSelector="",selectedVersion=null,versions=[],selectedBaseline={};
 const emptyDraft=()=>({elements:[],sectionOrder:[]});
 function setStatus(message,error=false){if(status){status.textContent=message;status.classList.toggle("is-error",error);}}
-function normalize(value){if(Array.isArray(value))return {elements:value,sectionOrder:[]};return {elements:Array.isArray(value?.elements)?value.elements:[],sectionOrder:Array.isArray(value?.sectionOrder)?value.sectionOrder:[]};}
+function normalize(value){if(Array.isArray(value))return {elements:value,sectionOrder:[],theme:{}};return {elements:Array.isArray(value?.elements)?value.elements:[],sectionOrder:Array.isArray(value?.sectionOrder)?value.sectionOrder:[],theme:value?.theme&&typeof value.theme==="object"?value.theme:{}};}
 function selectorFor(node){
  if(node.id)return "#"+CSS.escape(node.id);
  const parts=[];let el=node;
@@ -27,10 +27,17 @@ function applyItem(doc,item){
  if(item.color)node.style.color=item.color;
  if(item.background)node.style.backgroundColor=item.background;
  if(item.fontSize)node.style.fontSize=item.fontSize+"px";
+ if(item.fontFamily)node.style.fontFamily='"'+String(item.fontFamily).replace(/["\\]/g,"")+'", sans-serif';
+ if(item.fontWeight)node.style.fontWeight=item.fontWeight;
+ if(item.textAlign)node.style.textAlign=item.textAlign;
+ if(item.borderColor)node.style.borderColor=item.borderColor;
+ if(item.fontUrl)ensureCustomFont(doc,item.fontFamily,item.fontUrl);
  if(item.hidden!==undefined)node.hidden=!!item.hidden;
 }
+function ensureCustomFont(doc,family,url){if(!doc||!family||!url)return;const id="studio-font-"+String(family).toLowerCase().replace(/[^a-z0-9]+/g,"-");if(doc.getElementById(id))return;const style=doc.createElement("style");style.id=id;style.textContent='@font-face{font-family:"'+String(family).replace(/["\\]/g,"")+'";src:url("'+String(url).replace(/["\\]/g,"")+'");font-display:swap}';doc.head.append(style);}
+function applyThemeToPreview(){const doc=frame.contentDocument;if(!doc)return;const theme=draft.theme||{};if(theme.gold)doc.documentElement.style.setProperty("--gold",theme.gold);if(theme.paper)doc.documentElement.style.setProperty("--paper",theme.paper);if(theme.ink)doc.documentElement.style.setProperty("--ink",theme.ink);}
 function applyDraftToPreview(){
- try{const doc=frame.contentDocument;if(!doc?.body)return;draft.elements.forEach(item=>applyItem(doc,item));applyOrder(doc);if(selectedSelector)highlightSelected();}catch(e){setStatus("Preview could not be accessed. Refresh and try again.",true);}
+ try{const doc=frame.contentDocument;if(!doc?.body)return;draft.elements.forEach(item=>applyItem(doc,item));applyOrder(doc);applyThemeToPreview();if(selectedSelector)highlightSelected();}catch(e){setStatus("Preview could not be accessed. Refresh and try again.",true);}
 }
 function applyOrder(doc){
  const main=doc.querySelector("main");if(!main||!draft.sectionOrder.length)return;
@@ -80,10 +87,14 @@ function populateControls(node){
  $("studioText").value=$("studioTextWrap").hidden?"":node.textContent.trim();
  $("studioHref").value=tag==="A"?(node.getAttribute("href")||""):"";
  $("studioImage").value=tag==="IMG"?(node.getAttribute("src")||""):"";
- selectedBaseline={color:toHex(getComputedStyle(node).color),background:toHex(getComputedStyle(node).backgroundColor),fontSize:parseFloat(getComputedStyle(node).fontSize)||""};
+ selectedBaseline={color:toHex(getComputedStyle(node).color),background:toHex(getComputedStyle(node).backgroundColor),fontSize:parseFloat(getComputedStyle(node).fontSize)||"",fontFamily:getComputedStyle(node).fontFamily.split(",")[0].replace(/[\'"]/g,""),fontWeight:getComputedStyle(node).fontWeight,textAlign:getComputedStyle(node).textAlign,borderColor:toHex(getComputedStyle(node).borderColor)};
  $("studioColor").value=selectedBaseline.color||"#171717";
  $("studioBackground").value=selectedBaseline.background||"#ffffff";
  $("studioFontSize").value=selectedBaseline.fontSize||"";
+ $("studioFontFamily").value=findItem(selectedSelector)?.fontFamily||selectedBaseline.fontFamily||"";
+ $("studioFontWeight").value=findItem(selectedSelector)?.fontWeight||"";
+ $("studioTextAlign").value=findItem(selectedSelector)?.textAlign||"";
+ $("studioBorderColor").value=findItem(selectedSelector)?.borderColor||selectedBaseline.borderColor||"#c9a45c";
  $("studioHidden").checked=getComputedStyle(node).display==="none";
  $("studioMoveUp").disabled=!node.matches("main > section[id]")||!node.previousElementSibling;
  $("studioMoveDown").disabled=!node.matches("main > section[id]")||!node.nextElementSibling;
@@ -97,6 +108,11 @@ function currentPatch(){
  if(tag==="IMG")item.src=$("studioImage").value.trim();
  const color=$("studioColor").value,bg=$("studioBackground").value,size=$("studioFontSize").value;
  if(color!==selectedBaseline.color)item.color=color;if(bg!==selectedBaseline.background&&!(selectedBaseline.background===null&&bg==="#ffffff"))item.background=bg;if(size&&Number(size)>=8&&Number(size)<=120&&Number(size)!==Number(selectedBaseline.fontSize))item.fontSize=Number(size);
+ const family=$("studioFontFamily").value.trim();if(family&&family!==selectedBaseline.fontFamily)item.fontFamily=family;
+ const weight=$("studioFontWeight").value;if(weight&&weight!==selectedBaseline.fontWeight)item.fontWeight=weight;
+ const align=$("studioTextAlign").value;if(align&&align!==selectedBaseline.textAlign)item.textAlign=align;
+ const border=$("studioBorderColor").value;if(border&&border!==selectedBaseline.borderColor)item.borderColor=border;
+ if(studioUploadedFontUrl&&family)item.fontUrl=studioUploadedFontUrl;
  item.hidden=$("studioHidden").checked;return item;
 }
 function applyCurrent(){
@@ -148,6 +164,16 @@ async function loadVersions(){
  if(!versions.length){host.textContent="No saved versions yet.";return;}
  versions.forEach(v=>{const label=document.createElement("label");label.className="studio-version-option";const radio=document.createElement("input");radio.type="radio";radio.name="studioVersion";radio.value=v.id;radio.addEventListener("change",()=>{selectedVersion=v; $("studioRestoreVersion").disabled=false;});const text=document.createElement("span");text.textContent=v.version_label;label.append(radio,text);host.append(label);});
 }
+
+let studioUploadedFontUrl="";
+function setAssetMessage(message,error=false){const el=$("studioAssetMessage");if(el){el.textContent=message;el.classList.toggle("is-error",error);}}
+async function uploadStudioAsset(file,kind){if(!file){setAssetMessage("Choose a file first.",true);return;}const isFont=kind==="font";const allowed=isFont?/\\.(woff2?|ttf|otf)$/i.test(file.name):/^image\\/(png|jpeg|webp)$/.test(file.type);if(!allowed){setAssetMessage(isFont?"Use WOFF, WOFF2, TTF or OTF font files.":"Use PNG, JPG or WebP images.",true);return;}if(file.size>(isFont?8:15)*1024*1024){setAssetMessage("File is too large. Maximum size: "+(isFont?8:15)+" MB.",true);return;}const button=$(isFont?"studioUploadFontBtn":"studioUploadImageBtn");button.disabled=true;setAssetMessage("Uploading "+file.name+"…");try{const safe=file.name.toLowerCase().replace(/[^a-z0-9._-]+/g,"-").slice(-90);const path="studio-uploads/"+crypto.randomUUID()+"-"+safe;const {data,error}=await supabase.storage.from("website-images").upload(path,file,{cacheControl:"31536000",upsert:false,contentType:file.type||undefined});if(error)throw error;const publicData=supabase.storage.from("website-images").getPublicUrl(data.path).data;$("studioAssetUrl").value=publicData.publicUrl;if(isFont){studioUploadedFontUrl=publicData.publicUrl;$("studioUseFont").disabled=false;$("studioUseImage").disabled=true;}else{$("studioUseImage").disabled=false;$("studioUseFont").disabled=true;} $("studioCopyAsset").disabled=false;setAssetMessage("Uploaded successfully. Apply this file to your selected element.");}catch(error){setAssetMessage("Upload failed: "+(error.message||"Please try again."),true);}finally{button.disabled=false;}}
+$("studioUploadImageBtn")?.addEventListener("click",()=>uploadStudioAsset($("studioImageUpload").files[0],"image"));
+$("studioUploadFontBtn")?.addEventListener("click",()=>uploadStudioAsset($("studioFontUpload").files[0],"font"));
+$("studioUseImage")?.addEventListener("click",()=>{if(!selectedSelector){setAssetMessage("Select an image element in the preview first.",true);return;}const node=frame.contentDocument?.querySelector(selectedSelector);if(!node||node.tagName!=="IMG"){$("studioImage").value=$("studioAssetUrl").value;setAssetMessage("URL placed in the image field. Select an image element to apply it.");return;}$("studioImage").value=$("studioAssetUrl").value;applyCurrent();});
+$("studioUseFont")?.addEventListener("click",()=>{if(!selectedSelector){setAssetMessage("Select a text element in the preview first.",true);return;}const family=prompt("Enter a name for this custom font:","AURK Custom Font");if(!family?.trim())return;$("studioFontFamily").value=family.trim();studioUploadedFontUrl=$("studioAssetUrl").value;applyCurrent();setAssetMessage("Custom font applied. Save your draft to keep it.");});
+$("studioCopyAsset")?.addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("studioAssetUrl").value);setAssetMessage("Asset URL copied.");}catch{setAssetMessage("Select and copy the URL from the field above.");}});
+$("studioApplyTheme")?.addEventListener("click",()=>{draft.theme={gold:$("studioThemeGold").value,paper:$("studioThemePaper").value,ink:$("studioThemeInk").value};applyThemeToPreview();setStatus("Website-wide colours applied to preview. Save draft to keep them.");});
 $("studioApply")?.addEventListener("click",applyCurrent);
 $("studioResetElement")?.addEventListener("click",resetCurrent);
 $("studioSaveDraft")?.addEventListener("click",()=>saveDraft(false));
