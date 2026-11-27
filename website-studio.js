@@ -3,7 +3,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 const $=id=>document.getElementById(id);
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const frame=$("studioPreviewFrame"),status=$("studioStatus");
-let draft={elements:[],sectionOrder:[]},selectedSelector="",selectedVersion=null,versions=[];
+let draft={elements:[],sectionOrder:[]},selectedSelector="",selectedVersion=null,versions=[],selectedBaseline={};
 const emptyDraft=()=>({elements:[],sectionOrder:[]});
 function setStatus(message,error=false){if(status){status.textContent=message;status.classList.toggle("is-error",error);}}
 function normalize(value){if(Array.isArray(value))return {elements:value,sectionOrder:[]};return {elements:Array.isArray(value?.elements)?value.elements:[],sectionOrder:Array.isArray(value?.sectionOrder)?value.sectionOrder:[]};}
@@ -15,7 +15,7 @@ function selectorFor(node){
   const tag=el.tagName.toLowerCase(),siblings=[...el.parentElement.children].filter(x=>x.tagName===el.tagName),index=siblings.indexOf(el)+1;
   parts.unshift(tag+":nth-of-type("+index+")");el=el.parentElement;
  }
- return parts.join(" > ");
+ return ["main",...parts].join(" > ");
 }
 function findItem(selector){return draft.elements.find(x=>x.selector===selector);}
 function applyItem(doc,item){
@@ -26,7 +26,7 @@ function applyItem(doc,item){
  if(item.color)node.style.color=item.color;
  if(item.background)node.style.backgroundColor=item.background;
  if(item.fontSize)node.style.fontSize=item.fontSize+"px";
- node.style.display=item.hidden?"none":"";
+ if(item.hidden!==undefined)node.hidden=!!item.hidden;
 }
 function applyDraftToPreview(){
  try{const doc=frame.contentDocument;if(!doc?.body)return;draft.elements.forEach(item=>applyItem(doc,item));applyOrder(doc);if(selectedSelector)highlightSelected();}catch(e){setStatus("Preview could not be accessed. Refresh and try again.",true);}
