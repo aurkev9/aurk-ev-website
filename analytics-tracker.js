@@ -23,7 +23,7 @@ function productFromUrl(){
  const params=new URLSearchParams(location.search);
  const id=params.get("product");
  if(!id)return null;
- const name=document.querySelector(".detail-title,h1.product-title,[data-product-name]")?.textContent?.trim()||null;
+ const name=document.querySelector(".detail-information h1,[data-product-name]")?.textContent?.trim()||null;
  return {product_id:id.slice(0,100),product_name:name?.slice(0,160)||null};
 }
 function pageEvent(){
