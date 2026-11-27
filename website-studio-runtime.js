@@ -5,7 +5,7 @@ const params=new URLSearchParams(location.search);
 const requestedSlug=params.get("page")||"home";
 const previewPageId=params.get("pageId");
 const studioPreview=params.get("studioPreview")==="1";
-const main=document.getElementById("storefrontMain");
+const mainElement=document.getElementById("storefrontMain");
 const footer=document.querySelector(".footer-v2");
 function safeUrl(value){
  const raw=String(value||"").trim();if(!raw)return "";
@@ -162,9 +162,9 @@ async function main(){
   if(error)console.warn("Website page lookup failed:",error.message);
   if(requestedSlug!=="home"){
    if(!page||(!isOwner&&page.status!=="published")){
-    if(main)main.innerHTML="<section class='studio-page-not-found'><h1>Page not available</h1><p>This page may be unpublished or the address may be incorrect.</p><a href='/'>Return to AUR-K EV homepage</a></section>";
+    if(mainElement)mainElement.innerHTML="<section class='studio-page-not-found'><h1>Page not available</h1><p>This page may be unpublished or the address may be incorrect.</p><a href='/'>Return to AUR-K EV homepage</a></section>";
    }else{
-    if(main)main.hidden=true;
+    if(mainElement)mainElement.hidden=true;
     document.getElementById("productDetailPage")?.setAttribute("hidden","");
     const root=node("main","studio-custom-page");root.id="studioCustomPageRoot";
     applyPageSeo(page,isOwner);
@@ -174,7 +174,7 @@ async function main(){
   }else{
    const content=isOwner?page?.draft_content:page?.published_content;
    if(page)applyPageSeo(page,isOwner);
-   await renderSections(main,content?.sections||[]);
+   await renderSections(mainElement,content?.sections||[]);
    if(isOwner){const {data:visual}=await supabase.from("site_studio_settings").select("draft_content").eq("id","homepage").maybeSingle();if(visual?.draft_content)applyVisualContent(visual.draft_content);}
    else {const {data:visual}=await supabase.from("site_studio_published").select("content").eq("id","homepage").maybeSingle();if(visual?.content)applyVisualContent(visual.content);}
   }
