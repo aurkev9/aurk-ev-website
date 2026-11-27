@@ -22,7 +22,7 @@ function applyStudioContent(raw){
 }
 (async()=>{
  try{
-  const {data,error}=await supabase.from("site_studio_settings").select("published_content").eq("id","homepage").maybeSingle();
-  if(!error&&data?.published_content)applyStudioContent(data.published_content);
+  const {data,error}=await supabase.from("site_studio_published").select("content").eq("id","homepage").maybeSingle();
+  if(!error&&data?.content)applyStudioContent(data.content);
  }catch(error){console.warn("AUR-K website settings could not be loaded.",error);}
 })();
