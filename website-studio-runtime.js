@@ -117,7 +117,7 @@ async function main(){
   if(studioPreview&&session){const {data:role}=await supabase.rpc("current_staff_role");isOwner=role==="owner";}
   const pageQuery=studioPreview&&isOwner&&previewPageId
    ?supabase.from("site_studio_page_drafts").select("*").eq("id",previewPageId)
-   :supabase.from("site_studio_pages").select("id,slug,title,published_content,status,show_in_nav,nav_order,meta_description,published_at").eq("slug",requestedSlug);
+   :supabase.from("site_studio_pages").select("id,slug,title,published_content,status,show_in_nav,nav_order,meta_description,meta_title,meta_keywords,og_image_url,published_at").eq("slug",requestedSlug);
   const {data:page,error}=await pageQuery.maybeSingle();
   if(error)console.warn("Website page lookup failed:",error.message);
   if(requestedSlug!=="home"){
