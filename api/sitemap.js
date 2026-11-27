@@ -1,4 +1,4 @@
-export default async function handler(req,res){
+module.exports = async function handler(req,res){
   const base="https://aurk-ev-website.vercel.app";
   const project="https://tkfdsxmwrkucuhkjfouo.supabase.co";
   const key="sb_publishable_xcEAI3PBuys-dS-oMK-zWw_a5Eau7ou";
