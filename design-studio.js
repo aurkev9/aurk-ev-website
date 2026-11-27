@@ -55,6 +55,27 @@ if(canvasEl&&window.fabric){
  function setCanvasSize(){const w=Math.max(200,Math.min(4000,Number($("aurkCanvasWidth").value)||1080)),h=Math.max(200,Math.min(4000,Number($("aurkCanvasHeight").value)||1080));canvas.setDimensions({width:w,height:h});$("aurkCanvasDimensions").textContent=w+" × "+h+" px";canvas.requestRenderAll();setZoom(zoom);pushHistory();}
  function alignCenter(){const o=selected();if(!o)return;o.set({left:canvas.getWidth()/2,top:canvas.getHeight()/2,originX:"center",originY:"center"});o.setCoords();canvas.requestRenderAll();pushHistory();}
  function duplicate(){const o=selected();if(!o)return;o.clone(clone=>{clone.set({left:(o.left||0)+24,top:(o.top||0)+24,name:(o.name||"Element")+" copy"});addObject(clone);});}
+ function applyPhotoCrop(){
+  const o=selected();if(!o||o.type!=="image"){message("Select a photo on the canvas first.",true);return;}
+  const el=o.getElement(),sw=el.naturalWidth||el.width,sh=el.naturalHeight||el.height,ratio=$("aurkCropRatio").value;
+  let cw=sw,ch=sh;if(ratio!=="free"){const ar=Number(ratio);if(sw/sh>ar)cw=sh*ar;else ch=sw/ar;}
+  const fx=Number($("aurkCropX").value)/100,fy=Number($("aurkCropY").value)/100;
+  const cx=Math.max(0,(sw-cw)*fx),cy=Math.max(0,(sh-ch)*fy);
+  const dw=o.getScaledWidth(),dh=o.getScaledHeight();
+  o.set({cropX:cx,cropY:cy,width:cw,height:ch,scaleX:dw/cw,scaleY:dh/ch});
+  o.setCoords();canvas.requestRenderAll();pushHistory();syncProperties();message("Photo cropped. You can still move and resize it.");
+ }
+ function applyPhotoFilters(){
+  const o=selected();if(!o||o.type!=="image"){message("Select a photo first.",true);return;}
+  const F=fabric.Image.filters;if(!F){message("Photo filters are unavailable in this browser.",true);return;}
+  const values={Brightness:Number($("aurkFilterBrightness").value),Contrast:Number($("aurkFilterContrast").value),Saturation:Number($("aurkFilterSaturation").value),Blur:Number($("aurkFilterBlur").value)};
+  const specs=[["Brightness",values.Brightness],["Contrast",values.Contrast],["Saturation",values.Saturation],["Blur",values.Blur]];
+  o.filters=(o.filters||[]).filter(f=>!specs.some(([n])=>f.type===n));
+  specs.forEach(([n,v])=>{if(v!==0&&F[n])o.filters.push(new F[n]({[n==="Blur"?"blur":n.toLowerCase()]:v}));});
+  o.applyFilters();canvas.requestRenderAll();pushHistory();message("Photo filters applied.");
+ }
+ function resetPhotoFilters(){const o=selected();if(!o||o.type!=="image"){message("Select a photo first.",true);return;}o.filters=[];o.applyFilters();["Brightness","Contrast","Saturation","Blur"].forEach(n=>$("aurkFilter"+n).value=0);canvas.requestRenderAll();pushHistory();message("Photo filters reset.");}
+ function applyPhotoFrame(frame){const o=selected();if(!o||o.type!=="image"){message("Select a photo first.",true);return;}const styles={none:{stroke:null,strokeWidth:0},gold:{stroke:"#c9a45c",strokeWidth:14},white:{stroke:"#ffffff",strokeWidth:18},dark:{stroke:"#171717",strokeWidth:18}};o.set(styles[frame]||styles.none);o.setCoords();canvas.requestRenderAll();pushHistory();syncProperties();message(frame==="none"?"Photo frame removed.":frame+" photo frame applied.");}
  function start(){canvas.on("selection:created",()=>{syncProperties();refreshLayers();});canvas.on("selection:updated",()=>{syncProperties();refreshLayers();});canvas.on("selection:cleared",()=>{syncProperties();refreshLayers();});["object:modified","object:added","object:removed"].forEach(e=>canvas.on(e,()=>{pushHistory();refreshLayers();}));
   $("aurkAddHeading").onclick=()=>addText("Your headline",82,"bold","#c9a45c");$("aurkAddSubheading").onclick=()=>addText("Add your subheading",48,"600","#ffffff");$("aurkAddBody").onclick=()=>addText("Write your message here",30,"normal","#ffffff");
   $("aurkAddBox").onclick=()=>addShape("box");$("aurkAddCircle").onclick=()=>addShape("circle");$("aurkAddLine").onclick=()=>addShape("line");$("aurkAddTriangle").onclick=()=>addShape("triangle");$("aurkAddStar").onclick=()=>addShape("star");$("aurkAddSticker").onclick=()=>addObject(new fabric.IText("⚡",{left:canvas.getWidth()/2,top:canvas.getHeight()/2,originX:"center",originY:"center",fontFamily:"Arial",fontSize:160,fill:"#c9a45c",name:"Sticker"}));$("aurkTemplateLuxury").onclick=()=>template("gold");$("aurkTemplateArrival").onclick=()=>template("arrival");$("aurkTemplateSale").onclick=()=>template("sale");
@@ -69,6 +90,10 @@ if(canvasEl&&window.fabric){
   $("aurkUndo").onclick=()=>restoreHistory(historyIndex-1);$("aurkRedo").onclick=()=>restoreHistory(historyIndex+1);$("aurkSaveDesign").onclick=saveDesign;$("aurkExportPng").onclick=()=>exportFile("png");$("aurkExportJpg").onclick=()=>exportFile("jpeg");$("aurkSaveToAssets").onclick=saveToWebsiteAssets;
   $("aurkRefreshDesigns").onclick=loadDesigns;$("aurkObjectText").addEventListener("input",()=>{const o=selected();if(o&&["i-text","textbox","text"].includes(o.type)){o.text=$("aurkObjectText").value;canvas.requestRenderAll();pushHistory();}});
   window.addEventListener("keydown",e=>{if(e.target.matches("input,textarea,select"))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();restoreHistory(historyIndex+(e.shiftKey?1:-1));}if(e.key==="Delete"||e.key==="Backspace"){const o=selected();if(o){canvas.remove(o);canvas.discardActiveObject();canvas.requestRenderAll();pushHistory();syncProperties();refreshLayers();}}});
+  $("aurkApplyCrop").onclick=applyPhotoCrop;$("aurkApplyFilters").onclick=applyPhotoFilters;$("aurkResetFilters").onclick=resetPhotoFilters;
+  document.querySelectorAll("[data-photo-frame]").forEach(b=>b.addEventListener("click",()=>applyPhotoFrame(b.dataset.photoFrame)));
+  document.querySelectorAll("[data-canvas-format]").forEach(b=>b.addEventListener("click",()=>{const [w,h]=b.dataset.canvasFormat.split("x").map(Number);$("aurkCanvasWidth").value=w;$("aurkCanvasHeight").value=h;setCanvasSize();message("Canvas resized to "+w+" × "+h+".");}));
+  canvas.on("selection:created",()=>{$("aurkPhotoTools").hidden=!(selected()&&selected().type==="image");});canvas.on("selection:updated",()=>{$("aurkPhotoTools").hidden=!(selected()&&selected().type==="image");});canvas.on("selection:cleared",()=>{$("aurkPhotoTools").hidden=true;});
   setZoom(zoom);history=[snapshot()];historyIndex=0;updateHistoryButtons();refreshLayers();
  }
  (async()=>{const {data:{session}}=await supabase.auth.getSession();if(!session){message("Sign in to the AUR-K admin panel to use Design Studio.",true);return;}const {data:role}=await supabase.rpc("current_staff_role");if(role!=="owner"){message("Design Studio is available to the Owner account only.",true);return;}currentUser=session.user;start();await loadDesigns();})();
