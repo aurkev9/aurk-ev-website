@@ -31,9 +31,10 @@ function applyItem(doc,item){
  if(item.fontWeight)node.style.fontWeight=item.fontWeight;
  if(item.textAlign)node.style.textAlign=item.textAlign;
  if(item.borderColor)node.style.borderColor=item.borderColor;
- if(item.fontUrl)ensureCustomFont(doc,item.fontFamily,item.fontUrl);
+ if(item.fontUrl)ensureCustomFont(doc,item.fontFamily,item.fontUrl);else if(item.fontFamily)ensureGoogleFont(doc,item.fontFamily);
  if(item.hidden!==undefined)node.hidden=!!item.hidden;
 }
+function ensureGoogleFont(doc,family){if(!doc||!family||/^(Arial|Georgia|Verdana|Tahoma|Trebuchet MS|Times New Roman|Courier New)$/i.test(family))return;const id="studio-google-font-"+String(family).toLowerCase().replace(/[^a-z0-9]+/g,"-");if(doc.getElementById(id))return;const link=doc.createElement("link");link.id=id;link.rel="stylesheet";link.href="https://fonts.googleapis.com/css2?family="+encodeURIComponent(family).replace(/%20/g,"+")+":wght@300;400;500;600;700;800;900&display=swap";doc.head.append(link);}
 function ensureCustomFont(doc,family,url){if(!doc||!family||!url)return;const id="studio-font-"+String(family).toLowerCase().replace(/[^a-z0-9]+/g,"-");if(doc.getElementById(id))return;const style=doc.createElement("style");style.id=id;style.textContent='@font-face{font-family:"'+String(family).replace(/["\\]/g,"")+'";src:url("'+String(url).replace(/["\\]/g,"")+'");font-display:swap}';doc.head.append(style);}
 function applyThemeToPreview(){const doc=frame.contentDocument;if(!doc)return;const theme=draft.theme||{};if(theme.gold)doc.documentElement.style.setProperty("--gold",theme.gold);if(theme.paper)doc.documentElement.style.setProperty("--paper",theme.paper);if(theme.ink)doc.documentElement.style.setProperty("--ink",theme.ink);}
 function applyDraftToPreview(){
@@ -134,7 +135,7 @@ async function loadStudio(){
  if(roleError||role!=="owner"){setStatus("Website Studio is available to the Owner account only.",true);document.querySelector('[data-view="website-studio"]')?.remove();return;}
  const {data,error}=await supabase.from("site_studio_settings").select("*").eq("id","homepage").maybeSingle();
  if(error){setStatus("Studio database setup issue: "+error.message,true);return;}
- draft=normalize(data?.draft_content||emptyDraft());
+ draft=normalize(data?.draft_content||emptyDraft());$("studioThemeGold").value=draft.theme.gold||"#c9a45c";$("studioThemePaper").value=draft.theme.paper||"#f7f5f0";$("studioThemeInk").value=draft.theme.ink||"#11110f";
  $("studioLastPublished").textContent="Published version: "+(data?.published_at?new Date(data.published_at).toLocaleString():"Not published yet");
  setStatus(data?.updated_at?"Draft loaded. Select an element in the preview to begin.":"Ready. Your first draft has not been saved yet.");
  await loadVersions();await initPageBuilder();if(frame.contentDocument?.readyState==="complete")attachPreviewEditor();
