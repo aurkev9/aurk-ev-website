@@ -24,13 +24,29 @@ function applyItem(doc,item){
  if(item.text!==undefined)node.textContent=item.text;
  if(item.href!==undefined&&node.tagName==="A")node.setAttribute("href",item.href);
  if(item.src!==undefined&&node.tagName==="IMG")node.setAttribute("src",item.src);
- if(item.color)node.style.color=item.color;
- if(item.background)node.style.backgroundColor=item.background;
- if(item.fontSize)node.style.fontSize=item.fontSize+"px";
- if(item.fontFamily)node.style.fontFamily='"'+String(item.fontFamily).replace(/["\\]/g,"")+'", sans-serif';
- if(item.fontWeight)node.style.fontWeight=item.fontWeight;
- if(item.textAlign)node.style.textAlign=item.textAlign;
- if(item.borderColor)node.style.borderColor=item.borderColor;
+ if(item.alt!==undefined&&node.tagName==="IMG")node.setAttribute("alt",item.alt);
+ if(item.color!==undefined)node.style.color=item.color;
+ if(item.background!==undefined)node.style.backgroundColor=item.background;
+ if(item.fontSize!==undefined)node.style.fontSize=item.fontSize+"px";
+ if(item.fontFamily!==undefined)node.style.fontFamily='"'+String(item.fontFamily).replace(/["\\]/g,"")+'", sans-serif';
+ if(item.fontWeight!==undefined)node.style.fontWeight=item.fontWeight;
+ if(item.fontStyle!==undefined)node.style.fontStyle=item.fontStyle;
+ if(item.textDecoration!==undefined)node.style.textDecoration=item.textDecoration;
+ if(item.textAlign!==undefined)node.style.textAlign=item.textAlign;
+ if(item.letterSpacing!==undefined)node.style.letterSpacing=item.letterSpacing+"px";
+ if(item.lineHeight!==undefined)node.style.lineHeight=String(item.lineHeight);
+ if(item.borderColor!==undefined)node.style.borderColor=item.borderColor;
+ if(item.borderWidth!==undefined)node.style.borderWidth=item.borderWidth+"px";
+ if(item.width!==undefined)node.style.width=item.width+"px";
+ if(item.height!==undefined)node.style.height=item.height+"px";
+ if(item.maxWidth!==undefined)node.style.maxWidth=item.maxWidth+"px";
+ if(item.padding!==undefined)node.style.padding=item.padding+"px";
+ if(item.radius!==undefined)node.style.borderRadius=item.radius+"px";
+ if(item.opacity!==undefined)node.style.opacity=String(item.opacity);
+ if(item.backgroundImage!==undefined)node.style.backgroundImage=item.backgroundImage?"url("+JSON.stringify(item.backgroundImage)+")":"none";
+ if(item.backgroundSize!==undefined)node.style.backgroundSize=item.backgroundSize;
+ if(item.backgroundPosition!==undefined)node.style.backgroundPosition=item.backgroundPosition;
+ if(item.objectFit!==undefined&&node.tagName==="IMG")node.style.objectFit=item.objectFit;
  if(item.fontUrl)ensureCustomFont(doc,item.fontFamily,item.fontUrl);else if(item.fontFamily)ensureGoogleFont(doc,item.fontFamily);
  if(item.hidden!==undefined)node.hidden=!!item.hidden;
 }
@@ -161,21 +177,37 @@ function attachPreviewEditor(){
 function populateControls(node){
  $("studioDecorationControls").hidden=true;$("studioElementControls").hidden=false;
  $("studioSelectorLabel").value=selectedSelector;
- const tag=node.tagName;
- $("studioTextWrap").hidden=!["H1","H2","H3","H4","P","A","BUTTON","SMALL","SPAN","B","STRONG","EM"].includes(tag);
+ const tag=node.tagName,saved=findItem(selectedSelector)||{},computed=getComputedStyle(node);
+ $("studioTextWrap").hidden=!["H1","H2","H3","H4","P","A","BUTTON","SMALL","SPAN","B","STRONG","EM","LI"].includes(tag);
  $("studioLinkWrap").hidden=tag!=="A";$("studioImageWrap").hidden=tag!=="IMG";
  $("studioText").value=$("studioTextWrap").hidden?"":node.textContent.trim();
  $("studioHref").value=tag==="A"?(node.getAttribute("href")||""):"";
  $("studioImage").value=tag==="IMG"?(node.getAttribute("src")||""):"";
- selectedBaseline={color:toHex(getComputedStyle(node).color),background:toHex(getComputedStyle(node).backgroundColor),fontSize:parseFloat(getComputedStyle(node).fontSize)||"",fontFamily:getComputedStyle(node).fontFamily.split(",")[0].replace(/[\'"]/g,""),fontWeight:getComputedStyle(node).fontWeight,textAlign:getComputedStyle(node).textAlign,borderColor:toHex(getComputedStyle(node).borderColor)};
- $("studioColor").value=selectedBaseline.color||"#171717";
- $("studioBackground").value=selectedBaseline.background||"#ffffff";
- $("studioFontSize").value=selectedBaseline.fontSize||"";
- $("studioFontFamily").value=findItem(selectedSelector)?.fontFamily||selectedBaseline.fontFamily||"";
- $("studioFontWeight").value=findItem(selectedSelector)?.fontWeight||"";
- $("studioTextAlign").value=findItem(selectedSelector)?.textAlign||"";
- $("studioBorderColor").value=findItem(selectedSelector)?.borderColor||selectedBaseline.borderColor||"#c9a45c";
- $("studioHidden").checked=getComputedStyle(node).display==="none";
+ $("studioImageAlt").value=tag==="IMG"?(saved.alt??node.alt??""):"";
+ $("studioObjectFit").value=saved.objectFit||"";
+ selectedBaseline={
+  color:toHex(computed.color),background:toHex(computed.backgroundColor),
+  fontSize:parseFloat(computed.fontSize)||"",fontFamily:computed.fontFamily.split(",")[0].replace(/['"]/g,""),
+  fontWeight:computed.fontWeight,textAlign:computed.textAlign,borderColor:toHex(computed.borderColor),
+  opacity:Number(computed.opacity)||1,fontStyle:computed.fontStyle,textDecoration:computed.textDecorationLine||computed.textDecoration,
+  letterSpacing:parseFloat(computed.letterSpacing)||0,lineHeight:computed.lineHeight==="normal"?"":parseFloat(computed.lineHeight)||"",
+  width:parseFloat(computed.width)||"",height:parseFloat(computed.height)||"",maxWidth:parseFloat(computed.maxWidth)||"",
+  padding:parseFloat(computed.paddingTop)||0,radius:parseFloat(computed.borderTopLeftRadius)||0,borderWidth:parseFloat(computed.borderTopWidth)||0
+ };
+ $("studioColor").value=saved.color||selectedBaseline.color||"#171717";
+ $("studioBackground").value=saved.background||selectedBaseline.background||"#ffffff";
+ $("studioFontSize").value=saved.fontSize??selectedBaseline.fontSize??"";
+ $("studioFontFamily").value=saved.fontFamily||selectedBaseline.fontFamily||"";
+ $("studioFontWeight").value=saved.fontWeight||"";
+ $("studioTextAlign").value=saved.textAlign||"";
+ $("studioBorderColor").value=saved.borderColor||selectedBaseline.borderColor||"#c9a45c";
+ $("studioWidth").value=saved.width??"";$("studioHeight").value=saved.height??"";$("studioMaxWidth").value=saved.maxWidth??"";
+ $("studioPadding").value=saved.padding??"";$("studioRadius").value=saved.radius??"";$("studioBorderWidth").value=saved.borderWidth??"";
+ $("studioOpacity").value=saved.opacity??selectedBaseline.opacity;$("studioOpacityValue").textContent=Math.round(Number($("studioOpacity").value)*100)+"%";
+ $("studioLetterSpacing").value=saved.letterSpacing??"";$("studioLineHeight").value=saved.lineHeight??"";
+ $("studioFontStyle").value=saved.fontStyle||"";$("studioTextDecoration").value=saved.textDecoration||"";
+ $("studioBackgroundImage").value=saved.backgroundImage||"";$("studioBackgroundSize").value=saved.backgroundSize||"";$("studioBackgroundPosition").value=saved.backgroundPosition||"";
+ $("studioHidden").checked=!!saved.hidden||node.hidden;
  $("studioMoveUp").disabled=!node.matches("main > section[id]")||!node.previousElementSibling;
  $("studioMoveDown").disabled=!node.matches("main > section[id]")||!node.nextElementSibling;
 }
@@ -185,13 +217,25 @@ function currentPatch(){
  const tag=node.tagName,item={...(findItem(selectedSelector)||{}),selector:selectedSelector};
  if(!$("studioTextWrap").hidden)item.text=$("studioText").value;
  if(tag==="A")item.href=$("studioHref").value.trim();
- if(tag==="IMG")item.src=$("studioImage").value.trim();
- const color=$("studioColor").value,bg=$("studioBackground").value,size=$("studioFontSize").value;
- if(color!==selectedBaseline.color)item.color=color;if(bg!==selectedBaseline.background&&!(selectedBaseline.background===null&&bg==="#ffffff"))item.background=bg;if(size&&Number(size)>=8&&Number(size)<=120&&Number(size)!==Number(selectedBaseline.fontSize))item.fontSize=Number(size);
- const family=$("studioFontFamily").value.trim();if(family&&family!==selectedBaseline.fontFamily)item.fontFamily=family;
- const weight=$("studioFontWeight").value;if(weight&&weight!==selectedBaseline.fontWeight)item.fontWeight=weight;
- const align=$("studioTextAlign").value;if(align&&align!==selectedBaseline.textAlign)item.textAlign=align;
- const border=$("studioBorderColor").value;if(border&&border!==selectedBaseline.borderColor)item.borderColor=border;
+ if(tag==="IMG"){item.src=$("studioImage").value.trim();item.alt=$("studioImageAlt").value.trim();const fit=$("studioObjectFit").value;if(fit)item.objectFit=fit;else delete item.objectFit;}
+ const setNumber=(id,key,min,max)=>{const raw=$(id).value.trim();if(!raw){delete item[key];return;}const n=Number(raw);if(Number.isFinite(n)&&n>=min&&n<=max)item[key]=n;};
+ const color=$("studioColor").value,bg=$("studioBackground").value;
+ if(color===selectedBaseline.color)delete item.color;else item.color=color;
+ if(bg===selectedBaseline.background)delete item.background;else item.background=bg;
+ const size=$("studioFontSize").value.trim();if(size&&Number(size)>=8&&Number(size)<=400)item.fontSize=Number(size);else delete item.fontSize;
+ const family=$("studioFontFamily").value.trim();if(family&&family!==selectedBaseline.fontFamily)item.fontFamily=family;else if(!family||family===selectedBaseline.fontFamily)delete item.fontFamily;
+ const weight=$("studioFontWeight").value;if(weight)item.fontWeight=weight;else delete item.fontWeight;
+ const align=$("studioTextAlign").value;if(align)item.textAlign=align;else delete item.textAlign;
+ const border=$("studioBorderColor").value;if(border===selectedBaseline.borderColor)delete item.borderColor;else item.borderColor=border;
+ setNumber("studioWidth","width",1,4000);setNumber("studioHeight","height",1,4000);setNumber("studioMaxWidth","maxWidth",1,4000);
+ setNumber("studioPadding","padding",0,300);setNumber("studioRadius","radius",0,300);setNumber("studioBorderWidth","borderWidth",0,40);
+ setNumber("studioLetterSpacing","letterSpacing",-10,40);setNumber("studioLineHeight","lineHeight",.7,4);
+ item.opacity=Math.max(0,Math.min(1,Number($("studioOpacity").value)));
+ const fontStyle=$("studioFontStyle").value;if(fontStyle)item.fontStyle=fontStyle;else delete item.fontStyle;
+ const decoration=$("studioTextDecoration").value;if(decoration)item.textDecoration=decoration;else delete item.textDecoration;
+ const bgImage=$("studioBackgroundImage").value.trim();if(bgImage&&/^https:\/\//i.test(bgImage))item.backgroundImage=bgImage;else delete item.backgroundImage;
+ const bgSize=$("studioBackgroundSize").value;if(bgSize)item.backgroundSize=bgSize;else delete item.backgroundSize;
+ const bgPosition=$("studioBackgroundPosition").value;if(bgPosition)item.backgroundPosition=bgPosition;else delete item.backgroundPosition;
  if(studioUploadedFontUrl&&family===studioUploadedFontFamily)item.fontUrl=studioUploadedFontUrl;
  item.hidden=$("studioHidden").checked;return item;
 }
@@ -203,10 +247,13 @@ async function applyCurrent(){
  applyItem(frame.contentDocument,item);highlightSelected();
  await saveDraft(false);
 }
-function resetCurrent(){
+async function resetCurrent(){
  if(!selectedSelector)return;
  draft.elements=draft.elements.filter(x=>x.selector!==selectedSelector);
- selectedSelector="";frame.src="index.html?page=home&pageId="+encodeURIComponent(studioPages.find(p=>p.slug==="home")?.id||"")+"&studioPreview=1&refresh="+Date.now();setStatus("Element reset in preview. Save draft to keep the reset.");
+ selectedSelector="";await saveDraft(false);
+ const home=studioPages.find(p=>p.slug==="home");
+ frame.src="index.html?page=home&pageId="+encodeURIComponent(home?.id||"")+"&studioPreview=1&refresh="+Date.now();
+ $("studioSelectorLabel").value="";setStatus("Element reset and saved to the homepage draft.");
 }
 async function loadStudio(){
  const {data:{session}}=await supabase.auth.getSession();
@@ -360,7 +407,7 @@ function selectStudioPage(page){
  $("studioPageState").textContent=page.status==="published"?"Published page — draft edits stay private":"Unpublished draft";
  renderBlockList();renderBlockFields();
  pageMessage(page.slug==="home"?"Add custom sections to your existing homepage without replacing its current content.":"Edit this page, preview it, then publish when ready.");
- previewStudioPage();
+ loadStudioPagePreview();
 }
 function renderBlockList(){
  const host=$("studioBlockList");host.innerHTML="";
@@ -443,18 +490,23 @@ async function saveStudioPage(publish=false){
   if(publishError){button.disabled=false;pageMessage("Draft saved, but publishing failed: "+publishError.message,true);return;}
  }
  button.disabled=false;
- const publishedData=publish?{slug,title,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:activeStudioPage.nav_order??studioPages.indexOf(activeStudioPage),meta_description:draftPayload.draft_meta_description,meta_title:draftPayload.draft_meta_title,meta_keywords:draftPayload.draft_meta_keywords,og_image_url:draftPayload.draft_og_image_url,published_content:pageDraft,published_at:now}:{};
+ const publishedData=publish?{slug,title,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:draftPayload.draft_nav_order,meta_description:draftPayload.draft_meta_description,meta_title:draftPayload.draft_meta_title,meta_keywords:draftPayload.draft_meta_keywords,og_image_url:draftPayload.draft_og_image_url,published_content:pageDraft,published_at:now}:{};
  activeStudioPage={...activeStudioPage,...draftData,...publishedData};
  studioPages=studioPages.map(p=>p.id===activeStudioPage.id?activeStudioPage:p);
  const option=$("studioPageSelect").querySelector('option[value="'+activeStudioPage.id+'"]');if(option)option.textContent=activeStudioPage.draft_title;
  $("studioPageState").textContent=activeStudioPage.status==="published"?(publish?"Published just now":"Published page — draft edits stay private"):"Unpublished draft";
  pageMessage(publish?"Page published successfully. It is now available on your website.":"Page draft saved. Visitors will continue seeing the last published version.");
- if(publish)previewStudioPage();
+ if(publish)loadStudioPagePreview();
 }
-function previewStudioPage(){
+function loadStudioPagePreview(){
  if(!activeStudioPage)return;
  frame.src="index.html?page="+encodeURIComponent(activeStudioPage.draft_slug||activeStudioPage.slug)+"&pageId="+encodeURIComponent(activeStudioPage.id)+"&studioPreview=1&refresh="+Date.now();
  $("studioSelectorLabel").value="";selectedSelector="";
+}
+async function previewStudioPage(){
+ if(!activeStudioPage)return;
+ await saveStudioPage(false);
+ loadStudioPagePreview();
 }
 
 loadStudio();
