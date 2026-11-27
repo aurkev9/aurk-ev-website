@@ -287,6 +287,8 @@ function renderBlockFields(){
   promo:[["eyebrow","Small label"],["heading","Promotion heading"],["body","Promotion details"],["image_url","Image URL"],["button_text","Button label"],["button_url","Button link"],["background_color","Banner background colour"]],
   products:[["heading","Heading"],["body","Description"],["product_limit","Number of products (1–8)"]]
  }[block.type]||[["heading","Heading"],["body","Text content"]];
+  if(!fields.some(([key])=>key==="background_color"))fields.push(["background_color","Section background colour"]);
+  fields.push(["text_color","Section text colour"],["accent_color","Button / accent colour"],["font_family","Section font family"]);
  fields.forEach(([key,labelText])=>{
   const label=document.createElement("label");label.textContent=labelText;
   let input;
