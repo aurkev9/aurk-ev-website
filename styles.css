@@ -1306,3 +1306,16 @@ body.storefront .model-media-content img{
   body.storefront .hero-image-frame img{padding:7px}
   body.storefront .model-media-content img{height:260px}
 }
+/* AUR-K EV product gallery refinement — neutral color and premium presentation */
+body.storefront .detail-gallery{position:relative}
+body.storefront .detail-main-image{height:clamp(420px,48vw,660px);min-height:420px;padding:0;border:1px solid #e5dccb;border-radius:8px;background:radial-gradient(ellipse at 50% 42%,#fff 0%,#faf8f3 62%,#eee8dc 100%);box-shadow:0 18px 48px rgba(35,28,18,.09);cursor:zoom-in}
+body.storefront .detail-main-image img{display:block;width:100%;height:100%;padding:clamp(18px,3vw,42px);object-fit:contain;object-position:center;mix-blend-mode:normal;filter:none;image-rendering:auto}
+body.storefront .detail-zoom-hint{position:absolute;right:14px;bottom:14px;padding:9px 12px;border:1px solid rgba(177,138,76,.38);border-radius:3px;background:rgba(255,255,255,.9);color:#80602b;font-size:8px;font-weight:800;letter-spacing:1.2px}
+body.storefront .detail-thumbnails{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,90px));gap:11px;margin-top:14px}
+body.storefront .detail-thumb{width:100%;height:82px;padding:5px;border:1px solid #e5dccb;border-radius:5px;background:#fff;transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+body.storefront .detail-thumb:hover{transform:translateY(-2px);border-color:#b38a45}
+body.storefront .detail-thumb.active{border:2px solid #b38a45;box-shadow:0 4px 14px rgba(128,96,43,.13)}
+body.storefront .detail-thumb img{display:block;width:100%;height:100%;object-fit:contain;mix-blend-mode:normal}
+body.storefront .product-image-viewer img{background:#f8f6f1;padding:12px;border:1px solid rgba(220,190,130,.25);border-radius:6px}
+@media(max-width:850px){body.storefront .detail-main-image{height:clamp(320px,68vw,540px);min-height:320px}}
+@media(max-width:520px){body.storefront .detail-main-image{height:82vw;min-height:260px}body.storefront .detail-main-image img{padding:16px}body.storefront .detail-thumb{height:72px}}
