@@ -415,7 +415,7 @@ document.getElementById('modelMediaForm')?.addEventListener('submit',async e=>{
  if(!file&&!youtube){msg.textContent='Choose a photo/video file or paste a YouTube link.';return;}
  if(file&&youtube){msg.textContent='Please use either a file upload or a YouTube link, not both.';return;}
  const [model_type,model_id]=choice.split(':'),model=modelMediaChoices.find(x=>x.value===choice);let publicUrl='',storagePath=null,mediaType='video';
- if(youtube){let videoId='';try{const u=new URL(youtube);if(u.hostname==='youtu.be')videoId=u.pathname.split('/').filter(Boolean)[0]||'';else if(['youtube.com','www.youtube.com','m.youtube.com','youtube-nocookie.com','www.youtube-nocookie.com'].includes(u.hostname)){videoId=u.searchParams.get('v')||u.pathname.match(/\\/(?:embed|shorts|live)\\/([^/?]+)/)?.[1]||'';}}catch{}
+ if(youtube){let videoId='';try{const u=new URL(youtube);if(u.hostname==='youtu.be')videoId=u.pathname.split('/').filter(Boolean)[0]||'';else if(['youtube.com','www.youtube.com','m.youtube.com','youtube-nocookie.com','www.youtube-nocookie.com'].includes(u.hostname)){videoId=u.searchParams.get('v')||(['embed','shorts','live'].includes(u.pathname.split('/').filter(Boolean)[0])?u.pathname.split('/').filter(Boolean)[1]:'')||'';}}catch{}
   if(!/^[A-Za-z0-9_-]{11}$/.test(videoId)){msg.textContent='Please paste a valid YouTube video link.';return;}publicUrl='https://www.youtube-nocookie.com/embed/'+videoId;
  }else{const isImage=file.type.startsWith('image/'),isVideo=file.type.startsWith('video/');
   if(!isImage&&!isVideo){msg.textContent='Choose a JPG, PNG, WebP, MP4, WebM or MOV file.';return;}
