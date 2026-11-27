@@ -90,7 +90,7 @@ function populateDecorationControls(item){
  $("studioDecorationOpacity").value=item.opacity??1;$("studioDecorationOpacityValue").textContent=Math.round((item.opacity??1)*100)+"%";
  $("studioDecorationControls").hidden=false;$("studioElementControls").hidden=true;
 }
-function addStudioDecoration(type){
+async function addStudioDecoration(type){
  if(!selectedSelector){setStatus("First click the image or section in the preview, then choose a shape.",true);return;}
  const doc=frame.contentDocument,selected=doc?.querySelector(selectedSelector);
  if(!selected){setStatus("Select the image or section again.",true);return;}
@@ -98,7 +98,7 @@ function addStudioDecoration(type){
  if(!anchor){setStatus("Select an image or visible section first.",true);return;}
  const item={id:"shape-"+crypto.randomUUID(),type,anchor:selectorFor(anchor),x:24,y:24,width:type==="line"?180:120,height:type==="line"?0:70,fill:"#c9a45c",borderColor:"#171717",borderWidth:type==="line"?3:0,radius:10,opacity:1,zIndex:20};
  draft.decorations.push(item);selectedDecorationId=item.id;selectedSelector="";
- renderStudioDecorations(doc);populateDecorationControls(item);setStatus("Shape added over the selected image/section. Adjust X, Y, width and height, then save draft.");
+ renderStudioDecorations(doc);populateDecorationControls(item);setStatus("Shape added over the selected image/section. Saving…");await saveDraft(false);
 }
 function updateStudioDecoration(){
  const item=draft.decorations.find(x=>x.id===selectedDecorationId);if(!item)return;
