@@ -1495,7 +1495,7 @@ body.storefront .story-actions .inline-link{color:#72572e;font-size:10px;font-we
 .studio-pages-heading p,.studio-block-library p{margin:0;color:#777;font-size:11px;line-height:1.6}
 .studio-page-actions{display:flex;gap:8px;flex-wrap:wrap}
 .studio-page-toolbar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
-.studio-page-meta{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;align-items:end;margin-bottom:18px}
+.studio-page-meta{display:grid;grid-template-columns:minmax(0,1fr) 120px auto auto;gap:14px;align-items:end;margin-bottom:18px}
 .studio-page-toolbar label,.studio-page-meta>label:not(.studio-check){display:flex;flex-direction:column;gap:6px;font-size:10px;font-weight:700;color:#554d40}
 .studio-page-toolbar input,.studio-page-toolbar select,.studio-page-meta textarea{width:100%;min-width:0;border:1px solid #ded8cc;border-radius:8px;padding:10px;background:#fff;color:#24211c;font:12px inherit}
 .studio-page-meta textarea{resize:vertical}
