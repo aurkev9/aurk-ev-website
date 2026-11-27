@@ -33,7 +33,11 @@ function applyDraftToPreview(){
 }
 function applyOrder(doc){
  const main=doc.querySelector("main");if(!main||!draft.sectionOrder.length)return;
- draft.sectionOrder.forEach(selector=>{const node=doc.querySelector(selector);if(node&&node.parentElement===main)main.append(node);});
+ const sections=[...main.children].filter(node=>node.tagName==="SECTION");
+ const ordered=draft.sectionOrder.map(selector=>doc.querySelector(selector)).filter(node=>node&&node.parentElement===main);
+ sections.forEach(node=>{if(!ordered.includes(node))ordered.push(node);});
+ const slots=sections.map(node=>{const marker=doc.createComment("studio-section-slot");main.insertBefore(marker,node);return marker;});
+ ordered.slice(0,slots.length).forEach((node,index)=>main.insertBefore(node,slots[index]));slots.forEach(marker=>marker.remove());
 }
 function highlightSelected(){
  const doc=frame.contentDocument;if(!doc)return;
@@ -85,7 +89,7 @@ function populateControls(node){
 function toHex(value){const match=String(value).match(/rgba?\(([^)]+)\)/);if(!match)return null;const parts=match[1].split(",").map(x=>x.trim());if(parts.length>3&&Number(parts[3])===0)return null;const nums=parts.slice(0,3).map(Number);return nums.length===3?"#"+nums.map(x=>Math.max(0,Math.min(255,x)).toString(16).padStart(2,"0")).join(""):null;}
 function currentPatch(){
  const node=frame.contentDocument?.querySelector(selectedSelector);if(!node)return null;
- const tag=node.tagName,item={selector:selectedSelector};
+ const tag=node.tagName,item={...(findItem(selectedSelector)||{}),selector:selectedSelector};
  if(!$("studioTextWrap").hidden)item.text=$("studioText").value;
  if(tag==="A")item.href=$("studioHref").value.trim();
  if(tag==="IMG")item.src=$("studioImage").value.trim();
