@@ -1,7 +1,7 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 const FALLBACK=[{id:1,name:"ROADKING R99 PRO",category:"premium",tag:"FEATURED MODEL",price_text:"Ask for price",description:"A bold electric ride for confident everyday journeys.",image_url:"https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80"},{id:2,name:"ROADKING RAPTOR",category:"premium",tag:"PERFORMANCE STYLE",price_text:"Ask for price",description:"Stand out with a striking design and electric convenience.",image_url:"https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=900&q=80"},{id:3,name:"AUR-K CITY SERIES",category:"commuter",tag:"CITY COMMUTE",price_text:"Ask for price",description:"A practical choice for your everyday city routine.",image_url:"https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80"}];
-const WHATSAPP_NUMBER="923239661747";let PRODUCTS=FALLBACK,cart=[];let PRODUCT_IMAGES=[];let supabase=null;const grid=document.getElementById('productGrid');
+const WHATSAPP_NUMBER="923239661747";let PRODUCTS=FALLBACK,cart=[];let PRODUCT_IMAGES=[];let MODEL_MEDIA=[];let supabase=null;const grid=document.getElementById('productGrid');
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function productSpecs(value){
  if(!value)return [];
