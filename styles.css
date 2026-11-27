@@ -1688,3 +1688,8 @@ html{scroll-behavior:smooth}
  .studio-top-actions{justify-content:flex-start}
  .studio-statusbar{top:5px}
 }
+
+.studio-editor-notice{grid-column:1/-1;margin:0;padding:14px 16px;border:1px solid #d9c79e;border-radius:10px;background:#fbf5e7;color:#70572d;font-size:12px;line-height:1.6;font-weight:650}
+.studio-editor-notice[hidden]{display:none!important}
+.studio-workbench[data-editor-mode=page-builder]{grid-template-columns:minmax(0,1fr)}
+.studio-workbench[data-editor-mode=page-builder] .studio-preview-area{position:relative;top:auto}
