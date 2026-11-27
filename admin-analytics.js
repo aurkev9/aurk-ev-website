@@ -63,6 +63,6 @@ function init(){
  document.querySelector('[data-view="analytics"]')?.addEventListener("click",loadAnalytics);
  loadAnalytics();
 }
-supabase.auth.onAuthStateChange((event,session)=>{if(session)queueMicrotask(init);});
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{if(window.AURK_CURRENT_ROLE==="owner")init();});
-else if(window.AURK_CURRENT_ROLE==="owner")init();
+supabase.auth.onAuthStateChange((event,session)=>{queueMicrotask(()=>{if(session){if(!initialized)init();else loadAnalytics();}});});
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
+else init();
