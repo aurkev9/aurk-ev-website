@@ -10,14 +10,14 @@ try{
 }catch{sessionId=crypto.randomUUID();}
 const device=/tablet|ipad/i.test(navigator.userAgent)?"tablet":/mobile|android|iphone/i.test(navigator.userAgent)?"mobile":"desktop";
 const host=(()=>{try{return document.referrer?new URL(document.referrer).hostname:null;}catch{return null;}})();
-const pagePath=()=>location.pathname+location.search+location.hash;
+const pagePath=()=>{const params=new URLSearchParams(location.search),safe=new URLSearchParams();["page","product"].forEach(k=>{if(params.has(k))safe.set(k,params.get(k).slice(0,100));});return location.pathname+(safe.size?"?"+safe.toString():"")+location.hash.slice(0,80);};
 const tracked=new Set();
 async function record(eventType,extra={}){
  const key=eventType+"|"+(extra.product_id||"")+"|"+pagePath();
  if(eventType==="page_view"&&tracked.has(key))return;
  tracked.add(key);
  const row={event_type:eventType,page_path:pagePath().slice(0,500),session_id:sessionId,device_type:device,referrer_host:host,...extra};
- try{await supabase.from("site_analytics_events").insert(row);}catch(error){console.debug("AUR-K analytics event skipped",error);}
+ try{const {error}=await supabase.from("site_analytics_events").insert(row);if(error)console.debug("AUR-K analytics event skipped",error.message);}catch(error){console.debug("AUR-K analytics event skipped",error);}
 }
 function productFromUrl(){
  const params=new URLSearchParams(location.search);
@@ -43,12 +43,7 @@ document.addEventListener("click",event=>{
  else if(href.startsWith("tel:"))record("call_click");
  else if(/compare/.test(href)||/compare/.test(label))record("compare_click");
  else if(/order|checkout|enquiry|enquire|whatsapp/.test(label))record("enquiry_click");
- const productMatch=href.match(/[?&]product=([^&#]+)/);
- if(productMatch){
-  const card=target.closest("[data-product-id],.product-card,.product-item");
-  const id=card?.dataset.productId||decodeURIComponent(productMatch[1]);
-  const name=card?.querySelector("h2,h3,.product-name")?.textContent?.trim()||null;
-  record("product_view",{product_id:String(id).slice(0,100),product_name:name?.slice(0,160)||null});
+
  }
 });
 document.getElementById("customerOrderForm")?.addEventListener("submit",()=>{
