@@ -398,29 +398,34 @@ async function loadModelMediaList(){
  host.innerHTML='';
  data.forEach(item=>{
   const card=document.createElement('article');card.className='image-item';
-  const media=item.media_type==='video'?document.createElement('video'):document.createElement('img');
-  media.src=item.public_url;media.alt=item.title;media.controls=item.media_type==='video';media.muted=true;media.playsInline=true;
+  let media;
+  if(item.media_type==='video'&&/youtube-nocookie\.com\/embed\//.test(item.public_url)){
+   media=document.createElement('iframe');media.src=item.public_url;media.title=item.title;media.loading='lazy';media.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';media.allowFullscreen=true;media.referrerPolicy='strict-origin-when-cross-origin';
+  }else{media=item.media_type==='video'?document.createElement('video'):document.createElement('img');media.src=item.public_url;media.alt=item.title;media.controls=item.media_type==='video';media.muted=true;media.playsInline=true;}
   const body=document.createElement('div'),title=document.createElement('strong'),meta=document.createElement('small'),del=document.createElement('button');
   title.textContent=item.title;meta.textContent=item.media_type.toUpperCase();del.className='delete-btn';del.textContent='Delete';
-  del.onclick=async()=>{if(!confirm('Delete this gallery media?'))return;const {error:de}=await supabase.from('site_model_media').delete().eq('id',item.id);if(de){alert(de.message);return;}await supabase.storage.from('website-images').remove([item.storage_path]);await loadModelMediaList();};
+  del.onclick=async()=>{if(!confirm('Delete this gallery media?'))return;const {error:de}=await supabase.from('site_model_media').delete().eq('id',item.id);if(de){alert(de.message);return;}if(item.storage_path)await supabase.storage.from('website-images').remove([item.storage_path]);await loadModelMediaList();};
   body.append(title,meta,del);card.append(media,body);host.append(card);
  });
 }
 document.getElementById('mediaModelSelect')?.addEventListener('change',loadModelMediaList);
 document.getElementById('modelMediaForm')?.addEventListener('submit',async e=>{
- e.preventDefault();const msg=document.getElementById('modelMediaMessage'),file=document.getElementById('mediaFile').files[0],choice=document.getElementById('mediaModelSelect').value;
- if(!file||!choice)return;
- const isImage=file.type.startsWith('image/'),isVideo=file.type.startsWith('video/');
- if(!isImage&&!isVideo){msg.textContent='Choose a JPG, PNG, WebP, MP4, WebM or MOV file.';return;}
- if(isImage&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024)){msg.textContent='Photos must be JPG, PNG or WebP and smaller than 8 MB.';return;}
- if(isVideo&&(!['video/mp4','video/webm','video/quicktime'].includes(file.type)||file.size>100*1024*1024)){msg.textContent='Videos must be MP4, WebM or MOV and smaller than 100 MB.';return;}
- const [model_type,model_id]=choice.split(':'),model=modelMediaChoices.find(x=>x.value===choice);
- msg.textContent='Uploading '+(isVideo?'video':'photo')+'…';
- const ext=file.name.split('.').pop().toLowerCase(),path='model-media/'+crypto.randomUUID()+'.'+ext;
- const {error:upErr}=await supabase.storage.from('website-images').upload(path,file,{upsert:false,contentType:file.type});
- if(upErr){msg.textContent=upErr.message;return;}
- const {data:{publicUrl}}=supabase.storage.from('website-images').getPublicUrl(path);
- const {error:dbErr}=await supabase.from('site_model_media').insert({model_type,model_id,model_label:model?.label||'Scooter',title:document.getElementById('mediaTitle').value.trim(),media_type:isVideo?'video':'image',public_url:publicUrl,storage_path:path});
- if(dbErr){await supabase.storage.from('website-images').remove([path]);msg.textContent='Could not save gallery media: '+dbErr.message;return;}
- msg.textContent='Uploaded successfully. It is now available in this model gallery.';document.getElementById('mediaTitle').value='';document.getElementById('mediaFile').value='';await loadModelMediaList();
+ e.preventDefault();const msg=document.getElementById('modelMediaMessage'),file=document.getElementById('mediaFile').files[0],choice=document.getElementById('mediaModelSelect').value,youtube=document.getElementById('mediaYoutubeUrl').value.trim(),title=document.getElementById('mediaTitle').value.trim();
+ if(!choice||!title)return;
+ if(!file&&!youtube){msg.textContent='Choose a photo/video file or paste a YouTube link.';return;}
+ if(file&&youtube){msg.textContent='Please use either a file upload or a YouTube link, not both.';return;}
+ const [model_type,model_id]=choice.split(':'),model=modelMediaChoices.find(x=>x.value===choice);let publicUrl='',storagePath=null,mediaType='video';
+ if(youtube){let videoId='';try{const u=new URL(youtube);if(u.hostname==='youtu.be')videoId=u.pathname.split('/').filter(Boolean)[0]||'';else if(['youtube.com','www.youtube.com','m.youtube.com','youtube-nocookie.com','www.youtube-nocookie.com'].includes(u.hostname)){videoId=u.searchParams.get('v')||u.pathname.match(/\\/(?:embed|shorts|live)\\/([^/?]+)/)?.[1]||'';}}catch{}
+  if(!/^[A-Za-z0-9_-]{11}$/.test(videoId)){msg.textContent='Please paste a valid YouTube video link.';return;}publicUrl='https://www.youtube-nocookie.com/embed/'+videoId;
+ }else{const isImage=file.type.startsWith('image/'),isVideo=file.type.startsWith('video/');
+  if(!isImage&&!isVideo){msg.textContent='Choose a JPG, PNG, WebP, MP4, WebM or MOV file.';return;}
+  if(isImage&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024)){msg.textContent='Photos must be JPG, PNG or WebP and smaller than 8 MB.';return;}
+  if(isVideo&&(!['video/mp4','video/webm','video/quicktime'].includes(file.type)||file.size>100*1024*1024)){msg.textContent='Videos must be MP4, WebM or MOV and smaller than 100 MB.';return;}
+  mediaType=isImage?'image':'video';msg.textContent='Uploading '+(isVideo?'video':'photo')+'…';const ext=file.name.split('.').pop().toLowerCase();storagePath='model-media/'+crypto.randomUUID()+'.'+ext;
+  const {error:upErr}=await supabase.storage.from('website-images').upload(storagePath,file,{upsert:false,contentType:file.type});if(upErr){msg.textContent=upErr.message;return;}
+  const {data:{publicUrl:uploadedUrl}}=supabase.storage.from('website-images').getPublicUrl(storagePath);publicUrl=uploadedUrl;
+ }
+ const {error:dbErr}=await supabase.from('site_model_media').insert({model_type,model_id,model_label:model?.label||'Scooter',title,media_type:mediaType,public_url:publicUrl,storage_path:storagePath});
+ if(dbErr){if(storagePath)await supabase.storage.from('website-images').remove([storagePath]);msg.textContent='Could not save gallery media: '+dbErr.message;return;}
+ msg.textContent=youtube?'YouTube video added to this model gallery.':'Uploaded successfully. It is now available in this model gallery.';document.getElementById('mediaTitle').value='';document.getElementById('mediaFile').value='';document.getElementById('mediaYoutubeUrl').value='';await loadModelMediaList();
 });
