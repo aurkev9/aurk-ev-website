@@ -102,7 +102,7 @@ function applyVisualContent(raw){
   let target;try{target=document.querySelector(item.selector);}catch{return;}
   if(!target)return;
   if(item.text!==undefined)target.textContent=item.text;
-  if(item.href!==undefined&&target.tagName==="A"){const url=safeUrl(item.href);if(url)target.setAttribute("href",url);}
+  if(item.href!==undefined&&target.tagName==="A"){const url=safeUrl(item.href);if(url)target.setAttribute("href",url);else target.removeAttribute("href");}
   if(item.src!==undefined&&target.tagName==="IMG"&&/^https?:\/\//i.test(item.src))target.setAttribute("src",item.src);
   if(item.color)target.style.color=item.color;
   if(item.background)target.style.backgroundColor=item.background;
