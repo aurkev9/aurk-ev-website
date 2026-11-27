@@ -24,7 +24,7 @@ function render(){
   if(e.event_type==="product_view"){const key=e.product_id||e.product_name||"Unknown";const item=productMap.get(key)||{label:e.product_name||"Product "+key,value:0};item.value++;productMap.set(key,item);}
   if(e.event_type==="page_view"){const key=e.page_path||"/";pageMap.set(key,(pageMap.get(key)||0)+1);const day=String(e.created_at).slice(0,10);dayMap.set(day,(dayMap.get(day)||0)+1);}
   const src=e.referrer_host||"Direct / unknown";sourceMap.set(src,(sourceMap.get(src)||0)+1);
-  deviceMap.set(e.device_type||"unknown",(deviceMap.get(e.device_type)||0)+1);
+  const device=e.device_type||"unknown";deviceMap.set(device,(deviceMap.get(device)||0)+1);
  });
  renderBars("analyticsProducts",[...productMap.values()].sort((a,b)=>b.value-a.value).slice(0,8),"Product views will appear as customers explore scooter details.");
  renderBars("analyticsPages",[...pageMap].map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value).slice(0,8),"Page views will appear here.");
@@ -64,6 +64,6 @@ function init(){
  document.querySelector('[data-view="analytics"]')?.addEventListener("click",loadAnalytics);
  loadAnalytics();
 }
-supabase.auth.onAuthStateChange((event,session)=>{if(session)init();});
+supabase.auth.onAuthStateChange((event,session)=>{if(session)queueMicrotask(init);});
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{if(window.AURK_CURRENT_ROLE==="owner")init();});
 else if(window.AURK_CURRENT_ROLE==="owner")init();
