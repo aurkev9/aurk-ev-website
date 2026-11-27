@@ -170,12 +170,13 @@ function currentPatch(){
  if(studioUploadedFontUrl&&family===studioUploadedFontFamily)item.fontUrl=studioUploadedFontUrl;
  item.hidden=$("studioHidden").checked;return item;
 }
-function applyCurrent(){
+async function applyCurrent(){
  if(!selectedSelector){setStatus("Select an element in the preview first.",true);return;}
- const item=currentPatch();if(!item)return;
+ const item=currentPatch();if(!item){setStatus("Could not apply this change. Select the element again.",true);return;}
  const index=draft.elements.findIndex(x=>x.selector===selectedSelector);
  if(index>=0)draft.elements[index]=item;else draft.elements.push(item);
- applyItem(frame.contentDocument,item);highlightSelected();setStatus("Preview updated. Save draft to keep these changes.");
+ applyItem(frame.contentDocument,item);highlightSelected();
+ await saveDraft(false);
 }
 function resetCurrent(){
  if(!selectedSelector)return;
