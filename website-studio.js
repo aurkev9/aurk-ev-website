@@ -222,7 +222,8 @@ function selectStudioPage(page){
  $("studioPageSlug").readOnly=page.slug==="home";
  $("studioPageTitle").readOnly=page.slug==="home";
  $("studioPageMeta").value=page.draft_meta_description??page.meta_description??"";
- $("studioPageNav").checked=page.slug==="home"?false:(page.draft_show_in_nav??page.show_in_nav);\n $("studioPageNavOrder").value=page.draft_nav_order??page.nav_order??studioPages.indexOf(page);
+ $("studioPageNav").checked=page.slug==="home"?false:(page.draft_show_in_nav??page.show_in_nav);
+ $("studioPageNavOrder").value=page.draft_nav_order??page.nav_order??studioPages.indexOf(page);
  $("studioDeletePage").disabled=page.slug==="home";
  $("studioPageState").textContent=page.status==="published"?"Published page — draft edits stay private":"Unpublished draft";
  renderBlockList();renderBlockFields();
