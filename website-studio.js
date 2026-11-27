@@ -222,7 +222,7 @@ function selectStudioPage(page){
  $("studioPageSlug").readOnly=page.slug==="home";
  $("studioPageTitle").readOnly=page.slug==="home";
  $("studioPageMeta").value=page.draft_meta_description??page.meta_description??"";
- $("studioPageNav").checked=page.slug==="home"?false:(page.draft_show_in_nav??page.show_in_nav);
+ $("studioPageNav").checked=page.slug==="home"?false:(page.draft_show_in_nav??page.show_in_nav);\n $("studioPageNavOrder").value=page.draft_nav_order??page.nav_order??studioPages.indexOf(page);
  $("studioDeletePage").disabled=page.slug==="home";
  $("studioPageState").textContent=page.status==="published"?"Published page — draft edits stay private":"Unpublished draft";
  renderBlockList();renderBlockFields();
@@ -278,7 +278,7 @@ async function createStudioPage(){
  const slug=slugify(title);if(!slug||slug==="home"){pageMessage("Please choose a valid page title.",true);return;}
  if(studioPages.some(p=>(p.draft_slug||p.slug)===slug)){pageMessage("That page URL already exists. Choose a different title.",true);return;}
  const user=(await supabase.auth.getUser()).data.user;
- const {data,error}=await supabase.from("site_studio_page_drafts").insert({id:crypto.randomUUID(),draft_slug:slug,draft_title:title.trim(),draft_meta_description:"",draft_show_in_nav:true,draft_content:{sections:[]},created_by:user?.id,updated_by:user?.id}).select("*").single();
+ const {data,error}=await supabase.from("site_studio_page_drafts").insert({id:crypto.randomUUID(),draft_slug:slug,draft_title:title.trim(),draft_meta_description:"",draft_show_in_nav:true,draft_nav_order:studioPages.length,draft_content:{sections:[]},created_by:user?.id,updated_by:user?.id}).select("*").single();
  if(error){pageMessage("Could not create page: "+error.message,true);return;}
  studioPages.push(data);const option=document.createElement("option");option.value=data.id;option.textContent=data.draft_title;$("studioPageSelect").append(option);selectStudioPage(data);pageMessage("New page created as a private draft. Add sections to build it.");
 }
@@ -299,11 +299,11 @@ async function saveStudioPage(publish=false){
  if(activeStudioPage.slug==="home"&&slug!=="home"){button.disabled=false;pageMessage("The homepage URL cannot be changed here.",true);return;}
  if(studioPages.some(p=>p.id!==activeStudioPage.id&&(p.slug===slug||p.draft_slug===slug))){button.disabled=false;pageMessage("This URL is already used by another page.",true);return;}
  const user=(await supabase.auth.getUser()).data.user,now=new Date().toISOString();
- const draftPayload={draft_title:title,draft_slug:slug,draft_meta_description:$("studioPageMeta").value.trim(),draft_show_in_nav:activeStudioPage.slug==="home"?false:$("studioPageNav").checked,draft_content:pageDraft,updated_by:user?.id,updated_at:now};
+ const draftPayload={draft_title:title,draft_slug:slug,draft_meta_description:$("studioPageMeta").value.trim(),draft_show_in_nav:activeStudioPage.slug==="home"?false:$("studioPageNav").checked,draft_nav_order:Math.max(0,Math.min(99,Number($("studioPageNavOrder").value)||0)),draft_content:pageDraft,updated_by:user?.id,updated_at:now};
  const {data:draftData,error}=await supabase.from("site_studio_page_drafts").update(draftPayload).eq("id",activeStudioPage.id).select("*").single();
  if(error){button.disabled=false;pageMessage("Could not save page draft: "+error.message,true);return;}
  if(publish){
-  const publicPayload={id:activeStudioPage.id,slug,title,published_content:pageDraft,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:activeStudioPage.nav_order??studioPages.indexOf(activeStudioPage),meta_description:draftPayload.draft_meta_description,published_at:now};
+  const publicPayload={id:activeStudioPage.id,slug,title,published_content:pageDraft,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:draftPayload.draft_nav_order,meta_description:draftPayload.draft_meta_description,published_at:now};
   const {error:publishError}=await supabase.from("site_studio_pages").upsert(publicPayload,{onConflict:"id"});
   if(publishError){button.disabled=false;pageMessage("Draft saved, but publishing failed: "+publishError.message,true);return;}
  }
