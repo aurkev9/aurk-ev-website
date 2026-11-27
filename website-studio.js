@@ -86,15 +86,16 @@ function populateDecorationControls(item){
  $("studioDecorationControls").hidden=false;$("studioElementControls").hidden=true;
 }
 function addStudioDecoration(type){
- if(!selectedSelector){setStatus("First click the part of the website where you want to add a shape.",true);return;}
- const selected=frame.contentDocument?.querySelector(selectedSelector);if(!selected)return;
- const anchor=selected.matches("section,header,footer,main,nav,article,div")?selected:(selected.closest("section,header,footer,main,nav,article")||selected.parentElement);
- if(!anchor){setStatus("Select a section or container first.",true);return;}
- const item={id:"shape-"+crypto.randomUUID(),type,anchor:selectorFor(anchor),x:24,y:24,width:type==="line"?180:120,height:type==="line"?0:70,fill:"#c9a45c",borderColor:"#171717",borderWidth:type==="line"?3:0,radius:10,opacity:1,zIndex:3};
+ if(!selectedSelector){setStatus("First click the image or section in the preview, then choose a shape.",true);return;}
+ const doc=frame.contentDocument,selected=doc?.querySelector(selectedSelector);
+ if(!selected){setStatus("Select the image or section again.",true);return;}
+ const anchor=selected.tagName==="IMG"?(selected.parentElement||selected):(selected.matches("section,header,footer,main,nav,article,div")?selected:(selected.closest("section,header,footer,main,nav,article")||selected.parentElement));
+ if(!anchor){setStatus("Select an image or visible section first.",true);return;}
+ const item={id:"shape-"+crypto.randomUUID(),type,anchor:selectorFor(anchor),x:24,y:24,width:type==="line"?180:120,height:type==="line"?0:70,fill:"#c9a45c",borderColor:"#171717",borderWidth:type==="line"?3:0,radius:10,opacity:1,zIndex:20};
  draft.decorations.push(item);selectedDecorationId=item.id;selectedSelector="";
- renderStudioDecorations(frame.contentDocument);populateDecorationControls(item);highlightDecoration();setStatus("Shape added. Adjust its position and size, then save your draft.");
+ renderStudioDecorations(doc);populateDecorationControls(item);setStatus("Shape added over the selected image/section. Adjust X, Y, width and height, then save draft.");
 }
-function updateStudioDecoration(){
+async function updateStudioDecoration(){
  const item=draft.decorations.find(x=>x.id===selectedDecorationId);if(!item)return;
  item.type=$("studioDecorationType").value;item.x=Number($("studioDecorationX").value)||0;item.y=Number($("studioDecorationY").value)||0;
  item.width=Math.max(1,Number($("studioDecorationWidth").value)||120);item.height=item.type==="line"?0:Math.max(1,Number($("studioDecorationHeight").value)||60);
@@ -248,7 +249,7 @@ $("studioCopyAsset")?.addEventListener("click",async()=>{try{await navigator.cli
 $("studioApplyTheme")?.addEventListener("click",()=>{draft.theme={gold:$("studioThemeGold").value,paper:$("studioThemePaper").value,ink:$("studioThemeInk").value};applyThemeToPreview();setStatus("Website-wide colours applied to preview. Save draft to keep them.");});
 
 document.querySelectorAll("[data-studio-shape]").forEach(button=>button.addEventListener("click",()=>addStudioDecoration(button.dataset.studioShape)));
-$("studioUpdateDecoration")?.addEventListener("click",()=>{updateStudioDecoration();setStatus("Design element updated in preview. Save draft to keep it.");});
+$("studioUpdateDecoration")?.addEventListener("click",updateStudioDecoration);
 $("studioDeleteDecoration")?.addEventListener("click",deleteStudioDecoration);
 $("studioDecorationType")?.addEventListener("change",updateStudioDecoration);
 ["studioDecorationX","studioDecorationY","studioDecorationWidth","studioDecorationHeight","studioDecorationFill","studioDecorationBorder","studioDecorationBorderWidth","studioDecorationRadius","studioDecorationOpacity"].forEach(id=>$(id)?.addEventListener("input",()=>{if(id==="studioDecorationOpacity")$("studioDecorationOpacityValue").textContent=Math.round(Number($(id).value)*100)+"%";updateStudioDecoration();}));
