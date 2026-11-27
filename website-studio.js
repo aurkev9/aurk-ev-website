@@ -119,14 +119,18 @@ async function loadStudio(){
 }
 async function saveDraft(publish=false){
  const button=publish?$("studioPublish"):$("studioSaveDraft");button.disabled=true;setStatus(publish?"Publishing website changes…":"Saving draft…");
- const {data:existing}=await supabase.from("site_studio_settings").select("id,published_content").eq("id","homepage").maybeSingle();
- const payload={id:"homepage",draft_content:draft,updated_at:new Date().toISOString(),updated_by:(await supabase.auth.getUser()).data.user?.id};
- if(publish){payload.published_content=draft;payload.published_at=new Date().toISOString();}
- const result=existing?await supabase.from("site_studio_settings").update(payload).eq("id","homepage"):await supabase.from("site_studio_settings").insert({...payload,published_content:publish?draft:emptyDraft()});
- if(result.error){button.disabled=false;setStatus("Could not save: "+result.error.message,true);return;}
- await supabase.from("site_studio_versions").insert({version_label:(publish?"Published":"Draft saved")+" — "+new Date().toLocaleString(),content:draft,created_by:payload.updated_by});
+ const user=(await supabase.auth.getUser()).data.user;
+ const payload={id:"homepage",draft_content:draft,updated_at:new Date().toISOString(),updated_by:user?.id};
+ if(publish)payload.published_at=new Date().toISOString();
+ const {error:saveError}=await supabase.from("site_studio_settings").upsert(payload,{onConflict:"id"});
+ if(saveError){button.disabled=false;setStatus("Could not save draft: "+saveError.message,true);return;}
+ if(publish){
+  const {error:publishError}=await supabase.from("site_studio_published").upsert({id:"homepage",content:draft,published_at:payload.published_at,published_by:user?.id},{onConflict:"id"});
+  if(publishError){button.disabled=false;setStatus("Draft saved, but publishing failed: "+publishError.message,true);return;}
+ }
+ await supabase.from("site_studio_versions").insert({version_label:(publish?"Published":"Draft saved")+" — "+new Date().toLocaleString(),content:draft,created_by:user?.id});
  button.disabled=false;
- if(publish){$("studioLastPublished").textContent="Published version: "+new Date(payload.published_at).toLocaleString();setStatus("Published successfully. Refresh the live website to see your changes.");}
+ if(publish){$("studioLastPublished").textContent="Published version: "+new Date(payload.published_at).toLocaleString();setStatus("Published successfully. Your changes are now live.");}
  else setStatus("Draft saved. Visitors will not see it until you publish.");
  await loadVersions();
 }
