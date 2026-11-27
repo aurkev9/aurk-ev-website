@@ -66,14 +66,19 @@ function renderStudioDecorations(doc){
  doc.querySelectorAll("[data-studio-decoration-id]").forEach(el=>el.remove());
  (draft.decorations||[]).forEach(item=>{
   let anchor;try{anchor=doc.querySelector(item.anchor);}catch{return;}if(!anchor)return;
-  if(getComputedStyle(anchor).position==="static")anchor.style.position="relative";
-  const shape=doc.createElement("div");shape.dataset.studioDecorationId=item.id;shape.setAttribute("aria-hidden","true");
-  Object.assign(shape.style,decorationStyle(item));
-  if(item.type==="line")shape.style.width=Math.max(1,Number(item.width)||120)+"px";
+  if(doc.defaultView.getComputedStyle(anchor).position==="static")anchor.style.position="relative";
+  const shape=doc.createElement("div");shape.dataset.studioDecorationId=item.id;
+  Object.assign(shape.style,decorationStyle(item),{boxSizing:"border-box",cursor:"move",touchAction:"none"});
+  if(selectedDecorationId===item.id){
+   shape.style.outline="2px dashed #171717";
+   const handle=doc.createElement("span");handle.dataset.studioResizeHandle="true";
+   Object.assign(handle.style,{position:"absolute",right:"-7px",bottom:"-7px",width:"14px",height:"14px",background:"#fff",border:"2px solid #171717",borderRadius:"3px",cursor:"nwse-resize",zIndex:"99999",touchAction:"none"});
+   shape.append(handle);
+  }
   anchor.append(shape);
  });
 }
-function highlightDecoration(){const doc=frame.contentDocument;if(!doc)return;doc.querySelectorAll("[data-studio-decoration-id]").forEach(el=>{el.style.outline=el.dataset.studioDecorationId===selectedDecorationId?"2px dashed #111":"none";});}
+function highlightDecoration(){renderStudioDecorations(frame.contentDocument);}
 function populateDecorationControls(item){
  if(!item)return;
  $("studioSelectorLabel").value="Custom "+item.type+" — "+item.anchor;
@@ -95,7 +100,7 @@ function addStudioDecoration(type){
  draft.decorations.push(item);selectedDecorationId=item.id;selectedSelector="";
  renderStudioDecorations(doc);populateDecorationControls(item);setStatus("Shape added over the selected image/section. Adjust X, Y, width and height, then save draft.");
 }
-async function updateStudioDecoration(){
+function updateStudioDecoration(){
  const item=draft.decorations.find(x=>x.id===selectedDecorationId);if(!item)return;
  item.type=$("studioDecorationType").value;item.x=Number($("studioDecorationX").value)||0;item.y=Number($("studioDecorationY").value)||0;
  item.width=Math.max(1,Number($("studioDecorationWidth").value)||120);item.height=item.type==="line"?0:Math.max(1,Number($("studioDecorationHeight").value)||60);
@@ -110,6 +115,25 @@ function attachPreviewEditor(){
  if(new URL(frame.src).searchParams.get("page")!=="home")return;
  doc.querySelectorAll("style[data-studio-editor-style]").forEach(n=>n.remove());
  const style=doc.createElement("style");style.dataset.studioEditorStyle="true";style.textContent='[data-studio-selected="true"]{outline:3px solid #c9a45c!important;outline-offset:3px!important;cursor:crosshair!important} body{cursor:crosshair}';doc.head.append(style);
+ doc.addEventListener("pointerdown",event=>{
+  const shape=event.target.closest("[data-studio-decoration-id]");if(!shape)return;
+  const item=draft.decorations.find(x=>x.id===shape.dataset.studioDecorationId);if(!item)return;
+  event.preventDefault();event.stopPropagation();selectedDecorationId=item.id;selectedSelector="";populateDecorationControls(item);
+  const resizing=!!event.target.closest("[data-studio-resize-handle]");
+  const sx=event.clientX,sy=event.clientY,ox=Number(item.x)||0,oy=Number(item.y)||0,ow=Number(item.width)||120,oh=Number(item.height)||60;
+  const active=shape;
+  const move=e=>{
+   const dx=e.clientX-sx,dy=e.clientY-sy;
+   if(resizing){item.width=Math.max(12,ow+dx);if(item.type!=="line")item.height=Math.max(12,oh+dy);}
+   else{item.x=ox+dx;item.y=oy+dy;}
+   active.style.left=item.x+"px";active.style.top=item.y+"px";active.style.width=item.width+"px";
+   if(item.type!=="line")active.style.height=item.height+"px";
+   $("studioDecorationX").value=Math.round(item.x);$("studioDecorationY").value=Math.round(item.y);
+   $("studioDecorationWidth").value=Math.round(item.width);$("studioDecorationHeight").value=Math.round(item.height);
+  };
+  const up=async()=>{doc.removeEventListener("pointermove",move);await saveDraft(false);renderStudioDecorations(doc);};
+  doc.addEventListener("pointermove",move);doc.addEventListener("pointerup",up,{once:true});
+ },true);
  doc.addEventListener("click",event=>{
   const decoration=event.target.closest("[data-studio-decoration-id]");
   if(decoration){event.preventDefault();event.stopPropagation();selectedDecorationId=decoration.dataset.studioDecorationId;selectedSelector="";populateDecorationControls(draft.decorations.find(x=>x.id===selectedDecorationId));highlightDecoration();return;}
@@ -249,7 +273,7 @@ $("studioCopyAsset")?.addEventListener("click",async()=>{try{await navigator.cli
 $("studioApplyTheme")?.addEventListener("click",()=>{draft.theme={gold:$("studioThemeGold").value,paper:$("studioThemePaper").value,ink:$("studioThemeInk").value};applyThemeToPreview();setStatus("Website-wide colours applied to preview. Save draft to keep them.");});
 
 document.querySelectorAll("[data-studio-shape]").forEach(button=>button.addEventListener("click",()=>addStudioDecoration(button.dataset.studioShape)));
-$("studioUpdateDecoration")?.addEventListener("click",updateStudioDecoration);
+$("studioUpdateDecoration")?.addEventListener("click",async()=>{updateStudioDecoration();await saveDraft(false);});
 $("studioDeleteDecoration")?.addEventListener("click",deleteStudioDecoration);
 $("studioDecorationType")?.addEventListener("change",updateStudioDecoration);
 ["studioDecorationX","studioDecorationY","studioDecorationWidth","studioDecorationHeight","studioDecorationFill","studioDecorationBorder","studioDecorationBorderWidth","studioDecorationRadius","studioDecorationOpacity"].forEach(id=>$(id)?.addEventListener("input",()=>{if(id==="studioDecorationOpacity")$("studioDecorationOpacityValue").textContent=Math.round(Number($(id).value)*100)+"%";updateStudioDecoration();}));
