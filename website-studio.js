@@ -134,6 +134,7 @@ function attachPreviewEditor(){
  applyDraftToPreview();
 }
 function populateControls(node){
+ $("studioDecorationControls").hidden=true;$("studioElementControls").hidden=false;
  $("studioSelectorLabel").value=selectedSelector;
  const tag=node.tagName;
  $("studioTextWrap").hidden=!["H1","H2","H3","H4","P","A","BUTTON","SMALL","SPAN","B","STRONG","EM"].includes(tag);
