@@ -17,7 +17,7 @@ function applyStudioContent(raw){
  });
  const main=document.querySelector("main");
  if(main&&content.sectionOrder.length){
-  content.sectionOrder.forEach(selector=>{let node;try{node=document.querySelector(selector);}catch{return;}if(node&&node.parentElement===main)main.append(node);});
+  const sections=[...main.children].filter(node=>node.tagName==="SECTION");\n  const ordered=content.sectionOrder.map(selector=>{try{return document.querySelector(selector);}catch{return null;}}).filter(node=>node&&node.parentElement===main);\n  sections.forEach(node=>{if(!ordered.includes(node))ordered.push(node);});\n  const slots=sections.map(node=>{const marker=document.createComment("studio-section-slot");main.insertBefore(marker,node);return marker;});\n  ordered.slice(0,slots.length).forEach((node,index)=>main.insertBefore(node,slots[index]));slots.forEach(marker=>marker.remove());
  }
 }
 (async()=>{
