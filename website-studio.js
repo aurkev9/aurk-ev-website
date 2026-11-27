@@ -22,7 +22,7 @@ function findItem(selector){return draft.elements.find(x=>x.selector===selector)
 function applyItem(doc,item){
  const node=doc.querySelector(item.selector);if(!node)return;
  if(item.text!==undefined)node.textContent=item.text;
- if(item.href!==undefined&&node.tagName==="A")node.setAttribute("href",item.href);
+ if(item.href!==undefined&&node.tagName==="A"){if(item.href.trim())node.setAttribute("href",item.href);else node.removeAttribute("href");}
  if(item.src!==undefined&&node.tagName==="IMG")node.setAttribute("src",item.src);
  if(item.alt!==undefined&&node.tagName==="IMG")node.setAttribute("alt",item.alt);
  if(item.color!==undefined)node.style.color=item.color;
