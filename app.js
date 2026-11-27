@@ -65,12 +65,13 @@ function detailPrice(value){
  return match?'PKR '+Number(match[1].replace(/,/g,'')).toLocaleString('en-PK',{maximumFractionDigits:2}):(raw||'Contact us for price');
 }
 function relatedProductImages(product){
+ const ownMedia=MODEL_MEDIA.filter(m=>m.model_type==='aurk'&&String(m.model_id)===String(product.id)&&m.media_type==='image').map(m=>m.public_url);
  const tokens=[product.name,product.tag].filter(Boolean).join(' ').toLowerCase().split(/[^a-z0-9]+/).filter(t=>t.length>2&&!['road','king','electric','scooter','bike','series','model','aurk'].includes(t));
- return PRODUCT_IMAGES.filter(img=>{
+ return [...new Set([...ownMedia,...PRODUCT_IMAGES.filter(img=>{
   if(img.slot!=='product'||!img.public_url)return false;
   const label=[img.product_name,img.title].filter(Boolean).join(' ').toLowerCase();
   return tokens.some(token=>label.includes(token));
- }).map(img=>img.public_url);
+ }).map(img=>img.public_url)])];
 }
 function detailSpecMarkup(spec,index){
  const text=String(spec).trim();
@@ -91,6 +92,7 @@ function renderProductDetail(product){
   return;
  }
  const gallery=[...new Set([product.image_url,...relatedProductImages(product)].filter(Boolean))];
+ const productVideos=MODEL_MEDIA.filter(m=>m.model_type==='aurk'&&String(m.model_id)===String(product.id)&&m.media_type==='video');
  const image=gallery[0]||'';
  const specs=productSpecs(product.specifications);
  const description=product.description||'Contact our showroom team for model details, features and availability.';
@@ -113,6 +115,7 @@ function renderProductDetail(product){
     <button type="button" class="detail-share-btn" id="detailShare">Share this scooter ↗</button>
    </div>
   </div>
+  ${productVideos.length?`<section class="model-video-gallery"><p class="eyebrow">SEE IT IN ACTION</p><h2>Videos & walkarounds</h2><div class="model-video-grid">${productVideos.map(v=>`<article><video controls playsinline preload="metadata" src="${esc(v.public_url)}"></video><b>${esc(v.title)}</b></article>`).join('')}</div></section>`:''}
   <div class="detail-contact-note"><b>Need help choosing?</b><span>Talk to AUR-K EV Bike Experts before placing your order.</span><a href="https://wa.me/923239661747" target="_blank" rel="noopener">Contact showroom ↗</a></div>`;
  const zoomButton=content.querySelector('#detailImageZoom');
  zoomButton?.addEventListener('click',()=>{
@@ -291,7 +294,7 @@ document.getElementById('customerOrderForm').addEventListener('submit',async e=>
 });
 document.getElementById('contactWhatsApp').onclick=e=>{e.preventDefault();whatsapp('Hello AUR-K EV, I would like to know more about your electric scooters.');};document.getElementById('menuToggle').onclick=()=>document.getElementById('nav').classList.toggle('show');document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>document.getElementById('nav').classList.remove('show')));document.getElementById('year').textContent=new Date().getFullYear();
 renderProducts();renderCart();
-if(!SUPABASE_URL.startsWith('PASTE_')&&!SUPABASE_ANON_KEY.startsWith('PASTE_')){try{supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const [{data:products,error:productError},{data:images}]=await Promise.all([supabase.from('site_products').select('id,name,category,tag,price_text,description,image_url,specifications,featured,created_at').order('created_at',{ascending:false}),supabase.from('site_images').select('*').order('created_at',{ascending:false})]);PRODUCT_IMAGES=images||[];const activeHero=PRODUCT_IMAGES.find(x=>x.slot==="hero"&&x.public_url);const heroElement=document.getElementById("heroImage");if(activeHero&&heroElement)heroElement.src=activeHero.public_url;if(!productError&&products?.length){PRODUCTS=products;renderProducts();}else if(!productError&&(!products||!products.length)&&images?.length){const imageProducts=images.filter(x=>x.slot==='product').map((x,i)=>({id:x.id||('image-'+i),name:x.product_name||x.title||'AUR-K EV Scooter',category:'premium',tag:'AUR-K EV',price_text:'Ask for price',description:'Contact us for details and availability.',image_url:x.public_url}));if(imageProducts.length){PRODUCTS=imageProducts;renderProducts();}}}catch(e){console.warn('Could not load live AUR-K EV content.',e);}}
+if(!SUPABASE_URL.startsWith('PASTE_')&&!SUPABASE_ANON_KEY.startsWith('PASTE_')){try{supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const [{data:products,error:productError},{data:images},{data:modelMedia}]=await Promise.all([supabase.from('site_products').select('id,name,category,tag,price_text,description,image_url,specifications,featured,created_at').order('created_at',{ascending:false}),supabase.from('site_images').select('*').order('created_at',{ascending:false}),supabase.from('site_model_media').select('id,model_type,model_id,model_label,title,media_type,public_url,sort_order').eq('is_active',true).order('sort_order').order('created_at',{ascending:false})]);PRODUCT_IMAGES=images||[];MODEL_MEDIA=modelMedia||[];const activeHero=PRODUCT_IMAGES.find(x=>x.slot==="hero"&&x.public_url);const heroElement=document.getElementById("heroImage");if(activeHero&&heroElement)heroElement.src=activeHero.public_url;if(!productError&&products?.length){PRODUCTS=products;renderProducts();}else if(!productError&&(!products||!products.length)&&images?.length){const imageProducts=images.filter(x=>x.slot==='product').map((x,i)=>({id:x.id||('image-'+i),name:x.product_name||x.title||'AUR-K EV Scooter',category:'premium',tag:'AUR-K EV',price_text:'Ask for price',description:'Contact us for details and availability.',image_url:x.public_url}));if(imageProducts.length){PRODUCTS=imageProducts;renderProducts();}}}catch(e){console.warn('Could not load live AUR-K EV content.',e);}}
 
 /* AUR-K EV vs competitor comparison */
 let competitorScooters=[];
@@ -321,8 +324,8 @@ function aurkCompareValue(p,key){
  const m=spec.match(patterns[key]);return m?m[0].trim():'Not provided';
 }
 function allCompareScooters(){
- const aurk=PRODUCTS.map(p=>({kind:'aurk',id:p.id,brand:'AUR-K EV',name:p.name,image_url:p.image_url,price_text:p.price_text,battery:aurkCompareValue(p,'battery'),motor:aurkCompareValue(p,'motor'),range:aurkCompareValue(p,'range'),speed:aurkCompareValue(p,'speed'),warranty:aurkCompareValue(p,'warranty')}));
- const others=competitorScooters.map(p=>({kind:'competitor',id:p.id,brand:p.company_name,name:p.model_name,image_url:p.image_url,price_text:p.price_text,battery:p.battery||'Not provided',motor:p.motor_w?Number(p.motor_w).toLocaleString()+' W':'Not provided',range:p.range_km?p.range_km+' km':'Not provided',speed:p.top_speed_kmh?p.top_speed_kmh+' km/h':'Not provided',warranty:p.warranty_text||'Not provided'}));
+ const aurk=PRODUCTS.map(p=>({kind:'aurk',id:p.id,brand:'AUR-K EV',name:p.name,image_url:p.image_url,media:MODEL_MEDIA.filter(m=>m.model_type==='aurk'&&String(m.model_id)===String(p.id)),price_text:p.price_text,battery:aurkCompareValue(p,'battery'),motor:aurkCompareValue(p,'motor'),range:aurkCompareValue(p,'range'),speed:aurkCompareValue(p,'speed'),warranty:aurkCompareValue(p,'warranty')}));
+ const others=competitorScooters.map(p=>({kind:'competitor',id:p.id,brand:p.company_name,name:p.model_name,image_url:p.image_url,media:MODEL_MEDIA.filter(m=>m.model_type==='competitor'&&String(m.model_id)===String(p.id)),price_text:p.price_text,battery:p.battery||'Not provided',motor:p.motor_w?Number(p.motor_w).toLocaleString()+' W':'Not provided',range:p.range_km?p.range_km+' km':'Not provided',speed:p.top_speed_kmh?p.top_speed_kmh+' km/h':'Not provided',warranty:p.warranty_text||'Not provided'}));
  return [...aurk,...others];
 }
 function fillCompareChoices(){
@@ -336,11 +339,23 @@ function renderCompetitorComparison(){
  const brands=selected.map(p=>p.brand.toLowerCase());
  if(new Set(brands).size!==3){if(compareResult)compareResult.innerHTML='<p>Please choose scooters from three different brands.</p>';return;}
  const labels=[['Price','price_text'],['Battery','battery'],['Motor power','motor'],['Range','range'],['Top speed','speed'],['Warranty','warranty']];
- const cards=selected.map(p=>'<article class="three-brand-card"><div class="three-brand-photo">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.brand+' '+p.name)+' scooter" loading="eager" decoding="async" referrerpolicy="no-referrer" tabindex="0" role="button" aria-label="View full image of '+esc(p.brand+' '+p.name)+'">':'')+'<span>PHOTO NOT ADDED</span></div><div class="three-brand-name"><small>'+esc(p.brand)+'</small><b>'+esc(p.name)+'</b></div></article>').join('');
+ const cards=selected.map(p=>'<article class="three-brand-card"><div class="three-brand-photo">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.brand+' '+p.name)+' scooter" loading="eager" decoding="async" referrerpolicy="no-referrer" tabindex="0" role="button" aria-label="View full image of '+esc(p.brand+' '+p.name)+'">':'')+'<span>PHOTO NOT ADDED</span></div><div class="three-brand-name"><small>'+esc(p.brand)+'</small><b>'+esc(p.name)+'</b><button type="button" class="model-gallery-open" data-gallery-kind="'+p.kind+'" data-gallery-id="'+esc(p.id)+'">View photos & videos ('+(p.media?.length||0)+')</button></div></article>').join('');
  const rows=labels.map(([label,key])=>'<div class="three-brand-spec-row"><b>'+esc(label)+'</b>'+selected.map(p=>'<span>'+esc(p[key]||'Not provided')+'</span>').join('')+'</div>').join('');
  compareResult.innerHTML='<div class="three-brand-compare">'+cards+'</div><div class="three-brand-specs">'+rows+'</div>';
 }
 document.getElementById('runCompetitorCompare')?.addEventListener('click',renderCompetitorComparison);
+
+function openModelMediaGallery(model){
+ const items=model?.media||[];let viewer=document.getElementById('modelMediaViewer');
+ if(!viewer){viewer=document.createElement('div');viewer.id='modelMediaViewer';viewer.className='model-media-viewer';viewer.innerHTML='<div class="model-media-panel"><button type="button" class="model-media-close" aria-label="Close gallery">✕</button><h2 class="model-media-heading"></h2><div class="model-media-content"></div></div>';document.body.append(viewer);viewer.addEventListener('click',e=>{if(e.target===viewer||e.target.closest('.model-media-close'))viewer.classList.remove('open');});document.addEventListener('keydown',e=>{if(e.key==='Escape')viewer.classList.remove('open');});}
+ viewer.querySelector('.model-media-heading').textContent=model.brand+' — '+model.name;
+ const host=viewer.querySelector('.model-media-content');
+ host.innerHTML=items.length?items.map(m=>m.media_type==='video'?'<article><video controls playsinline preload="metadata" src="'+esc(m.public_url)+'"></video><b>'+esc(m.title)+'</b></article>':'<article><img loading="lazy" src="'+esc(m.public_url)+'" alt="'+esc(m.title)+'"><b>'+esc(m.title)+'</b></article>').join(''):'<p>No extra photos or videos have been added for this model yet.</p>';
+ if(model.image_url&&!items.some(m=>m.media_type==='image'&&m.public_url===model.image_url))host.insertAdjacentHTML('afterbegin','<article><img src="'+esc(model.image_url)+'" alt="'+esc(model.brand+' '+model.name)+'"><b>Main model photo</b></article>');
+ viewer.classList.add('open');
+}
+compareResult?.addEventListener('click',e=>{const b=e.target.closest('.model-gallery-open');if(!b)return;const model=allCompareScooters().find(p=>p.kind===b.dataset.galleryKind&&String(p.id)===String(b.dataset.galleryId));if(model)openModelMediaGallery(model);});
+
 async function loadCompetitorScooters(){
  if(!supabase)return;
  const {data,error}=await supabase.from('site_competitor_scooters').select('id,company_name,model_name,price_text,battery,motor_w,range_km,top_speed_kmh,warranty_text,image_url,notes').eq('is_active',true).order('company_name').order('model_name');
