@@ -3,6 +3,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const params=new URLSearchParams(location.search);
 const requestedSlug=params.get("page")||"home";
+const previewPageId=params.get("pageId");
 const studioPreview=params.get("studioPreview")==="1";
 const main=document.getElementById("storefrontMain");
 const footer=document.querySelector(".footer-v2");
@@ -104,7 +105,8 @@ async function main(){
   const {data:{session}}=await supabase.auth.getSession();
   let isOwner=false;
   if(studioPreview&&session){const {data:role}=await supabase.rpc("current_staff_role");isOwner=role==="owner";}
-  const {data:page,error}=await supabase.from("site_studio_pages").select("*").eq("slug",requestedSlug).maybeSingle();
+  const pageQuery=supabase.from("site_studio_pages").select("*");
+  const {data:page,error}=studioPreview&&isOwner&&previewPageId?await pageQuery.eq("id",previewPageId).maybeSingle():await pageQuery.eq("slug",requestedSlug).maybeSingle();
   if(error)console.warn("Website page lookup failed:",error.message);
   if(requestedSlug!=="home"){
    if(!page||(!isOwner&&page.status!=="published")){
@@ -123,8 +125,8 @@ async function main(){
   }else{
    const content=isOwner?page?.draft_content:page?.published_content;
    await renderSections(main,content?.sections||[]);
-   const {data:visual}=await supabase.from("site_studio_settings").select("draft_content,published_content").eq("id","homepage").maybeSingle();
-   if(visual)applyVisualContent(isOwner?visual.draft_content:visual.published_content);
+   if(isOwner){const {data:visual}=await supabase.from("site_studio_settings").select("draft_content").eq("id","homepage").maybeSingle();if(visual?.draft_content)applyVisualContent(visual.draft_content);}
+   else {const {data:visual}=await supabase.from("site_studio_published").select("content").eq("id","homepage").maybeSingle();if(visual?.content)applyVisualContent(visual.content);}
   }
   await addNavigationPages();
  }catch(error){console.warn("AUR-K Website Studio content could not be loaded.",error);}
