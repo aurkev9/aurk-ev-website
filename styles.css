@@ -1382,3 +1382,33 @@ body.storefront .showroom-map-link:hover b{color:#fff}
  body.storefront .trust-strip-v2 article b{font-size:9px}
  body.storefront .trust-strip-v2 article small{font-size:8px}
 }
+
+
+/* AUR-K EV — guided customer journey section */
+body.storefront .customer-journey{padding:78px 7% 70px;background:linear-gradient(180deg,#171613 0%,#201d17 100%);color:#f5f0e5;border-top:1px solid #80643a;border-bottom:1px solid #80643a}
+body.storefront .journey-heading{max-width:720px;margin:0 auto 38px;text-align:center}
+body.storefront .journey-heading .eyebrow{margin:0 0 12px;color:#c9a86a;font-size:9px;font-weight:800;letter-spacing:2.2px}
+body.storefront .journey-heading h2{margin:0;color:#fffaf0;font:800 clamp(28px,4vw,43px)/1.12 Manrope,sans-serif;letter-spacing:-1.2px}
+body.storefront .journey-heading h2 em{color:#d2b477;font-style:normal}
+body.storefront .journey-heading>p:last-child{max-width:540px;margin:14px auto 0;color:#bdb5a6;font-size:12px;line-height:1.8}
+body.storefront .journey-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-width:1240px;margin:0 auto;gap:13px}
+body.storefront .journey-step{position:relative;min-height:245px;padding:24px 20px 20px;background:linear-gradient(145deg,#26231d,#1d1b17);border:1px solid #55452c;transition:transform .2s ease,border-color .2s ease}
+body.storefront .journey-step:hover{transform:translateY(-4px);border-color:#c4a263}
+body.storefront .journey-number{position:absolute;top:17px;right:17px;color:#9c8357;font:800 10px Manrope;letter-spacing:1px}
+body.storefront .journey-icon{width:42px;height:42px;display:grid;place-items:center;margin-bottom:23px;border:1px solid #9d7b43;border-radius:50%;color:#dfc58e;font:26px/1 Georgia,serif}
+body.storefront .journey-step h3{margin:0 0 10px;color:#fffaf0;font:800 14px/1.35 Manrope,sans-serif}
+body.storefront .journey-step p{min-height:58px;margin:0 0 18px;color:#bdb5a6;font-size:10px;line-height:1.75}
+body.storefront .journey-step>a{display:inline-flex;gap:8px;align-items:center;color:#dfc58e;font-size:9px;font-weight:800;text-decoration:none;letter-spacing:.3px}
+body.storefront .journey-step>a:hover{color:#fff}
+body.storefront .journey-footer{display:flex;align-items:center;justify-content:center;gap:15px;margin:28px auto 0;padding-top:22px;border-top:1px solid #51432e;color:#bdb5a6;font-size:10px}
+body.storefront .journey-footer a{color:#e2c98f;font-weight:800;text-decoration:none}
+@media(max-width:900px){body.storefront .journey-steps{grid-template-columns:repeat(2,minmax(0,1fr))}body.storefront .journey-step{min-height:220px}}
+@media(max-width:560px){
+ body.storefront .customer-journey{padding:55px 6% 45px}
+ body.storefront .journey-heading{margin-bottom:26px}
+ body.storefront .journey-steps{grid-template-columns:1fr;gap:10px}
+ body.storefront .journey-step{min-height:0;padding:19px 17px}
+ body.storefront .journey-icon{margin-bottom:14px;width:36px;height:36px;font-size:22px}
+ body.storefront .journey-step p{min-height:0;margin-bottom:13px}
+ body.storefront .journey-footer{align-items:flex-start;flex-direction:column;gap:9px;margin-top:20px}
+}
