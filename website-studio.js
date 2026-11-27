@@ -500,6 +500,11 @@ async function saveStudioPage(publish=false){
 }
 function loadStudioPagePreview(){
  if(!activeStudioPage)return;
+ const isHome=(activeStudioPage.draft_slug||activeStudioPage.slug)==="home";
+ const controls=document.querySelector(".studio-controls"),workbench=$("studioVisualEditor"),notice=$("studioVisualEditorNotice");
+ if(controls)controls.hidden=!isHome;
+ if(workbench)workbench.dataset.editorMode=isHome?"visual":"page-builder";
+ if(notice)notice.hidden=isHome;
  frame.src="index.html?page="+encodeURIComponent(activeStudioPage.draft_slug||activeStudioPage.slug)+"&pageId="+encodeURIComponent(activeStudioPage.id)+"&studioPreview=1&refresh="+Date.now();
  $("studioSelectorLabel").value="";selectedSelector="";
 }
