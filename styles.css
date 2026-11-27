@@ -1571,3 +1571,26 @@ body.storefront .story-actions .inline-link{color:#72572e;font-size:10px;font-we
 .studio-page-meta input{width:100%;min-width:0;border:1px solid #ded8cc;border-radius:8px;padding:10px;background:#fff;color:#24211c;font:12px inherit}
 @media(max-width:1100px){.studio-page-meta{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.studio-page-meta{grid-template-columns:1fr}}
+
+/* AUR-K EV website analytics dashboard */
+.analytics-live-label{align-self:flex-start;border:1px solid #d6c49f;border-radius:30px;padding:8px 13px;color:#9a7842;font-size:10px;font-weight:800;letter-spacing:.13em}
+.analytics-filter-card{margin-bottom:18px}
+.analytics-filter-row{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.analytics-filter-row label{display:grid;gap:6px;color:#726b60;font-size:11px;font-weight:700}
+.analytics-filter-row input{min-height:42px;border:1px solid #ded8cc;border-radius:8px;padding:9px 11px;background:#fff;color:#29251e;font:inherit}
+.analytics-kpis{grid-template-columns:repeat(3,minmax(0,1fr));margin:18px 0}
+.analytics-kpis .analytics-tile{min-height:112px;padding:20px;background:linear-gradient(145deg,#fff,#f7f4ed);border:1px solid #e8e0d1;border-radius:12px}
+.analytics-kpis .analytics-tile strong{font-size:30px;color:#25221d}
+.analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.analytics-grid .admin-card{min-width:0}
+.analytics-bars{display:grid;gap:14px;margin-top:20px}
+.analytics-bar-row{min-width:0}
+.analytics-bar-label{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:6px;color:#4f493f;font-size:12px}
+.analytics-bar-label span{overflow-wrap:anywhere}
+.analytics-bar-label b{font-variant-numeric:tabular-nums;color:#28241e}
+.analytics-bar-track{height:8px;border-radius:99px;background:#eee9df;overflow:hidden}
+.analytics-bar-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#9d7a43,#d9bd82)}
+.analytics-empty{color:#8a8378;font-size:13px;line-height:1.6}
+.analytics-data-note{color:#847c70;font-size:11px;margin:14px 2px}
+@media(max-width:850px){.analytics-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.analytics-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.analytics-kpis{grid-template-columns:1fr 1fr}.analytics-kpis .analytics-tile{min-height:94px;padding:14px}.analytics-kpis .analytics-tile strong{font-size:24px}.analytics-filter-row>*{flex:1 1 42%}.analytics-filter-row button{min-height:42px}}
