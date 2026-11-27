@@ -26,7 +26,7 @@ async function refreshSession(){
  currentRole=role;window.AURK_CURRENT_ROLE=currentRole;if(!['owner','manager'].includes(currentRole))productCostMap=new Map();loginPanel.hidden=true;dashboard.hidden=false;
  const profile=document.getElementById('adminEmail');if(profile)profile.textContent=(session.user?.email||'Signed in')+' • '+role.replaceAll('_',' ');
  applyRolePermissions();
- if(['owner','product_staff'].includes(currentRole))loadImages();
+ if(['owner','product_staff'].includes(currentRole)){loadImages();loadModelMediaOptions();}
  if(['owner','manager'].includes(currentRole))await loadProductCostMap();
  if(canView('staff'))loadStaff();
  if(currentRole==='owner')loadCompetitorAdmin();
@@ -374,3 +374,53 @@ competitorForm?.addEventListener('submit',async e=>{
  msg.textContent='Competitor scooter saved.';resetCompetitorForm();await loadCompetitorAdmin();
 });
 document.getElementById('competitorCancel')?.addEventListener('click',resetCompetitorForm);
+
+
+/* Model photo and video gallery manager */
+let modelMediaChoices=[];
+async function loadModelMediaOptions(){
+ const select=document.getElementById('mediaModelSelect');if(!select)return;
+ const [{data:products,error:pErr},{data:competitors,error:cErr}]=await Promise.all([
+  supabase.from('site_products').select('id,name').order('name'),
+  supabase.from('site_competitor_scooters').select('id,company_name,model_name').eq('is_active',true).order('company_name').order('model_name')
+ ]);
+ if(pErr||cErr){select.innerHTML='<option value="">Could not load models</option>';return;}
+ modelMediaChoices=[...(products||[]).map(p=>({value:'aurk:'+p.id,label:'AUR-K / ROADKING — '+p.name})),...(competitors||[]).map(p=>({value:'competitor:'+p.id,label:p.company_name+' — '+p.model_name}))];
+ select.innerHTML='<option value="">Choose a scooter model</option>'+modelMediaChoices.map(x=>'<option value="'+escHtml(x.value)+'">'+escHtml(x.label)+'</option>').join('');
+}
+async function loadModelMediaList(){
+ const host=document.getElementById('modelMediaList'),select=document.getElementById('mediaModelSelect');if(!host||!select)return;
+ if(!select.value){host.textContent='Choose a scooter model to view its photos and videos.';return;}
+ const [model_type,model_id]=select.value.split(':');host.textContent='Loading gallery…';
+ const {data,error}=await supabase.from('site_model_media').select('*').eq('model_type',model_type).eq('model_id',model_id).order('sort_order').order('created_at',{ascending:false});
+ if(error){host.textContent='Gallery setup issue: '+error.message;return;}
+ if(!data?.length){host.textContent='No photos or videos uploaded for this model yet.';return;}
+ host.innerHTML='';
+ data.forEach(item=>{
+  const card=document.createElement('article');card.className='image-item';
+  const media=item.media_type==='video'?document.createElement('video'):document.createElement('img');
+  media.src=item.public_url;media.alt=item.title;media.controls=item.media_type==='video';media.muted=true;media.playsInline=true;
+  const body=document.createElement('div'),title=document.createElement('strong'),meta=document.createElement('small'),del=document.createElement('button');
+  title.textContent=item.title;meta.textContent=item.media_type.toUpperCase();del.className='delete-btn';del.textContent='Delete';
+  del.onclick=async()=>{if(!confirm('Delete this gallery media?'))return;const {error:de}=await supabase.from('site_model_media').delete().eq('id',item.id);if(de){alert(de.message);return;}await supabase.storage.from('website-images').remove([item.storage_path]);await loadModelMediaList();};
+  body.append(title,meta,del);card.append(media,body);host.append(card);
+ });
+}
+document.getElementById('mediaModelSelect')?.addEventListener('change',loadModelMediaList);
+document.getElementById('modelMediaForm')?.addEventListener('submit',async e=>{
+ e.preventDefault();const msg=document.getElementById('modelMediaMessage'),file=document.getElementById('mediaFile').files[0],choice=document.getElementById('mediaModelSelect').value;
+ if(!file||!choice)return;
+ const isImage=file.type.startsWith('image/'),isVideo=file.type.startsWith('video/');
+ if(!isImage&&!isVideo){msg.textContent='Choose a JPG, PNG, WebP, MP4, WebM or MOV file.';return;}
+ if(isImage&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024)){msg.textContent='Photos must be JPG, PNG or WebP and smaller than 8 MB.';return;}
+ if(isVideo&&(!['video/mp4','video/webm','video/quicktime'].includes(file.type)||file.size>100*1024*1024)){msg.textContent='Videos must be MP4, WebM or MOV and smaller than 100 MB.';return;}
+ const [model_type,model_id]=choice.split(':'),model=modelMediaChoices.find(x=>x.value===choice);
+ msg.textContent='Uploading '+(isVideo?'video':'photo')+'…';
+ const ext=file.name.split('.').pop().toLowerCase(),path='model-media/'+crypto.randomUUID()+'.'+ext;
+ const {error:upErr}=await supabase.storage.from('website-images').upload(path,file,{upsert:false,contentType:file.type});
+ if(upErr){msg.textContent=upErr.message;return;}
+ const {data:{publicUrl}}=supabase.storage.from('website-images').getPublicUrl(path);
+ const {error:dbErr}=await supabase.from('site_model_media').insert({model_type,model_id,model_label:model?.label||'Scooter',title:document.getElementById('mediaTitle').value.trim(),media_type:isVideo?'video':'image',public_url:publicUrl,storage_path:path});
+ if(dbErr){await supabase.storage.from('website-images').remove([path]);msg.textContent='Could not save gallery media: '+dbErr.message;return;}
+ msg.textContent='Uploaded successfully. It is now available in this model gallery.';document.getElementById('mediaTitle').value='';document.getElementById('mediaFile').value='';await loadModelMediaList();
+});
