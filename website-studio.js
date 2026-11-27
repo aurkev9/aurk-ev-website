@@ -278,7 +278,6 @@ async function createStudioPage(){
  const slug=slugify(title);if(!slug||slug==="home"){pageMessage("Please choose a valid page title.",true);return;}
  if(studioPages.some(p=>(p.draft_slug||p.slug)===slug)){pageMessage("That page URL already exists. Choose a different title.",true);return;}
  const user=(await supabase.auth.getUser()).data.user;
- const payload={slug,title:title.trim(),draft_slug:slug,draft_title:title.trim(),meta_description:"",draft_meta_description:"",show_in_nav:true,draft_show_in_nav:true,status:"draft",page_content:{sections:[]},draft_content:{sections:[]},created_by:user?.id,updated_by:user?.id};
  const {data,error}=await supabase.from("site_studio_page_drafts").insert({id:crypto.randomUUID(),draft_slug:slug,draft_title:title.trim(),draft_meta_description:"",draft_show_in_nav:true,draft_content:{sections:[]},created_by:user?.id,updated_by:user?.id}).select("*").single();
  if(error){pageMessage("Could not create page: "+error.message,true);return;}
  studioPages.push(data);const option=document.createElement("option");option.value=data.id;option.textContent=data.draft_title;$("studioPageSelect").append(option);selectStudioPage(data);pageMessage("New page created as a private draft. Add sections to build it.");
@@ -300,18 +299,16 @@ async function saveStudioPage(publish=false){
  if(activeStudioPage.slug==="home"&&slug!=="home"){button.disabled=false;pageMessage("The homepage URL cannot be changed here.",true);return;}
  if(studioPages.some(p=>p.id!==activeStudioPage.id&&(p.slug===slug||p.draft_slug===slug))){button.disabled=false;pageMessage("This URL is already used by another page.",true);return;}
  const user=(await supabase.auth.getUser()).data.user,now=new Date().toISOString();
- const payload={draft_title:title,draft_slug:slug,draft_meta_description:$("studioPageMeta").value.trim(),draft_show_in_nav:activeStudioPage.slug==="home"?false:$("studioPageNav").checked,draft_content:pageDraft,updated_by:user?.id,updated_at:now};
- if(publish){payload.title=title;payload.slug=slug;payload.meta_description=payload.draft_meta_description;payload.show_in_nav=payload.draft_show_in_nav;payload.published_content=pageDraft;payload.page_content=pageDraft;payload.status="published";payload.published_at=now;}
- else {payload.page_content=pageDraft;}
- const {data:draftData,error}=await supabase.from("site_studio_page_drafts").update(payload).eq("id",activeStudioPage.id).select("*").single();
+ const draftPayload={draft_title:title,draft_slug:slug,draft_meta_description:$("studioPageMeta").value.trim(),draft_show_in_nav:activeStudioPage.slug==="home"?false:$("studioPageNav").checked,draft_content:pageDraft,updated_by:user?.id,updated_at:now};
+ const {data:draftData,error}=await supabase.from("site_studio_page_drafts").update(draftPayload).eq("id",activeStudioPage.id).select("*").single();
  if(error){button.disabled=false;pageMessage("Could not save page draft: "+error.message,true);return;}
  if(publish){
-  const publicPayload={id:activeStudioPage.id,slug,title,published_content:pageDraft,status:"published",show_in_nav:payload.draft_show_in_nav,nav_order:activeStudioPage.nav_order??studioPages.indexOf(activeStudioPage),meta_description:payload.draft_meta_description,published_at:now};
+  const publicPayload={id:activeStudioPage.id,slug,title,published_content:pageDraft,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:activeStudioPage.nav_order??studioPages.indexOf(activeStudioPage),meta_description:draftPayload.draft_meta_description,published_at:now};
   const {error:publishError}=await supabase.from("site_studio_pages").upsert(publicPayload,{onConflict:"id"});
   if(publishError){button.disabled=false;pageMessage("Draft saved, but publishing failed: "+publishError.message,true);return;}
  }
  button.disabled=false;
- const publishedData=publish?{slug,title,status:"published",show_in_nav:payload.draft_show_in_nav,nav_order:activeStudioPage.nav_order??studioPages.indexOf(activeStudioPage),meta_description:payload.draft_meta_description,published_content:pageDraft,published_at:now}:{};
+ const publishedData=publish?{slug,title,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:activeStudioPage.nav_order??studioPages.indexOf(activeStudioPage),meta_description:draftPayload.draft_meta_description,published_content:pageDraft,published_at:now}:{};
  activeStudioPage={...activeStudioPage,...draftData,...publishedData};
  studioPages=studioPages.map(p=>p.id===activeStudioPage.id?activeStudioPage:p);
  const option=$("studioPageSelect").querySelector('option[value="'+activeStudioPage.id+'"]');if(option)option.textContent=activeStudioPage.draft_title;
