@@ -81,7 +81,7 @@ function detailSpecMarkup(spec,index){
 }
 function modelVideoMarkup(url,title){
  const safeUrl=esc(url),safeTitle=esc(title);
- if(/youtube-nocookie\\.com\\/embed\\//.test(url))return '<iframe loading="lazy" src="'+safeUrl+'" title="'+safeTitle+'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+ if(/youtube-nocookie\.com\/embed\//.test(url))return '<iframe loading="lazy" src="'+safeUrl+'" title="'+safeTitle+'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
  return '<video controls playsinline preload="metadata" src="'+safeUrl+'"></video>';
 }
 function renderProductDetail(product){
