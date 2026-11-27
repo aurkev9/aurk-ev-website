@@ -1445,3 +1445,43 @@ body.storefront .story-actions .inline-link{color:#72572e;font-size:10px;font-we
  body.storefront .story-photo-caption>span:last-child{font-size:9px}
  body.storefront .story-actions{align-items:flex-start;flex-direction:column;gap:14px}
 }
+
+
+/* AUR-K Website Studio */
+.website-studio-view{max-width:none!important}
+.studio-top-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+.studio-statusbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;margin:0 0 16px;background:#171717;color:#e9dfca;border:1px solid #302a20;border-radius:12px;font-size:11px}
+.studio-statusbar .is-error{color:#ffb4a9}
+.studio-workbench{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
+.studio-controls,.studio-preview-area{background:#fff;border:1px solid #e8e2d6;border-radius:14px;box-shadow:0 8px 30px #16120b0a}
+.studio-controls{padding:18px;display:flex;flex-direction:column;gap:13px;max-height:calc(100vh - 170px);overflow:auto;position:sticky;top:16px}
+.studio-control-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.studio-control-heading small{font-size:9px;letter-spacing:1.8px;color:#a1814c;font-weight:800}
+.studio-control-heading h3{margin:4px 0 0;font-size:17px;color:#1c1a17}
+.studio-live-dot{font-size:8px;letter-spacing:1px;color:#54845d;font-weight:800}
+.studio-help,.studio-security-note{font-size:10px;line-height:1.65;color:#777;margin:0}
+.studio-controls label{display:flex;flex-direction:column;gap:6px;font-size:10px;font-weight:700;color:#554d40}
+.studio-controls input:not([type=checkbox]):not([type=color]),.studio-controls textarea{width:100%;border:1px solid #ded8cc;border-radius:8px;padding:10px;font:12px inherit;color:#24211c;background:#fff;min-width:0}
+.studio-controls textarea{resize:vertical}
+.studio-controls input[type=color]{width:100%;height:38px;border:1px solid #ded8cc;border-radius:8px;background:#fff;padding:3px}
+.studio-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.studio-check{display:flex!important;flex-direction:row!important;align-items:center;gap:8px!important}
+.studio-check input{accent-color:#b28c4b}
+.studio-editor-actions,.studio-reorder>div{display:flex;gap:8px;flex-wrap:wrap}
+.studio-editor-actions button,.studio-reorder button{flex:1;font-size:10px;padding:9px}
+.studio-reorder{display:flex;flex-direction:column;gap:8px;font-size:11px}
+.studio-divider{height:1px;background:#eee8dc;margin:3px 0}
+.studio-versions{display:flex;flex-direction:column;gap:8px;max-height:190px;overflow:auto}
+.studio-version-option{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:8px!important;padding:8px;border:1px solid #eee8dc;border-radius:8px;font-size:9px!important;line-height:1.5}
+.studio-version-option input{margin-top:2px;accent-color:#b28c4b}
+.studio-preview-area{min-width:0;overflow:hidden}
+.studio-preview-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;border-bottom:1px solid #eee8dc;font-size:11px}
+.studio-preview-toolbar>div{display:flex;gap:4px}
+.studio-device{border:1px solid #e5dfd4;background:#fff;border-radius:7px;padding:7px 10px;font-size:9px}
+.studio-device.active{background:#171717;color:#fff;border-color:#171717}
+.studio-frame-wrap{height:calc(100vh - 235px);min-height:620px;background:#e9e7e1;display:flex;justify-content:center;overflow:auto;padding:14px}
+.studio-frame-wrap iframe{width:100%;height:100%;min-height:620px;border:0;background:#fff;box-shadow:0 6px 28px #00000018;transition:width .2s}
+.studio-frame-wrap[data-device=tablet] iframe{width:820px;flex:0 0 820px}
+.studio-frame-wrap[data-device=mobile] iframe{width:390px;flex:0 0 390px}
+@media(max-width:1100px){.studio-workbench{grid-template-columns:280px minmax(0,1fr)}.studio-controls{padding:14px}}
+@media(max-width:760px){.studio-workbench{grid-template-columns:1fr}.studio-controls{position:static;max-height:none;order:2}.studio-preview-area{order:1}.studio-frame-wrap{height:680px;min-height:500px}.studio-frame-wrap iframe{min-height:650px}.studio-top-actions{justify-content:flex-start}.studio-statusbar{font-size:10px}}
