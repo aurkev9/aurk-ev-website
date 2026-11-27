@@ -224,6 +224,22 @@ let studioUploadedFontUrl="",studioUploadedFontFamily="";
 function setAssetMessage(message,error=false){const el=$("studioAssetMessage");if(el){el.textContent=message;el.classList.toggle("is-error",error);}}
 async function uploadStudioAsset(file,kind){if(!file){setAssetMessage("Choose a file first.",true);return;}const isFont=kind==="font";const allowed=isFont?/\.(woff2?|ttf|otf)$/i.test(file.name):/^image\/(png|jpeg|webp)$/.test(file.type);if(!allowed){setAssetMessage(isFont?"Use WOFF, WOFF2, TTF or OTF font files.":"Use PNG, JPG or WebP images.",true);return;}if(file.size>(isFont?8:15)*1024*1024){setAssetMessage("File is too large. Maximum size: "+(isFont?8:15)+" MB.",true);return;}const button=$(isFont?"studioUploadFontBtn":"studioUploadImageBtn");button.disabled=true;setAssetMessage("Uploading "+file.name+"…");try{const safe=file.name.toLowerCase().replace(/[^a-z0-9._-]+/g,"-").slice(-90);const path="studio-uploads/"+crypto.randomUUID()+"-"+safe;const ext=file.name.split(".").pop().toLowerCase();const mime=file.type||(isFont?({woff2:"font/woff2",woff:"font/woff",ttf:"font/ttf",otf:"font/otf"}[ext]||"application/font-woff"):({png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",webp:"image/webp"}[ext]||"application/octet-stream"));const {data,error}=await supabase.storage.from("website-images").upload(path,file,{cacheControl:"31536000",upsert:false,contentType:mime});if(error)throw error;const publicData=supabase.storage.from("website-images").getPublicUrl(data.path).data;$("studioAssetUrl").value=publicData.publicUrl;if(isFont){studioUploadedFontUrl=publicData.publicUrl;$("studioUseFont").disabled=false;$("studioUseImage").disabled=true;}else{$("studioUseImage").disabled=false;$("studioUseFont").disabled=true;} $("studioCopyAsset").disabled=false;setAssetMessage("Uploaded successfully. Apply this file to your selected element.");}catch(error){setAssetMessage("Upload failed: "+(error.message||"Please try again."),true);}finally{button.disabled=false;}}
 $("studioUploadImageBtn")?.addEventListener("click",()=>uploadStudioAsset($("studioImageUpload").files[0],"image"));
+$("studioSelectedImageUploadBtn")?.addEventListener("click",()=>$("studioSelectedImageFile").click());
+$("studioSelectedImageFile")?.addEventListener("change",async event=>{
+ const file=event.target.files?.[0];if(!file)return;
+ if(!selectedSelector||frame.contentDocument?.querySelector(selectedSelector)?.tagName!=="IMG"){
+  $("studioSelectedImageUploadStatus").textContent="Select an image in the preview first.";event.target.value="";return;
+ }
+ const button=$("studioSelectedImageUploadBtn");button.disabled=true;
+ $("studioSelectedImageUploadStatus").textContent="Uploading…";
+ await uploadStudioAsset(file,"image");
+ const uploadedUrl=$("studioAssetUrl").value;
+ if(uploadedUrl&&uploadedUrl.startsWith("https://")){
+  $("studioImage").value=uploadedUrl;applyCurrent();
+  $("studioSelectedImageUploadStatus").textContent="Uploaded and applied. Save draft to keep it.";
+ }else{$("studioSelectedImageUploadStatus").textContent="Upload failed. Please try again.";}
+ button.disabled=false;event.target.value="";
+});
 $("studioUploadFontBtn")?.addEventListener("click",()=>uploadStudioAsset($("studioFontUpload").files[0],"font"));
 $("studioUseImage")?.addEventListener("click",()=>{if(!selectedSelector){setAssetMessage("Select an image element in the preview first.",true);return;}const node=frame.contentDocument?.querySelector(selectedSelector);if(!node||node.tagName!=="IMG"){$("studioImage").value=$("studioAssetUrl").value;setAssetMessage("URL placed in the image field. Select an image element to apply it.");return;}$("studioImage").value=$("studioAssetUrl").value;applyCurrent();});
 $("studioUseFont")?.addEventListener("click",()=>{if(!selectedSelector){setAssetMessage("Select a text element in the preview first.",true);return;}const family=prompt("Enter a name for this custom font:","AURK Custom Font");if(!family?.trim())return;$("studioFontFamily").value=family.trim();studioUploadedFontUrl=$("studioAssetUrl").value;studioUploadedFontFamily=family.trim();applyCurrent();setAssetMessage("Custom font applied. Save your draft to keep it.");});
