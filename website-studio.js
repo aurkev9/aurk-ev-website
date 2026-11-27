@@ -55,7 +55,7 @@ function highlightSelected(){
 }
 
 function decorationStyle(item){
- const style={position:"absolute",left:(Number(item.x)||0)+"px",top:(Number(item.y)||0)+"px",width:Math.max(1,Number(item.width)||120)+"px",height:Math.max(1,Number(item.height)||60)+"px",background:item.type==="line"?"transparent":(item.fill||"#c9a45c"),border:item.type==="line"?"0":((Number(item.borderWidth)||0)+"px solid "+(item.borderColor||"#111111")),borderRadius:item.type==="circle"?"50%":(item.type==="pill"?"999px":(Number(item.radius)||0)+"px"),opacity:String(Math.max(0,Math.min(1,Number(item.opacity??1))),zIndex:String(item.zIndex||2),pointerEvents:"auto"};
+ const style={position:"absolute",left:(Number(item.x)||0)+"px",top:(Number(item.y)||0)+"px",width:Math.max(1,Number(item.width)||120)+"px",height:Math.max(1,Number(item.height)||60)+"px",background:item.type==="line"?"transparent":(item.fill||"#c9a45c"),border:item.type==="line"?"0":((Number(item.borderWidth)||0)+"px solid "+(item.borderColor||"#111111")),borderRadius:item.type==="circle"?"50%":(item.type==="pill"?"999px":(Number(item.radius)||0)+"px"),opacity:String(Math.max(0,Math.min(1,Number(item.opacity??1)))),zIndex:String(item.zIndex||2),pointerEvents:"auto"};
  if(item.type==="line"){style.height="0px";style.borderTop=(Number(item.borderWidth)||3)+"px solid "+(item.borderColor||item.fill||"#c9a45c");}
  if(item.type==="triangle")style.clipPath="polygon(50% 0, 0 100%, 100% 100%)";
  if(item.type==="diamond")style.clipPath="polygon(50% 0, 100% 50%, 50% 100%, 0 50%)";
