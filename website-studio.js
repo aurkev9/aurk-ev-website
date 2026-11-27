@@ -157,4 +157,5 @@ document.querySelectorAll(".studio-device").forEach(button=>button.addEventListe
  $("studioFrameWrap").dataset.device=button.dataset.device;
 }));
 frame?.addEventListener("load",()=>{attachPreviewEditor();});
+document.querySelector('[data-view="website-studio"]')?.addEventListener("click",()=>loadStudio());
 loadStudio();
