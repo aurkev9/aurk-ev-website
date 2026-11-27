@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Sitemap: https://aurk-ev-website.vercel.app/sitemap.xml
