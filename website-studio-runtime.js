@@ -112,6 +112,22 @@ function applyVisualContent(raw){
   if(item.fontWeight)target.style.fontWeight=item.fontWeight;
   if(item.textAlign)target.style.textAlign=item.textAlign;
   if(item.borderColor)target.style.borderColor=item.borderColor;
+  if(item.borderWidth!==undefined)target.style.borderWidth=item.borderWidth+"px";
+  if(item.width!==undefined)target.style.width=item.width+"px";
+  if(item.height!==undefined)target.style.height=item.height+"px";
+  if(item.maxWidth!==undefined)target.style.maxWidth=item.maxWidth+"px";
+  if(item.padding!==undefined)target.style.padding=item.padding+"px";
+  if(item.radius!==undefined)target.style.borderRadius=item.radius+"px";
+  if(item.opacity!==undefined)target.style.opacity=String(item.opacity);
+  if(item.fontStyle!==undefined)target.style.fontStyle=item.fontStyle;
+  if(item.textDecoration!==undefined)target.style.textDecoration=item.textDecoration;
+  if(item.letterSpacing!==undefined)target.style.letterSpacing=item.letterSpacing+"px";
+  if(item.lineHeight!==undefined)target.style.lineHeight=String(item.lineHeight);
+  if(item.backgroundImage!==undefined)target.style.backgroundImage=item.backgroundImage?"url("+JSON.stringify(item.backgroundImage)+")":"none";
+  if(item.backgroundSize!==undefined)target.style.backgroundSize=item.backgroundSize;
+  if(item.backgroundPosition!==undefined)target.style.backgroundPosition=item.backgroundPosition;
+  if(item.objectFit!==undefined&&target.tagName==="IMG")target.style.objectFit=item.objectFit;
+  if(item.alt!==undefined&&target.tagName==="IMG")target.setAttribute("alt",item.alt);
   if(item.hidden!==undefined)target.hidden=!!item.hidden;
  });
 
