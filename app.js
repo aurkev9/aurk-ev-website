@@ -84,6 +84,16 @@ function modelVideoMarkup(url,title){
  if(/youtube-nocookie\.com\/embed\//.test(url))return '<iframe loading="lazy" src="'+safeUrl+'" title="'+safeTitle+'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
  return '<video controls playsinline preload="metadata" src="'+safeUrl+'"></video>';
 }
+function recommendedProducts(product){
+ const same=PRODUCTS.filter(p=>String(p.id)!==String(product.id)&&p.category===product.category);
+ const others=PRODUCTS.filter(p=>String(p.id)!==String(product.id)&&p.category!==product.category);
+ return [...same,...others].slice(0,3);
+}
+function recommendedProductsMarkup(product){
+ const items=recommendedProducts(product);
+ if(!items.length)return '';
+ return '<section class="detail-recommendations"><div class="detail-recommendations-heading"><div><p class="eyebrow">KEEP EXPLORING</p><h2>You may also like</h2></div><a href="/#collection">View all scooters ↗</a></div><div class="detail-recommendation-grid">'+items.map(p=>'<article class="detail-recommendation-card"><a href="?product='+encodeURIComponent(p.id)+'"><div class="detail-recommendation-photo">'+(p.image_url?'<img loading="lazy" src="'+esc(p.image_url)+'" alt="'+esc(p.name)+' electric scooter">':'')+'</div><div class="detail-recommendation-copy"><b>'+esc(p.name)+'</b><span>'+esc(p.price_text||'Ask for price')+'</span><em>Explore model ↗</em></div></a></article>').join('')+'</div></section>';
+}
 function renderProductDetail(product){
  const page=document.getElementById('productDetailPage');
  const content=document.getElementById('productDetailContent');
@@ -114,14 +124,16 @@ function renderProductDetail(product){
     <h1>${esc(product.name)}</h1>
     <p class="detail-description">${esc(description)}</p>
     <div class="detail-price"><small>SHOWROOM PRICE</small><strong>${esc(detailPrice(product.price_text))}</strong><span>Final price and availability are confirmed by our showroom team.</span></div>
-    ${specs.length?`<div class="detail-specifications"><h2>Specifications & highlights</h2><ul>${specs.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`:'<div class="detail-specifications"><h2>Need specifications?</h2><p>Message our team and we will share the latest details for this model.</p></div>'}
+    ${specs.length?`<div class="detail-specifications"><h2>Specifications & highlights</h2><ul>${specs.map((s,i)=>detailSpecMarkup(s,i)).join('')}</ul></div>`:'<div class="detail-specifications"><h2>Need specifications?</h2><p>Message our team and we will share the latest details for this model.</p></div>'}
     <div class="detail-assurance"><span>✓ Cash on Delivery</span><span>✓ Showroom assistance</span><span>✓ Faisalabad, Pakistan</span></div>
     <div class="detail-actions"><button type="button" class="detail-primary-btn" id="detailOrderNow">Order Now — COD</button><a class="detail-secondary-btn" id="detailWhatsApp" target="_blank" rel="noopener" href="${esc(productEnquiry(product))}">Ask on WhatsApp ↗</a></div>
     <button type="button" class="detail-share-btn" id="detailShare">Share this scooter ↗</button>
    </div>
   </div>
   ${productVideos.length?`<section class="model-video-gallery"><p class="eyebrow">SEE IT IN ACTION</p><h2>Videos & walkarounds</h2><div class="model-video-grid">${productVideos.map(v=>`<article>${modelVideoMarkup(v.public_url,v.title)}<b>${esc(v.title)}</b></article>`).join('')}</div></section>`:''}
-  <div class="detail-contact-note"><b>Need help choosing?</b><span>Talk to AUR-K EV Bike Experts before placing your order.</span><a href="https://wa.me/923239661747" target="_blank" rel="noopener">Contact showroom ↗</a></div>`;
+  <div class="detail-contact-note"><b>Need help choosing?</b><span>Talk to AUR-K EV Bike Experts before placing your order.</span><a href="https://wa.me/923239661747" target="_blank" rel="noopener">Contact showroom ↗</a></div>
+  ${recommendedProductsMarkup(product)}
+  <div class="detail-mobile-actions" aria-label="Quick product actions"><a href="${esc(productEnquiry(product))}" target="_blank" rel="noopener">Ask on WhatsApp</a><button type="button" id="detailMobileOrder">Order Now</button></div>`;
  const zoomButton=content.querySelector('#detailImageZoom');
  zoomButton?.addEventListener('click',()=>{
   const src=content.querySelector('#detailMainImage')?.src;
@@ -142,8 +154,7 @@ function renderProductDetail(product){
   if(mainImage)mainImage.src=button.dataset.imageSrc;
   thumbButtons.forEach(b=>b.classList.toggle('active',b===button));
  }));
- const orderButton=content.querySelector('#detailOrderNow');
- orderButton?.addEventListener('click',()=>{
+ const openProductOrder=()=>{
   cart=[{...product,qty:1,selectedVariant:null}];
   renderCart();
   populateOrderVariantChoices();
@@ -152,7 +163,9 @@ function renderProductDetail(product){
   updatePaymentOptions();
   orderModal.classList.add('open');
   orderModal.setAttribute('aria-hidden','false');
- });
+ };
+ content.querySelector('#detailOrderNow')?.addEventListener('click',openProductOrder);
+ content.querySelector('#detailMobileOrder')?.addEventListener('click',openProductOrder);
  content.querySelector('#detailShare')?.addEventListener('click',async()=>{
   const shareData={title:product.name+' | AUR-K EV',text:'Explore '+product.name+' at AUR-K EV.',url:shareUrl};
   try{
