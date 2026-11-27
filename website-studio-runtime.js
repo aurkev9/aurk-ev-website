@@ -34,6 +34,9 @@ function makeButton(label,url){
 }
 async function productShowcase(section){
  const wrap=node("section","studio-custom-section studio-products");
+ if(section.background_color)wrap.style.backgroundColor=section.background_color;
+ if(section.text_color)wrap.style.color=section.text_color;
+ if(section.accent_color)wrap.style.setProperty("--studio-section-accent",section.accent_color);
  const inner=node("div","studio-section-inner");
  inner.append(node("p","studio-section-eyebrow","AUR-K EV COLLECTION"),node("h2","studio-section-heading",section.heading||"Explore our scooters"));
  if(section.body)inner.append(node("p","studio-section-body",section.body));
@@ -52,6 +55,10 @@ async function productShowcase(section){
 async function renderSection(section){
  if(section.type==="products")return productShowcase(section);
  const wrap=node("section","studio-custom-section studio-block-"+(section.type||"text"));
+ if(section.background_color)wrap.style.backgroundColor=section.background_color;
+ if(section.text_color)wrap.style.color=section.text_color;
+ if(section.accent_color)wrap.style.setProperty("--studio-section-accent",section.accent_color);
+ if(section.font_family){wrap.style.fontFamily='"'+String(section.font_family).replace(/["\\]/g,"")+'", sans-serif';const gid="studio-google-font-"+String(section.font_family).toLowerCase().replace(/[^a-z0-9]+/g,"-");if(!document.getElementById(gid)){const link=document.createElement("link");link.id=gid;link.rel="stylesheet";link.href="https://fonts.googleapis.com/css2?family="+encodeURIComponent(section.font_family).replace(/%20/g,"+")+"&display=swap";document.head.append(link);}}
  if(section.type==="hero"||section.type==="promo"){
   const bg=section.background_color||"#171717";wrap.style.setProperty("--studio-section-bg",bg);
   const heroImage=safeUrl(section.image_url);if(/^https?:\/\//i.test(heroImage)){wrap.style.setProperty("--studio-section-image",'url("'+heroImage+'")');}
