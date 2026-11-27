@@ -1565,3 +1565,9 @@ body.storefront .story-actions .inline-link{color:#72572e;font-size:10px;font-we
 @media(max-width:650px){.studio-pages-heading{flex-direction:column}.studio-page-toolbar,.studio-page-meta,.studio-builder-layout,.studio-block-workspace{grid-template-columns:1fr}.studio-page-footer{align-items:flex-start}.studio-page-footer>div{width:100%}.studio-page-footer button{flex:1}.studio-block-buttons{grid-template-columns:1fr 1fr}.studio-custom-section{padding:52px 20px}.studio-block-image .studio-section-inner{grid-template-columns:1fr;gap:18px}.studio-product-grid{gap:9px}.studio-product-card img{height:145px}.studio-section-heading{font-size:34px}}
 
 .studio-section-hero-image{display:block;width:100%;max-height:460px;object-fit:contain;margin:28px auto 0;border-radius:6px}
+
+/* Website Studio SEO fields */
+.studio-page-meta{grid-template-columns:minmax(220px,1.5fr) repeat(3,minmax(150px,1fr)) 110px auto auto;align-items:end}
+.studio-page-meta input{width:100%;min-width:0;border:1px solid #ded8cc;border-radius:8px;padding:10px;background:#fff;color:#24211c;font:12px inherit}
+@media(max-width:1100px){.studio-page-meta{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.studio-page-meta{grid-template-columns:1fr}}
