@@ -12,6 +12,16 @@ function safeUrl(value){
  if(/^https?:\/\//i.test(raw)||/^mailto:/i.test(raw)||/^tel:/i.test(raw)||raw.startsWith("/")||raw.startsWith("#"))return raw;
  return "";
 }
+function applyPageSeo(page,isOwner=false){
+ const title=(isOwner?page?.draft_meta_title:page?.meta_title)||((isOwner?page?.draft_title:page?.title)||"AUR-K EV | Electric Scooters in Faisalabad");
+ const description=(isOwner?page?.draft_meta_description:page?.meta_description)||"Discover electric scooters at AUR-K EV Bike Experts in Faisalabad, Pakistan.";
+ const keywords=(isOwner?page?.draft_meta_keywords:page?.meta_keywords)||"electric scooters Faisalabad, electric bikes Pakistan, AUR-K EV";
+ const image=(isOwner?page?.draft_og_image_url:page?.og_image_url)||"https://tkfdsxmwrkucuhkjfouo.supabase.co/storage/v1/object/public/website-images/b86a4231-50a4-47ae-9273-598aab36d65d.jpeg";
+ document.title=title;
+ const setMeta=(key,value,isProperty=false)=>{let el=[...document.head.querySelectorAll("meta")].find(x=>x.getAttribute(isProperty?"property":"name")===key);if(!el){el=document.createElement("meta");el.setAttribute(isProperty?"property":"name",key);document.head.append(el);}el.content=value;};
+ setMeta("description",description);setMeta("keywords",keywords);setMeta("og:title",title,true);setMeta("og:description",description,true);setMeta("og:image",image,true);setMeta("twitter:title",title);setMeta("twitter:description",description);setMeta("twitter:image",image);
+ let canonical=document.querySelector("link[rel=canonical]");if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.append(canonical);}canonical.href=location.origin+(requestedSlug==="home"?"/":"/?page="+encodeURIComponent(requestedSlug));
+}
 function node(tag,className,text){
  const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=String(text);return el;
 }
@@ -117,15 +127,13 @@ async function main(){
     if(main)main.hidden=true;
     document.getElementById("productDetailPage")?.setAttribute("hidden","");
     const root=node("main","studio-custom-page");root.id="studioCustomPageRoot";
-    const title=isOwner?page.draft_title:page.title;
-    const meta=isOwner?page.draft_meta_description:page.meta_description;
-    document.title=title+" | AUR-K EV";
-    if(meta){let desc=document.querySelector('meta[name="description"]');if(desc)desc.content=meta;}
+    applyPageSeo(page,isOwner);
     await renderSections(root,(isOwner?page.draft_content:page.published_content)?.sections||[]);
     if(footer)footer.before(root);else document.body.append(root);
    }
   }else{
    const content=isOwner?page?.draft_content:page?.published_content;
+   if(page)applyPageSeo(page,isOwner);
    await renderSections(main,content?.sections||[]);
    if(isOwner){const {data:visual}=await supabase.from("site_studio_settings").select("draft_content").eq("id","homepage").maybeSingle();if(visual?.draft_content)applyVisualContent(visual.draft_content);}
    else {const {data:visual}=await supabase.from("site_studio_published").select("content").eq("id","homepage").maybeSingle();if(visual?.content)applyVisualContent(visual.content);}
