@@ -677,7 +677,15 @@ async function previewStudioPage(){
  loadStudioPagePreview();
 }
 
-frame.addEventListener("load",()=>{try{attachPreviewEditor();}catch(error){setStatus("Preview editor could not attach: "+(error?.message||"unknown error"),true);}});
+frame.addEventListener("load",()=>{
+ try{
+  attachPreviewEditor();
+  const doc=frame.contentDocument;
+  if(!doc||!doc.documentElement){setStatus("Live preview failed to load. Use Refresh preview to try again.",true);return;}
+  setStatus("Live preview loaded. Select an element to edit.");
+ }catch(error){setStatus("Preview editor could not attach: "+(error?.message||"unknown error"),true);}
+});
+frame.addEventListener("error",()=>setStatus("Live preview could not load. Check the website connection and refresh.",true));
 document.addEventListener("aurk:studio-workspace-open",event=>{if(event.detail?.id!=="studioPagesPanel")return;const host=$("studioBlockList");if(!pageBuilderInitialized){if(host)host.textContent="Loading page sections…";pageMessage("Loading page builder…");initPageBuilder().catch(error=>{pageBuilderInitialized=false;const message="Page builder could not load: "+(error?.message||"Please retry.");pageMessage(message,true);if(host)host.textContent=message;});}});
 setStatus("Starting Website Studio…");
 loadStudio().catch(error=>{console.error("Website Studio startup error:",error);setStatus("Website Studio could not start: "+(error?.message||"Unknown error"),true);});
