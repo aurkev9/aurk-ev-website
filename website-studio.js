@@ -650,7 +650,7 @@ async function deleteStudioPage(){
  if(activeStudioPage.status==="published"){const {error:publicError}=await supabase.from("site_studio_pages").delete().eq("id",activeStudioPage.id);if(publicError){pageMessage("Could not remove published page: "+publicError.message,true);return;}}
  const {error}=await supabase.from("site_studio_page_drafts").delete().eq("id",activeStudioPage.id);
  if(error){pageMessage("Could not delete page draft: "+error.message,true);return;}
- studioPages=studioPages.filter(p=>p.id!==activeStudioPage.id);$("studioPageSelect").querySelector('option[value="'+activeStudioPage.id+'"]')?.remove();
+ studioPages=studioPages.filter(p=>p.id!==activeStudioPage.id);$("studioPageSelect").querySelector('option[value="'+activeStudioPage.id+'"]')?.remove();$("studioVisualPageSelect")?.querySelector('option[value="'+activeStudioPage.id+'"]')?.remove();
  selectStudioPage(studioPages.find(p=>p.slug==="home"));pageMessage("Page deleted.");
 }
 async function saveStudioPage(publish=false){
@@ -670,7 +670,7 @@ async function saveStudioPage(publish=false){
   if(publishError){button.disabled=false;pageMessage("Draft saved, but publishing failed: "+publishError.message,true);return;}
  }
  button.disabled=false;
- const publishedData=publish?{slug,title,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:draftPayload.draft_nav_order,meta_description:draftPayload.draft_meta_description,meta_title:draftPayload.draft_meta_title,meta_keywords:draftPayload.draft_meta_keywords,og_image_url:draftPayload.draft_og_image_url,published_content:pageDraft,published_at:now}:{};
+ const publishedData=publish?{slug,title,status:"published",show_in_nav:draftPayload.draft_show_in_nav,nav_order:draftPayload.draft_nav_order,meta_description:draftPayload.draft_meta_description,meta_title:draftPayload.draft_meta_title,meta_keywords:draftPayload.draft_meta_keywords,og_image_url:draftPayload.draft_og_image_url,published_content:{...pageDraft,visual:draft},published_at:now}:{};
  activeStudioPage={...activeStudioPage,...draftData,...publishedData};
  studioPages=studioPages.map(p=>p.id===activeStudioPage.id?activeStudioPage:p);
  const option=$("studioPageSelect").querySelector('option[value="'+activeStudioPage.id+'"]');if(option)option.textContent=activeStudioPage.draft_title;
