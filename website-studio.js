@@ -428,6 +428,7 @@ async function loadStudio(){
  }
 }
 async function saveDraft(publish=false){
+ if(selectedSelector){const pending=currentPatch();if(pending){const index=draft.elements.findIndex(item=>item.selector===selectedSelector);if(index>=0)draft.elements[index]=pending;else draft.elements.push(pending);applyItem(frame.contentDocument,pending);}}
  const button=publish?$("studioPublish"):$("studioSaveDraft");if(button)button.disabled=true;setStatus(publish?"Publishing page design…":"Saving page design…");
  const user=(await supabase.auth.getUser()).data.user;
  const isCustomPage=activeVisualTarget.type==="custom"&&activeStudioPage;
@@ -669,7 +670,7 @@ async function createStudioPage(){
  const user=(await supabase.auth.getUser()).data.user;
  const {data,error}=await supabase.from("site_studio_page_drafts").insert({id:crypto.randomUUID(),draft_slug:slug,draft_title:title.trim(),draft_meta_description:"",draft_show_in_nav:true,draft_nav_order:studioPages.length,draft_content:{sections:[]},created_by:user?.id,updated_by:user?.id}).select("*").single();
  if(error){pageMessage("Could not create page: "+error.message,true);return;}
- studioPages.push(data);const option=document.createElement("option");option.value=data.id;option.textContent=data.draft_title;$("studioPageSelect").append(option);selectStudioPage(data);pageMessage("New page created as a private draft. Add sections to build it.");
+ studioPages.push(data);const option=document.createElement("option");option.value=data.id;option.textContent=data.draft_title;$("studioPageSelect").append(option);renderVisualPageOptions();selectStudioPage(data);pageMessage("New page created as a private draft. Add sections to build it.");
 }
 async function deleteStudioPage(){
  if(!activeStudioPage||activeStudioPage.slug==="home")return;
@@ -677,7 +678,7 @@ async function deleteStudioPage(){
  if(activeStudioPage.status==="published"){const {error:publicError}=await supabase.from("site_studio_pages").delete().eq("id",activeStudioPage.id);if(publicError){pageMessage("Could not remove published page: "+publicError.message,true);return;}}
  const {error}=await supabase.from("site_studio_page_drafts").delete().eq("id",activeStudioPage.id);
  if(error){pageMessage("Could not delete page draft: "+error.message,true);return;}
- studioPages=studioPages.filter(p=>p.id!==activeStudioPage.id);$("studioPageSelect").querySelector('option[value="'+activeStudioPage.id+'"]')?.remove();$("studioVisualPageSelect")?.querySelector('option[value="'+activeStudioPage.id+'"]')?.remove();
+ studioPages=studioPages.filter(p=>p.id!==activeStudioPage.id);$("studioPageSelect").querySelector('option[value="'+activeStudioPage.id+'"]')?.remove();$("studioVisualPageSelect")?.querySelector('option[value="'+activeStudioPage.id+'"]')?.remove();renderVisualPageOptions();
  selectStudioPage(studioPages.find(p=>p.slug==="home"));pageMessage("Page deleted.");
 }
 async function saveStudioPage(publish=false){
