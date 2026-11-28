@@ -411,11 +411,12 @@ async function loadStudio(){
   // Reuse the quickNav reference declared earlier in loadStudio().
   quickNav?.addEventListener("click",event=>{
    const link=event.target.closest("a");if(!link)return;
-   if(link.getAttribute("href")==="#studioPagesPanel"&&!pageBuilderInitialized){
+   const target=link.dataset.studioPage||link.getAttribute("href")||"";
+   if((target==="studioPagesPanel"||target==="#studioPagesPanel")&&!pageBuilderInitialized){
     pageMessage("Loading page builder…");
-    initPageBuilder().catch(error=>pageMessage("Page builder could not load: "+(error?.message||"Please retry."),true));
+    initPageBuilder().catch(error=>{pageBuilderInitialized=false;pageMessage("Page builder could not load: "+(error?.message||"Please retry."),true);});
    }
-   if(link.getAttribute("href")==="#studioVersionHistory"&&!versionsLoaded){
+   if((target==="studioVersionHistory"||target==="#studioVersionHistory")&&!versionsLoaded){
     versionsLoaded=true;
     $("studioVersions").textContent="Loading version history…";
     loadVersions().catch(error=>{versionsLoaded=false;const host=$("studioVersions");if(host)host.textContent="Version history unavailable: "+(error?.message||"Please retry.");});
@@ -527,11 +528,11 @@ async function initPageBuilder(){
   supabase.from("site_studio_page_drafts").select("*").order("created_at",{ascending:true}),
   supabase.from("site_studio_pages").select("id,slug,title,published_content,status,show_in_nav,nav_order,meta_description,meta_title,meta_keywords,og_image_url,published_at").order("created_at",{ascending:true})
  ]);
- if(draftResult.error||publishedResult.error){pageMessage("Page builder could not load: "+(draftResult.error||publishedResult.error).message,true);return;}
+ if(draftResult.error||publishedResult.error){pageBuilderInitialized=false;pageMessage("Page builder could not load: "+(draftResult.error||publishedResult.error).message,true);return;}
  const publishedById=new Map((publishedResult.data||[]).map(p=>[p.id,p]));
  studioPages=(draftResult.data||[]).map(d=>({...d,...(publishedById.get(d.id)||{}),draft_slug:d.draft_slug,draft_title:d.draft_title,draft_content:d.draft_content,draft_meta_description:d.draft_meta_description,draft_meta_title:d.draft_meta_title,draft_meta_keywords:d.draft_meta_keywords,draft_og_image_url:d.draft_og_image_url,draft_show_in_nav:d.draft_show_in_nav}));
  if(!studioPages.some(p=>p.slug==="home")){
-  pageMessage("Homepage page record is missing. Refresh and try again.",true);return;
+  pageBuilderInitialized=false;pageMessage("Homepage page record is missing. Refresh and try again.",true);return;
  }
  const select=$("studioPageSelect");select.innerHTML="";
  studioPages.forEach(p=>{const opt=document.createElement("option");opt.value=p.id;opt.textContent=p.slug==="home"?"Homepage":p.draft_title||p.title;select.append(opt);});
