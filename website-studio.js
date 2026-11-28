@@ -5,6 +5,20 @@ const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const frame=$("studioPreviewFrame"),status=$("studioStatus");
 let draft={elements:[],sectionOrder:[],decorations:[]},selectedSelector="",selectedVersion=null,versions=[],selectedBaseline={},selectedDecorationId="";
 const emptyDraft=()=>({elements:[],sectionOrder:[],decorations:[]});
+let fullPagePreview=false,previewResizeObserver=null;
+function syncFullPagePreview(){
+ if(!fullPagePreview||!frame?.contentDocument)return;
+ const doc=frame.contentDocument,body=doc.body,root=doc.documentElement;
+ const height=Math.max(body?.scrollHeight||0,root?.scrollHeight||0,body?.offsetHeight||0,root?.offsetHeight||0,620);
+ frame.style.height=height+"px";
+ const wrap=$("studioFrameWrap");if(wrap){wrap.style.height="auto";wrap.style.minHeight="620px";wrap.style.alignItems="flex-start";}
+}
+function setFullPagePreview(enabled){
+ fullPagePreview=!!enabled;const button=$("studioFullPageToggle"),wrap=$("studioFrameWrap");
+ if(button){button.textContent=fullPagePreview?"Fit preview to screen":"Show complete page";button.setAttribute("aria-pressed",String(fullPagePreview));}
+ if(wrap){wrap.classList.toggle("studio-full-page",fullPagePreview);if(!fullPagePreview){wrap.style.height="";wrap.style.minHeight="";wrap.style.alignItems="";frame.style.height="";}}
+ if(fullPagePreview){syncFullPagePreview();setTimeout(syncFullPagePreview,350);setTimeout(syncFullPagePreview,1200);}
+}
 function setStatus(message,error=false){if(status){status.textContent=message;status.classList.toggle("is-error",error);}}
 function normalize(value){if(Array.isArray(value))return {elements:value,sectionOrder:[],theme:{}};return {elements:Array.isArray(value?.elements)?value.elements:[],sectionOrder:Array.isArray(value?.sectionOrder)?value.sectionOrder:[],theme:value?.theme&&typeof value.theme==="object"?value.theme:{},decorations:Array.isArray(value?.decorations)?value.decorations:[]};}
 function selectorFor(node){
@@ -734,9 +748,13 @@ frame.addEventListener("load",()=>{
   attachPreviewEditor();
   const doc=frame.contentDocument;
   if(!doc||!doc.documentElement){setStatus("Live preview failed to load. Use Refresh preview to try again.",true);return;}
-  setStatus("Live preview loaded. Select an element to edit.");
+  if(previewResizeObserver)previewResizeObserver.disconnect();
+  if(doc.documentElement&&window.ResizeObserver){previewResizeObserver=new ResizeObserver(()=>syncFullPagePreview());previewResizeObserver.observe(doc.documentElement);if(doc.body)previewResizeObserver.observe(doc.body);}
+  if(fullPagePreview){syncFullPagePreview();setTimeout(syncFullPagePreview,350);setTimeout(syncFullPagePreview,1200);}
+  setStatus("Complete page preview loaded. Scroll down to inspect every section.");
  }catch(error){setStatus("Preview editor could not attach: "+(error?.message||"unknown error"),true);}
 });
+$("studioFullPageToggle")?.addEventListener("click",()=>setFullPagePreview(!fullPagePreview));
 frame.addEventListener("error",()=>setStatus("Live preview could not load. Check the website connection and refresh.",true));
 document.addEventListener("aurk:studio-workspace-open",event=>{if(!["studioPagesPanel","studioVisualEditor"].includes(event.detail?.id))return;const host=$("studioBlockList");if(!pageBuilderInitialized){if(host)host.textContent="Loading page sections…";pageMessage("Loading pages for the visual editor…");initPageBuilder().catch(error=>{pageBuilderInitialized=false;const message="Page list could not load: "+(error?.message||"Please retry.");pageMessage(message,true);if(host)host.textContent=message;setStatus(message,true);});}});
 setStatus("Starting Website Studio…");
