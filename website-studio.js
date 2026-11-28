@@ -250,7 +250,6 @@ function installStudioClickShield(){
 function attachPreviewEditor(){
  const doc=frame.contentDocument;if(!doc?.body)return;
  installStudioClickShield();
- if(new URL(frame.src).searchParams.get("page")!=="home")return;
  doc.querySelectorAll("style[data-studio-editor-style]").forEach(n=>n.remove());
  const style=doc.createElement("style");style.dataset.studioEditorStyle="true";style.textContent='[data-studio-selected="true"]{outline:3px solid #c9a45c!important;outline-offset:3px!important;cursor:crosshair!important} body{cursor:crosshair}';doc.head.append(style);
  doc.addEventListener("pointerdown",event=>{
@@ -429,21 +428,36 @@ async function loadStudio(){
  }
 }
 async function saveDraft(publish=false){
- const button=publish?$("studioPublish"):$("studioSaveDraft");button.disabled=true;setStatus(publish?"Publishing website changes…":"Saving draft…");
+ const button=publish?$("studioPublish"):$("studioSaveDraft");if(button)button.disabled=true;setStatus(publish?"Publishing page design…":"Saving page design…");
  const user=(await supabase.auth.getUser()).data.user;
- const payload={id:"homepage",draft_content:draft,updated_at:new Date().toISOString(),updated_by:user?.id};
- if(publish)payload.published_at=new Date().toISOString();
- const {error:saveError}=await supabase.from("site_studio_settings").upsert(payload,{onConflict:"id"});
- if(saveError){button.disabled=false;setStatus("Could not save draft: "+saveError.message,true);return;}
- if(publish){
-  const {error:publishError}=await supabase.from("site_studio_published").upsert({id:"homepage",content:draft,published_at:payload.published_at,published_by:user?.id},{onConflict:"id"});
-  if(publishError){button.disabled=false;setStatus("Draft saved, but publishing failed: "+publishError.message,true);return;}
+ const isCustomPage=activeStudioPage&&(activeStudioPage.draft_slug||activeStudioPage.slug)!=="home";
+ if(isCustomPage){
+  const visualContent={...pageDraft,visual:draft},now=new Date().toISOString();
+  const {data:updated,error}=await supabase.from("site_studio_page_drafts").update({draft_content:visualContent,updated_by:user?.id,updated_at:now}).eq("id",activeStudioPage.id).select("*").single();
+  if(error){if(button)button.disabled=false;setStatus("Could not save this page design: "+error.message,true);return;}
+  activeStudioPage={...activeStudioPage,...updated};studioPages=studioPages.map(p=>p.id===activeStudioPage.id?activeStudioPage:p);
+  if(publish){
+   const published={id:activeStudioPage.id,slug:activeStudioPage.draft_slug||activeStudioPage.slug,title:activeStudioPage.draft_title||activeStudioPage.title,published_content:visualContent,status:"published",show_in_nav:activeStudioPage.draft_show_in_nav??activeStudioPage.show_in_nav,nav_order:activeStudioPage.draft_nav_order??activeStudioPage.nav_order,meta_description:activeStudioPage.draft_meta_description,meta_title:activeStudioPage.draft_meta_title,meta_keywords:activeStudioPage.draft_meta_keywords,og_image_url:activeStudioPage.draft_og_image_url,published_at:now};
+   const {error:publishError}=await supabase.from("site_studio_pages").upsert(published,{onConflict:"id"});
+   if(publishError){if(button)button.disabled=false;setStatus("Draft saved, but publishing failed: "+publishError.message,true);return;}
+   activeStudioPage={...activeStudioPage,...published};studioPages=studioPages.map(p=>p.id===activeStudioPage.id?activeStudioPage:p);
+   setStatus("Page design published successfully. Your changes are live.");
+  }else setStatus("Page design saved as a private draft. Publish when you are ready.");
+ }else{
+  const payload={id:"homepage",draft_content:draft,updated_at:new Date().toISOString(),updated_by:user?.id};
+  if(publish)payload.published_at=new Date().toISOString();
+  const {error:saveError}=await supabase.from("site_studio_settings").upsert(payload,{onConflict:"id"});
+  if(saveError){if(button)button.disabled=false;setStatus("Could not save draft: "+saveError.message,true);return;}
+  if(publish){
+   const {error:publishError}=await supabase.from("site_studio_published").upsert({id:"homepage",content:draft,published_at:payload.published_at,published_by:user?.id},{onConflict:"id"});
+   if(publishError){if(button)button.disabled=false;setStatus("Draft saved, but publishing failed: "+publishError.message,true);return;}
+  }
+  await supabase.from("site_studio_versions").insert({version_label:(publish?"Published":"Draft saved")+" — "+new Date().toLocaleString(),content:draft,created_by:user?.id});
+  if(publish){$("studioLastPublished").textContent="Published version: "+new Date(payload.published_at).toLocaleString();setStatus("Published successfully. Your changes are now live.");}
+  else setStatus("Draft saved. Visitors will not see it until you publish.");
+  await loadVersions();
  }
- await supabase.from("site_studio_versions").insert({version_label:(publish?"Published":"Draft saved")+" — "+new Date().toLocaleString(),content:draft,created_by:user?.id});
- button.disabled=false;
- if(publish){$("studioLastPublished").textContent="Published version: "+new Date(payload.published_at).toLocaleString();setStatus("Published successfully. Your changes are now live.");}
- else setStatus("Draft saved. Visitors will not see it until you publish.");
- await loadVersions();
+ if(button)button.disabled=false;
 }
 async function loadVersions(){
  const host=$("studioVersions");if(!host)return;
@@ -540,6 +554,8 @@ async function initPageBuilder(){
  const select=$("studioPageSelect");select.innerHTML="";
  studioPages.forEach(p=>{const opt=document.createElement("option");opt.value=p.id;opt.textContent=p.slug==="home"?"Homepage":p.draft_title||p.title;select.append(opt);});
  select.addEventListener("change",()=>{const p=studioPages.find(x=>x.id===select.value);if(p)selectStudioPage(p);});
+ const visualSelect=$("studioVisualPageSelect");
+ if(visualSelect){visualSelect.innerHTML="";studioPages.forEach(p=>{const opt=document.createElement("option");opt.value=p.id;opt.textContent=p.slug==="home"?"Homepage":p.draft_title||p.title;visualSelect.append(opt);});visualSelect.addEventListener("change",()=>{const p=studioPages.find(x=>x.id===visualSelect.value);if(p)selectStudioPage(p);});}
  $("studioNewPage").addEventListener("click",createStudioPage);
  $("studioDeletePage").addEventListener("click",deleteStudioPage);
  $("studioPageTitle").addEventListener("input",()=>{if(activeStudioPage?.slug==="home")return;if(!$("studioPageSlug").dataset.edited)$("studioPageSlug").value=slugify($("studioPageTitle").value);});
