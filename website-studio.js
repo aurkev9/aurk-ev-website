@@ -400,7 +400,7 @@ async function loadStudio(){
   const settingsResult=await withTimeout(supabase.from("site_studio_settings").select("*").eq("id","homepage").maybeSingle(),"Website design data");
   const {data,error}=settingsResult;
   if(error)throw new Error("Studio database setup issue: "+error.message);
-  draft=normalize(data?.draft_content||emptyDraft());
+  draft=normalize(data?.draft_content||emptyDraft());homepageVisualDraft=normalize(draft);
   $("studioThemeGold").value=draft.theme.gold||"#c9a45c";$("studioThemePaper").value=draft.theme.paper||"#f7f5f0";$("studioThemeInk").value=draft.theme.ink||"#11110f";$("studioThemePattern").value=draft.theme.pattern||"none";$("studioThemePatternOpacity").value=draft.theme.patternOpacity??14;$("studioThemePatternValue").textContent=$("studioThemePatternOpacity").value+"%";updateThemePatternPreview();
   $("studioLastPublished").textContent="Published version: "+(data?.published_at?new Date(data.published_at).toLocaleString():"Not published yet");
   const visualEditor=$("studioVisualEditor"),quickNav=document.querySelector(".studio-quick-nav");if(visualEditor&&quickNav&&visualEditor.previousElementSibling!==quickNav)quickNav.after(visualEditor);
@@ -448,6 +448,7 @@ async function saveDraft(publish=false){
   if(publish)payload.published_at=new Date().toISOString();
   const {error:saveError}=await supabase.from("site_studio_settings").upsert(payload,{onConflict:"id"});
   if(saveError){if(button)button.disabled=false;setStatus("Could not save draft: "+saveError.message,true);return;}
+  homepageVisualDraft=normalize(draft);
   if(publish){
    const {error:publishError}=await supabase.from("site_studio_published").upsert({id:"homepage",content:draft,published_at:payload.published_at,published_by:user?.id},{onConflict:"id"});
    if(publishError){if(button)button.disabled=false;setStatus("Draft saved, but publishing failed: "+publishError.message,true);return;}
@@ -523,7 +524,7 @@ frame?.addEventListener("load",()=>{attachPreviewEditor();});
 document.querySelector('[data-view="website-studio"]')?.addEventListener("click",()=>loadStudio());
 
 /* Advanced pages and reusable section builder */
-let studioPages=[],activeStudioPage=null,pageDraft={sections:[]},selectedBlockId=null,pageBuilderInitialized=false;
+let studioPages=[],activeStudioPage=null,pageDraft={sections:[]},selectedBlockId=null,pageBuilderInitialized=false,homepageVisualDraft=null;
 const blockDefaults={
  hero:{type:"hero",eyebrow:"WELCOME TO AUR-K EV",heading:"A better way to ride.",body:"Discover a more refined way to move with AUR-K EV.",image_url:"",button_text:"Explore scooters",button_url:"/#collection"},
  text:{type:"text",heading:"A story worth sharing",body:"Write your page content here. Share your story, services or important information."},
