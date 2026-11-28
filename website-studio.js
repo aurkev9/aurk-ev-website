@@ -408,7 +408,7 @@ async function loadStudio(){
   setStatus(data?.updated_at?"Website Studio ready. Select an element in the preview to begin.":"Website Studio ready. Your first draft has not been saved yet.");
   // Heavy secondary panels are loaded only when opened, keeping the editor startup fast.
   let versionsLoaded=false;
-  const quickNav=document.querySelector(".studio-quick-nav");
+  // Reuse the quickNav reference declared earlier in loadStudio().
   quickNav?.addEventListener("click",event=>{
    const link=event.target.closest("a");if(!link)return;
    if(link.getAttribute("href")==="#studioPagesPanel"&&!pageBuilderInitialized){
