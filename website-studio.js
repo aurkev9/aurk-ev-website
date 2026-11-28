@@ -319,11 +319,23 @@ async function loadStudio(){
   draft=normalize(data?.draft_content||emptyDraft());
   $("studioThemeGold").value=draft.theme.gold||"#c9a45c";$("studioThemePaper").value=draft.theme.paper||"#f7f5f0";$("studioThemeInk").value=draft.theme.ink||"#11110f";$("studioThemePattern").value=draft.theme.pattern||"none";$("studioThemePatternOpacity").value=draft.theme.patternOpacity??14;$("studioThemePatternValue").textContent=$("studioThemePatternOpacity").value+"%";updateThemePatternPreview();
   $("studioLastPublished").textContent="Published version: "+(data?.published_at?new Date(data.published_at).toLocaleString():"Not published yet");
-  setStatus("Website design loaded. Loading version history and page builder…");
-  loadVersions().catch(error=>{const host=$("studioVersions");if(host)host.textContent="Version history unavailable: "+(error?.message||"Please retry.");});
-  initPageBuilder().catch(error=>pageMessage("Page builder could not load: "+(error?.message||"Please refresh and retry."),true));
   if(frame.contentDocument?.readyState==="complete")attachPreviewEditor();
   setStatus(data?.updated_at?"Website Studio ready. Select an element in the preview to begin.":"Website Studio ready. Your first draft has not been saved yet.");
+  // Heavy secondary panels are loaded only when opened, keeping the editor startup fast.
+  let versionsLoaded=false;
+  const quickNav=document.querySelector(".studio-quick-nav");
+  quickNav?.addEventListener("click",event=>{
+   const link=event.target.closest("a");if(!link)return;
+   if(link.getAttribute("href")==="#studioPagesPanel"&&!pageBuilderInitialized){
+    pageMessage("Loading page builder…");
+    initPageBuilder().catch(error=>pageMessage("Page builder could not load: "+(error?.message||"Please retry."),true));
+   }
+   if(link.getAttribute("href")==="#studioVersionHistory"&&!versionsLoaded){
+    versionsLoaded=true;
+    $("studioVersions").textContent="Loading version history…";
+    loadVersions().catch(error=>{versionsLoaded=false;const host=$("studioVersions");if(host)host.textContent="Version history unavailable: "+(error?.message||"Please retry.");});
+   }
+  });
  }catch(error){
   console.error("Website Studio initialization failed:",error);
   setStatus("Website Studio could not finish loading: "+(error?.message||"Unknown error"),true);
