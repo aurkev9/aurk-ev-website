@@ -265,16 +265,32 @@ async function resetCurrent(){
  $("studioSelectorLabel").value="";setStatus("Element reset and saved to the homepage draft.");
 }
 async function loadStudio(){
- const {data:{session}}=await supabase.auth.getSession();
- if(!session){setStatus("Please sign in to the admin panel first.",true);return;}
- const {data:role,error:roleError}=await supabase.rpc("current_staff_role");
- if(roleError||role!=="owner"){setStatus("Website Studio is available to the Owner account only.",true);document.querySelector('[data-view="website-studio"]')?.remove();return;}
- const {data,error}=await supabase.from("site_studio_settings").select("*").eq("id","homepage").maybeSingle();
- if(error){setStatus("Studio database setup issue: "+error.message,true);return;}
- draft=normalize(data?.draft_content||emptyDraft());$("studioThemeGold").value=draft.theme.gold||"#c9a45c";$("studioThemePaper").value=draft.theme.paper||"#f7f5f0";$("studioThemeInk").value=draft.theme.ink||"#11110f";$("studioThemePattern").value=draft.theme.pattern||"none";$("studioThemePatternOpacity").value=draft.theme.patternOpacity??14;$("studioThemePatternValue").textContent=($("studioThemePatternOpacity").value)+"%";updateThemePatternPreview();
- $("studioLastPublished").textContent="Published version: "+(data?.published_at?new Date(data.published_at).toLocaleString():"Not published yet");
- setStatus(data?.updated_at?"Draft loaded. Select an element in the preview to begin.":"Ready. Your first draft has not been saved yet.");
- await loadVersions();await initPageBuilder();if(frame.contentDocument?.readyState==="complete")attachPreviewEditor();
+ const withTimeout=(promise,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+" timed out. Please refresh the page; if it continues, check the admin connection.")),15000))]);
+ try{
+  setStatus("Connecting to your secure admin session…");
+  const sessionResult=await withTimeout(supabase.auth.getSession(),"Admin session check");
+  const session=sessionResult?.data?.session;
+  if(!session){setStatus("Please sign in to the admin panel first.",true);return;}
+  setStatus("Checking Website Studio permissions…");
+  const roleResult=await withTimeout(supabase.rpc("current_staff_role"),"Permission check");
+  const {data:role,error:roleError}=roleResult;
+  if(roleError||role!=="owner"){setStatus("Website Studio is available to the Owner account only.",true);document.querySelector('[data-view="website-studio"]')?.remove();return;}
+  setStatus("Loading your saved website design…");
+  const settingsResult=await withTimeout(supabase.from("site_studio_settings").select("*").eq("id","homepage").maybeSingle(),"Website design data");
+  const {data,error}=settingsResult;
+  if(error)throw new Error("Studio database setup issue: "+error.message);
+  draft=normalize(data?.draft_content||emptyDraft());
+  $("studioThemeGold").value=draft.theme.gold||"#c9a45c";$("studioThemePaper").value=draft.theme.paper||"#f7f5f0";$("studioThemeInk").value=draft.theme.ink||"#11110f";$("studioThemePattern").value=draft.theme.pattern||"none";$("studioThemePatternOpacity").value=draft.theme.patternOpacity??14;$("studioThemePatternValue").textContent=$("studioThemePatternOpacity").value+"%";updateThemePatternPreview();
+  $("studioLastPublished").textContent="Published version: "+(data?.published_at?new Date(data.published_at).toLocaleString():"Not published yet");
+  setStatus("Website design loaded. Loading version history and page builder…");
+  loadVersions().catch(error=>{const host=$("studioVersions");if(host)host.textContent="Version history unavailable: "+(error?.message||"Please retry.");});
+  initPageBuilder().catch(error=>pageMessage("Page builder could not load: "+(error?.message||"Please refresh and retry."),true));
+  if(frame.contentDocument?.readyState==="complete")attachPreviewEditor();
+  setStatus(data?.updated_at?"Website Studio ready. Select an element in the preview to begin.":"Website Studio ready. Your first draft has not been saved yet.");
+ }catch(error){
+  console.error("Website Studio initialization failed:",error);
+  setStatus("Website Studio could not finish loading: "+(error?.message||"Unknown error"),true);
+ }
 }
 async function saveDraft(publish=false){
  const button=publish?$("studioPublish"):$("studioSaveDraft");button.disabled=true;setStatus(publish?"Publishing website changes…":"Saving draft…");
@@ -524,4 +540,5 @@ async function previewStudioPage(){
 }
 
 frame.addEventListener("load",()=>{try{attachPreviewEditor();}catch(error){setStatus("Preview editor could not attach: "+(error?.message||"unknown error"),true);}});
-loadStudio();
+setStatus("Starting Website Studio…");
+loadStudio().catch(error=>{console.error("Website Studio startup error:",error);setStatus("Website Studio could not start: "+(error?.message||"Unknown error"),true);});
