@@ -48,6 +48,7 @@ function applyItem(doc,item){
  if(item.backgroundPosition!==undefined)node.style.backgroundPosition=item.backgroundPosition;
  if(item.objectFit!==undefined&&node.tagName==="IMG")node.style.objectFit=item.objectFit;
  if(item.fontUrl)ensureCustomFont(doc,item.fontFamily,item.fontUrl);else if(item.fontFamily)ensureGoogleFont(doc,item.fontFamily);
+ if(item.translateX!==undefined||item.translateY!==undefined)node.style.translate=(Number(item.translateX)||0)+"px "+(Number(item.translateY)||0)+"px";
  if(item.hidden!==undefined)node.hidden=!!item.hidden;
 }
 function ensureGoogleFont(doc,family){if(!doc||!family||/^(Arial|Georgia|Verdana|Tahoma|Trebuchet MS|Times New Roman|Courier New)$/i.test(family))return;const id="studio-google-font-"+String(family).toLowerCase().replace(/[^a-z0-9]+/g,"-");if(doc.getElementById(id))return;const link=doc.createElement("link");link.id=id;link.rel="stylesheet";link.href="https://fonts.googleapis.com/css2?family="+encodeURIComponent(family).replace(/%20/g,"+")+"&display=swap";doc.head.append(link);}
@@ -128,35 +129,113 @@ function deleteStudioDecoration(){if(!selectedDecorationId)return;draft.decorati
 
 function installStudioClickShield(){
  const wrap=$("studioFrameWrap");if(!wrap||wrap.querySelector("#studioClickShield"))return;
- const shield=document.createElement("div");shield.id="studioClickShield";shield.setAttribute("aria-label","Website editor selection layer");
- Object.assign(shield.style,{position:"absolute",zIndex:"50",top:"14px",left:"50%",transform:"translateX(-50%)",background:"transparent",cursor:"crosshair",touchAction:"none"});
+ const shield=document.createElement("div");shield.id="studioClickShield";shield.setAttribute("aria-label","Visual editing canvas");
+ Object.assign(shield.style,{position:"absolute",zIndex:"50",background:"transparent",cursor:"crosshair",touchAction:"none",userSelect:"none"});
  wrap.style.position="relative";wrap.append(shield);
+ const outline=document.createElement("div");outline.id="studioSelectionOutline";
+ Object.assign(outline.style,{position:"absolute",display:"none",border:"2px solid #c9a45c",boxShadow:"0 0 0 1px #17171755",pointerEvents:"none",boxSizing:"border-box",zIndex:"2"});
+ shield.append(outline);
+ const handles={};
+ ["nw","n","ne","e","se","s","sw","w"].forEach(name=>{
+  const h=document.createElement("div");h.dataset.studioHandle=name;
+  Object.assign(h.style,{position:"absolute",width:"10px",height:"10px",background:"#fff",border:"2px solid #b58d45",borderRadius:"2px",boxSizing:"border-box",display:"none",zIndex:"3",pointerEvents:"auto",touchAction:"none"});
+  const pos={nw:{left:"-6px",top:"-6px",cursor:"nwse-resize"},n:{left:"calc(50% - 5px)",top:"-6px",cursor:"ns-resize"},ne:{right:"-6px",top:"-6px",cursor:"nesw-resize"},e:{right:"-6px",top:"calc(50% - 5px)",cursor:"ew-resize"},se:{right:"-6px",bottom:"-6px",cursor:"nwse-resize"},s:{left:"calc(50% - 5px)",bottom:"-6px",cursor:"ns-resize"},sw:{left:"-6px",bottom:"-6px",cursor:"nesw-resize"},w:{left:"-6px",top:"calc(50% - 5px)",cursor:"ew-resize"}}[name];
+  Object.assign(h.style,pos);outline.append(h);handles[name]=h;
+ });
+ let active=null;
+ const getSelectedNode=()=>{
+  const doc=frame.contentDocument;if(!doc)return null;
+  if(selectedDecorationId)return doc.querySelector('[data-studio-decoration-id="'+CSS.escape(selectedDecorationId)+'"]');
+  try{return selectedSelector?doc.querySelector(selectedSelector):null;}catch{return null;}
+ };
  const sync=()=>{
   const rect=frame.getBoundingClientRect(),parent=wrap.getBoundingClientRect();
   shield.style.width=rect.width+"px";shield.style.height=rect.height+"px";
   shield.style.left=(rect.left-parent.left+wrap.scrollLeft)+"px";shield.style.top=(rect.top-parent.top+wrap.scrollTop)+"px";
-  shield.style.transform="none";
+  shield.style.transform="none";drawSelection();
  };
- const selectFromPoint=(event)=>{
-  const doc=frame.contentDocument;if(!doc?.body)return;
+ const drawSelection=()=>{
+  const node=getSelectedNode();if(!node||!frame.contentDocument?.body.contains(node)){outline.style.display="none";Object.values(handles).forEach(h=>h.style.display="none");return;}
+  const nr=node.getBoundingClientRect(),fr=frame.getBoundingClientRect(),sx=frame.clientWidth/(fr.width||1),sy=frame.clientHeight/(fr.height||1);
+  const left=(nr.left-fr.left)*sx,top=(nr.top-fr.top)*sy,width=nr.width*sx,height=nr.height*sy;
+  Object.assign(outline.style,{display:"block",left:left+"px",top:top+"px",width:Math.max(12,width)+"px",height:Math.max(12,height)+"px"});
+  Object.values(handles).forEach(h=>h.style.display="block");
+ };
+ const elementAt=(event)=>{
+  const doc=frame.contentDocument;if(!doc?.body)return null;
   const rect=frame.getBoundingClientRect(),sx=frame.clientWidth/(rect.width||1),sy=frame.clientHeight/(rect.height||1);
-  const x=(event.clientX-rect.left)*sx,y=(event.clientY-rect.top)*sy;
-  const target=doc.elementFromPoint(x,y);if(!target)return;
+  return doc.elementFromPoint((event.clientX-rect.left)*sx,(event.clientY-rect.top)*sy);
+ };
+ const beginManipulation=(event,mode,handle,node,item)=>{
+  const rect=frame.getBoundingClientRect(),sx=frame.clientWidth/(rect.width||1),sy=frame.clientHeight/(rect.height||1);
+  const targetNode=node||getSelectedNode();if(!targetNode)return;
+  const box=targetNode.getBoundingClientRect();
+  const shape=!!selectedDecorationId;
+  const base={x:shape?Number(item.x)||0:Number(item?.translateX)||0,y:shape?Number(item.y)||0:Number(item?.translateY)||0,width:shape?Number(item.width)||box.width:box.width,height:shape?Number(item.height)||box.height:box.height};
+  active={mode,handle,startX:event.clientX,startY:event.clientY,scaleX:sx,scaleY:sy,node:targetNode,item,shape,base,moved:false};
+  shield.setPointerCapture?.(event.pointerId);
+ };
+ const updateItem=(a)=>{
+  if(!a)return;
+  const dx=(a.lastX-a.startX)*a.scaleX,dy=(a.lastY-a.startY)*a.scaleY;
+  let {x,y,width,height}=a.base;
+  if(a.mode==="move"){x+=dx;y+=dy;}
+  else{
+   if(a.handle.includes("e"))width=Math.max(20,width+dx);
+   if(a.handle.includes("s"))height=Math.max(16,height+dy);
+   if(a.handle.includes("w")){const next=Math.max(20,width-dx);x+=width-next;width=next;}
+   if(a.handle.includes("n")){const next=Math.max(16,height-dy);y+=height-next;height=next;}
+  }
+  if(a.shape){
+   Object.assign(a.item,{x,y,width,height});
+   Object.assign(a.node.style,{left:x+"px",top:y+"px",width:width+"px",height:height+"px"});
+  }else{
+   a.item.translateX=x;a.item.translateY=y;a.item.width=width;a.item.height=height;
+   a.node.style.translate=x+"px "+y+"px";a.node.style.width=width+"px";a.node.style.height=height+"px";
+  }
+  drawSelection();
+ };
+ shield.addEventListener("pointerdown",event=>{
+  event.preventDefault();event.stopPropagation();
+  const handle=event.target.closest?.("[data-studio-handle]")?.dataset.studioHandle;
+  let node=getSelectedNode(),item=selectedDecorationId?draft.decorations.find(x=>x.id===selectedDecorationId):(findItem(selectedSelector)||{selector:selectedSelector});
+  if(handle&&node){beginManipulation(event,"resize",handle,node,item);return;}
+  const target=elementAt(event);if(!target)return;
   const shape=target.closest?.("[data-studio-decoration-id]");
   if(shape){
-   const item=draft.decorations.find(x=>x.id===shape.dataset.studioDecorationId);if(!item)return;
-   selectedDecorationId=item.id;selectedSelector="";populateDecorationControls(item);highlightDecoration();
-   event.preventDefault();return;
+   const found=draft.decorations.find(x=>x.id===shape.dataset.studioDecorationId);if(!found)return;
+   selectedDecorationId=found.id;selectedSelector="";$("studioDecorationControls").hidden=false;$("studioElementControls").hidden=true;
+   populateDecorationControls(found);highlightDecoration();drawSelection();beginManipulation(event,"move","",shape,found);return;
   }
   if(target.closest?.("#orderModal,.cart-overlay,.product-detail-page"))return;
-  const node=target.closest?.("header,footer,nav,.announcement,.marquee-band,.hero,.why-v2,.contact-v2,h1,h2,h3,h4,p,a,button,img,small,span,b,strong,em,section,article,main,div");
-  if(!node||!doc.body.contains(node))return;
-  event.preventDefault();event.stopPropagation();
-  selectedDecorationId="";selectedSelector=selectorFor(node);
+  const selectable="header,footer,nav,.announcement,.marquee-band,.hero,.why-v2,.contact-v2,h1,h2,h3,h4,p,a,button,img,small,span,b,strong,em,section,article,main,div:not(body)";
+  const picked=target.closest?.(selectable);if(!picked||!frame.contentDocument.body.contains(picked))return;
+  selectedDecorationId="";selectedSelector=selectorFor(picked);
   $("studioDecorationControls").hidden=true;$("studioElementControls").hidden=false;
-  populateControls(node);highlightSelected();
+  populateControls(picked);highlightSelected();drawSelection();
+  const saved=findItem(selectedSelector)||{selector:selectedSelector};
+  beginManipulation(event,"move","",picked,saved);
+ });
+ shield.addEventListener("pointermove",event=>{
+  if(!active)return;
+  active.lastX=event.clientX;active.lastY=event.clientY;
+  if(Math.abs(active.lastX-active.startX)>2||Math.abs(active.lastY-active.startY)>2)active.moved=true;
+  if(active.moved)updateItem(active);
+ });
+ const finish=()=>{
+  if(!active)return;
+  const a=active;active=null;
+  if(a.moved){
+   if(a.shape){setStatus("Shape position updated. Click Save draft to keep your changes.");}
+   else{
+    const idx=draft.elements.findIndex(x=>x.selector===selectedSelector);
+    if(idx>=0)draft.elements[idx]=a.item;else draft.elements.push(a.item);
+    setStatus("Element moved/resized. Click Save draft to keep your changes.");
+   }
+  }
+  drawSelection();
  };
- shield.addEventListener("pointerdown",selectFromPoint);
+ shield.addEventListener("pointerup",finish);shield.addEventListener("pointercancel",finish);
  shield.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();});
  const observer=new ResizeObserver(sync);observer.observe(wrap);observer.observe(frame);
  wrap.addEventListener("scroll",sync);window.addEventListener("resize",sync);frame.addEventListener("load",sync);
@@ -319,6 +398,7 @@ async function loadStudio(){
   draft=normalize(data?.draft_content||emptyDraft());
   $("studioThemeGold").value=draft.theme.gold||"#c9a45c";$("studioThemePaper").value=draft.theme.paper||"#f7f5f0";$("studioThemeInk").value=draft.theme.ink||"#11110f";$("studioThemePattern").value=draft.theme.pattern||"none";$("studioThemePatternOpacity").value=draft.theme.patternOpacity??14;$("studioThemePatternValue").textContent=$("studioThemePatternOpacity").value+"%";updateThemePatternPreview();
   $("studioLastPublished").textContent="Published version: "+(data?.published_at?new Date(data.published_at).toLocaleString():"Not published yet");
+  const visualEditor=$("studioVisualEditor"),quickNav=document.querySelector(".studio-quick-nav");if(visualEditor&&quickNav&&visualEditor.previousElementSibling!==quickNav)quickNav.after(visualEditor);
   if(frame.contentDocument?.readyState==="complete")attachPreviewEditor();
   setStatus(data?.updated_at?"Website Studio ready. Select an element in the preview to begin.":"Website Studio ready. Your first draft has not been saved yet.");
   // Heavy secondary panels are loaded only when opened, keeping the editor startup fast.
