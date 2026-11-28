@@ -187,11 +187,14 @@ function installStudioClickShield(){
    if(a.handle.includes("n")){const next=Math.max(16,height-dy);y+=height-next;height=next;}
   }
   if(a.shape){
-   Object.assign(a.item,{x,y,width,height});
-   Object.assign(a.node.style,{left:x+"px",top:y+"px",width:width+"px",height:height+"px"});
+   a.item.x=x;a.item.y=y;
+   if(a.mode==="resize"){a.item.width=width;a.item.height=height;}
+   Object.assign(a.node.style,{left:x+"px",top:y+"px"});
+   if(a.mode==="resize")Object.assign(a.node.style,{width:width+"px",height:height+"px"});
   }else{
-   a.item.translateX=x;a.item.translateY=y;a.item.width=width;a.item.height=height;
-   a.node.style.translate=x+"px "+y+"px";a.node.style.width=width+"px";a.node.style.height=height+"px";
+   a.item.translateX=x;a.item.translateY=y;
+   a.node.style.translate=x+"px "+y+"px";
+   if(a.mode==="resize"){a.item.width=width;a.item.height=height;a.node.style.width=width+"px";a.node.style.height=height+"px";}
   }
   drawSelection();
  };
@@ -205,7 +208,9 @@ function installStudioClickShield(){
   if(shape){
    const found=draft.decorations.find(x=>x.id===shape.dataset.studioDecorationId);if(!found)return;
    selectedDecorationId=found.id;selectedSelector="";$("studioDecorationControls").hidden=false;$("studioElementControls").hidden=true;
-   populateDecorationControls(found);highlightDecoration();drawSelection();beginManipulation(event,"move","",shape,found);return;
+   populateDecorationControls(found);highlightDecoration();drawSelection();
+   const liveShape=frame.contentDocument.querySelector('[data-studio-decoration-id="'+CSS.escape(found.id)+'"]');
+   beginManipulation(event,"move","",liveShape,found);return;
   }
   if(target.closest?.("#orderModal,.cart-overlay,.product-detail-page"))return;
   const selectable="header,footer,nav,.announcement,.marquee-band,.hero,.why-v2,.contact-v2,h1,h2,h3,h4,p,a,button,img,small,span,b,strong,em,section,article,main,div:not(body)";
