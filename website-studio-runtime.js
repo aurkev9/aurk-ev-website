@@ -168,8 +168,10 @@ async function main(){
     document.getElementById("productDetailPage")?.setAttribute("hidden","");
     const root=node("main","studio-custom-page");root.id="studioCustomPageRoot";
     applyPageSeo(page,isOwner);
-    await renderSections(root,(isOwner?page.draft_content:page.published_content)?.sections||[]);
+    const pageContent=isOwner?page.draft_content:page.published_content;
+    await renderSections(root,pageContent?.sections||[]);
     if(footer)footer.before(root);else document.body.append(root);
+    if(pageContent?.visual)applyVisualContent(pageContent.visual);
    }
   }else{
    const content=isOwner?page?.draft_content:page?.published_content;
