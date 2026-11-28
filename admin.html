@@ -167,6 +167,7 @@
   header.querySelector("h3").textContent=page[1];header.querySelector("p").textContent=page[2];back.hidden=false;
   links.forEach(a=>{if(a.dataset.studioPage===id)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
   panel.scrollIntoView({behavior:"smooth",block:"start"});
+  panel.dispatchEvent(new CustomEvent("aurk:studio-workspace-open",{bubbles:true,detail:{id}}));
  }
  links.forEach(a=>a.addEventListener("click",e=>{e.preventDefault();showPage(a.dataset.studioPage);}));
  root.addEventListener("click",e=>{if(e.target.closest("#aurkCanvasBack"))showHome();});
