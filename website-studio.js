@@ -154,7 +154,7 @@ function attachPreviewEditor(){
   doc.documentElement.dataset.aurkStudioSelectionAttached="true";
   const selectable="header,footer,nav,.announcement,.marquee-band,.hero,.why-v2,.contact-v2,h1,h2,h3,h4,p,a,button,img,small,span,b,strong,em,section,article,main";
   const selectAtPoint=event=>{
-   const target=event.target instanceof Element?event.target:null;if(!target)return;
+   const target=event.target?.nodeType===1?event.target:null;if(!target)return;
    const decoration=target.closest("[data-studio-decoration-id]");
    if(decoration){event.preventDefault();event.stopImmediatePropagation();selectedDecorationId=decoration.dataset.studioDecorationId;selectedSelector="";populateDecorationControls(draft.decorations.find(x=>x.id===selectedDecorationId));highlightDecoration();return;}
    if(target.closest("#orderModal,.cart-overlay,.product-detail-page"))return;
