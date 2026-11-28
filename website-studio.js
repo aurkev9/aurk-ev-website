@@ -10,7 +10,7 @@ function normalize(value){if(Array.isArray(value))return {elements:value,section
 function selectorFor(node){
  if(node.id)return "#"+CSS.escape(node.id);
  const parts=[];let el=node;
- while(el&&el!==document.body&&el.nodeType===1){
+ while(el&&el!==node.ownerDocument.body&&el.nodeType===1){
   if(el.id){parts.unshift("#"+CSS.escape(el.id));break;}
   const tag=el.tagName.toLowerCase(),siblings=[...el.parentElement.children].filter(x=>x.tagName===el.tagName),index=siblings.indexOf(el)+1;
   parts.unshift(tag+":nth-of-type("+index+")");el=el.parentElement;
@@ -521,4 +521,5 @@ async function previewStudioPage(){
  loadStudioPagePreview();
 }
 
+frame.addEventListener("load",()=>{try{attachPreviewEditor();}catch(error){setStatus("Preview editor could not attach: "+(error?.message||"unknown error"),true);}});
 loadStudio();
