@@ -1703,3 +1703,40 @@ html{scroll-behavior:smooth}
 .studio-preview-page-picker{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:750;color:#625846;white-space:nowrap}
 .studio-preview-page-picker select{min-width:150px;max-width:230px;height:34px;padding:0 9px;border:1px solid #ded5c5;border-radius:7px;background:#fff;color:#2a261f;font:inherit}
 @media(max-width:760px){.studio-preview-page-picker{width:100%;justify-content:space-between}.studio-preview-page-picker select{flex:1;max-width:none}}
+
+
+/* Website Studio: keep the admin page vertically scrollable */
+html:has(body.admin-body), body.admin-body {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+body.admin-body .admin-app,
+body.admin-body .admin-workspace,
+body.admin-body .admin-content,
+body.admin-body #section-website-studio {
+  height: auto !important;
+  min-height: 100vh;
+  overflow: visible !important;
+}
+body.admin-body #section-website-studio.studio-page-mode {
+  display: block;
+}
+body.admin-body .studio-workbench {
+  align-items: start;
+}
+body.admin-body .studio-controls {
+  position: static !important;
+  top: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  align-self: start;
+}
+@media (min-width: 1101px) {
+  body.admin-body .studio-controls {
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
