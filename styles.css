@@ -1669,6 +1669,8 @@ html{scroll-behavior:smooth}
  .studio-workbench{grid-template-columns:1fr}
  .studio-controls{position:relative;top:auto;max-height:none}
  .studio-preview-area{position:relative;top:auto}
+ .studio-preview-area{order:1}
+ .studio-controls{order:2}
  .studio-frame-wrap{height:75vh}
 }
 @media(max-width:760px){
