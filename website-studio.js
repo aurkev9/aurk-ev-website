@@ -150,14 +150,21 @@ function attachPreviewEditor(){
   const up=async()=>{doc.removeEventListener("pointermove",move);await saveDraft(false);renderStudioDecorations(doc);};
   doc.addEventListener("pointermove",move);doc.addEventListener("pointerup",up,{once:true});
  },true);
- doc.addEventListener("click",event=>{
-  const decoration=event.target.closest("[data-studio-decoration-id]");
-  if(decoration){event.preventDefault();event.stopPropagation();selectedDecorationId=decoration.dataset.studioDecorationId;selectedSelector="";populateDecorationControls(draft.decorations.find(x=>x.id===selectedDecorationId));highlightDecoration();return;}
-  selectedDecorationId="";const node=event.target.closest("header,footer,nav,.announcement,.marquee-band,.hero,.why-v2,.contact-v2,h1,h2,h3,h4,p,a,button,img,small,span,b,strong,em,section,article");
-  if(!node||!doc.body.contains(node)||node.closest("#orderModal,.cart-overlay,.product-detail-page"))return;
-  event.preventDefault();event.stopPropagation();
-  selectedSelector=selectorFor(node);$("studioDecorationControls").hidden=true;$("studioElementControls").hidden=false;populateControls(node);highlightSelected();
- },true);
+  if(doc.documentElement.dataset.aurkStudioSelectionAttached!=="true"){
+  doc.documentElement.dataset.aurkStudioSelectionAttached="true";
+  const selectable="header,footer,nav,.announcement,.marquee-band,.hero,.why-v2,.contact-v2,h1,h2,h3,h4,p,a,button,img,small,span,b,strong,em,section,article,main";
+  const selectAtPoint=event=>{
+   const target=event.target instanceof Element?event.target:null;if(!target)return;
+   const decoration=target.closest("[data-studio-decoration-id]");
+   if(decoration){event.preventDefault();event.stopImmediatePropagation();selectedDecorationId=decoration.dataset.studioDecorationId;selectedSelector="";populateDecorationControls(draft.decorations.find(x=>x.id===selectedDecorationId));highlightDecoration();return;}
+   if(target.closest("#orderModal,.cart-overlay,.product-detail-page"))return;
+   const node=target.closest(selectable);if(!node||!doc.body.contains(node))return;
+   event.preventDefault();event.stopImmediatePropagation();selectedDecorationId="";selectedSelector=selectorFor(node);
+   $("studioDecorationControls").hidden=true;$("studioElementControls").hidden=false;populateControls(node);highlightSelected();
+  };
+  doc.addEventListener("pointerdown",selectAtPoint,true);
+  doc.addEventListener("click",selectAtPoint,true);
+ }
  doc.addEventListener("dragstart",event=>{
   const section=event.target.closest("main > section[id]");if(!section)return;
   event.dataTransfer.setData("text/aurk-section",section.id);event.dataTransfer.effectAllowed="move";
