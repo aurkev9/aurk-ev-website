@@ -1633,7 +1633,7 @@ html{scroll-behavior:smooth}
 .studio-block-fields input,.studio-block-fields textarea{min-height:40px;border:1px solid #ddd5c8;border-radius:7px;padding:10px;font:inherit;font-size:12px}
 .studio-page-footer{align-items:center;gap:14px;padding-top:16px;border-top:1px solid #eee8dd}
 .studio-page-footer button{min-height:40px}
-.studio-workbench{grid-template-columns:minmax(300px,370px) minmax(0,1fr);gap:18px;align-items:start;scroll-margin-top:125px}
+.studio-workbench{grid-template-columns:minmax(0,1fr) minmax(300px,370px);gap:18px;align-items:start;scroll-margin-top:125px}
 .studio-controls,.studio-preview-area{border-color:#e5ddce;box-shadow:0 14px 36px #1c160b0b}
 .studio-controls{padding:19px;gap:15px;max-height:calc(100vh - 145px);top:12px;border-radius:15px}
 .studio-control-heading h3{font-size:19px;letter-spacing:-.02em}
