@@ -409,6 +409,9 @@ async function loadStudio(){
   // Heavy secondary panels are loaded only when opened, keeping the editor startup fast.
   let versionsLoaded=false;
   // Reuse the quickNav reference declared earlier in loadStudio().
+  // Load all page targets as soon as Website Studio starts so the Visual Editor
+  // never remains stuck with the static Homepage-only placeholder.
+  await initPageBuilder();
   quickNav?.addEventListener("click",event=>{
    const link=event.target.closest("a");if(!link)return;
    const target=link.dataset.studioPage||link.getAttribute("href")||"";
@@ -562,7 +565,8 @@ async function initPageBuilder(){
   supabase.from("site_products").select("id,name").order("name",{ascending:true})
  ]);
  if(draftResult.error||publishedResult.error){pageBuilderInitialized=false;const message="Page builder could not load: "+(draftResult.error||publishedResult.error).message;pageMessage(message,true);const host=$("studioBlockList");if(host)host.textContent=message;return;}
- studioProducts=productResult.error?[]:(productResult.data||[]);
+ if(productResult.error){pageBuilderInitialized=false;const message="Product pages could not load: "+productResult.error.message;pageMessage(message,true);setStatus(message,true);return;}
+ studioProducts=productResult.data||[];
  const publishedById=new Map((publishedResult.data||[]).map(p=>[p.id,p]));
  studioPages=(draftResult.data||[]).map(d=>({...d,...(publishedById.get(d.id)||{}),draft_slug:d.draft_slug,draft_title:d.draft_title,draft_content:d.draft_content,draft_meta_description:d.draft_meta_description,draft_meta_title:d.draft_meta_title,draft_meta_keywords:d.draft_meta_keywords,draft_og_image_url:d.draft_og_image_url,draft_show_in_nav:d.draft_show_in_nav}));
  if(!studioPages.some(p=>p.slug==="home")){
