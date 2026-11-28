@@ -173,6 +173,19 @@ async function main(){
     if(footer)footer.before(root);else document.body.append(root);
     if(pageContent?.visual)applyVisualContent(pageContent.visual);
    }
+  }else if(params.has("product")){
+   const visualResult=studioPreview&&isOwner
+    ?await supabase.from("site_studio_settings").select("draft_content").eq("id","product-detail").maybeSingle()
+    :await supabase.from("site_studio_published").select("content").eq("id","product-detail").maybeSingle();
+   const visual=studioPreview&&isOwner?visualResult.data?.draft_content:visualResult.data?.content;
+   if(visual){
+    const target=document.getElementById("productDetailContent");
+    if(target){
+     const apply=()=>{if(target.children.length)applyVisualContent(visual);};
+     const observer=new MutationObserver(apply);observer.observe(target,{childList:true,subtree:true});apply();
+     window.addEventListener("beforeunload",()=>observer.disconnect(),{once:true});
+    }
+   }
   }else{
    const content=isOwner?page?.draft_content:page?.published_content;
    if(page)applyPageSeo(page,isOwner);
