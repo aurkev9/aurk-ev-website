@@ -433,10 +433,15 @@ async function saveDraft(publish=false){
  const user=(await supabase.auth.getUser()).data.user;
  const isCustomPage=activeVisualTarget.type==="custom"&&activeStudioPage;
  if(activeVisualTarget.type==="product"){
-  const {error}=await supabase.from("site_studio_settings").upsert({id:"product-detail",draft_content:draft,updated_at:new Date().toISOString(),updated_by:user?.id},{onConflict:"id"});
-  if(error){if(button)button.disabled=false;setStatus("Could not save product detail design: "+error.message,true);return;}
+  const now=new Date().toISOString();
+  const {data:existing,error:lookupError}=await supabase.from("site_studio_settings").select("id").eq("id","product-detail").maybeSingle();
+  if(lookupError){if(button)button.disabled=false;setStatus("Could not check product detail draft: "+lookupError.message,true);return;}
+  const write=existing
+   ?await supabase.from("site_studio_settings").update({draft_content:draft,updated_at:now,updated_by:user?.id,...(publish?{published_content:draft,published_at:now}:{})}).eq("id","product-detail")
+   :await supabase.from("site_studio_settings").insert({id:"product-detail",draft_content:draft,published_content:publish?draft:{},updated_at:now,updated_by:user?.id,...(publish?{published_at:now}:{})});
+  if(write.error){if(button)button.disabled=false;setStatus("Could not save product detail design: "+write.error.message,true);return;}
   if(publish){
-   const {error:publishError}=await supabase.from("site_studio_published").upsert({id:"product-detail",content:draft,published_at:new Date().toISOString(),published_by:user?.id},{onConflict:"id"});
+   const {error:publishError}=await supabase.from("site_studio_published").upsert({id:"product-detail",content:draft,published_at:now,published_by:user?.id},{onConflict:"id"});
    if(publishError){if(button)button.disabled=false;setStatus("Draft saved, but product detail publishing failed: "+publishError.message,true);return;}
    setStatus("Product detail design published for all scooter models.");
   }else setStatus("Product detail design saved. Publish to make it live on all scooter detail pages.");
